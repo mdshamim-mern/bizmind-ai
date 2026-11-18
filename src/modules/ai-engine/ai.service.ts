@@ -839,10 +839,623 @@ export const getBusinessIntelligenceDashboard = async (
   };
 };
 
+
+// ============================================================================
+// UPGRADED AI ENGINE FEATURES (Multi-Tenant shopId Isolated)
+// ============================================================================
+
+export type FestivalType = 'RAMADAN_EID' | 'POHELA_BOISHAKH' | 'MONSOON_RAIN' | 'NONE';
+
+interface BakiEntry {
+  id: string;
+  shopId: string;
+  customerName: string;
+  phone: string;
+  amountBDT: number;
+  dueDays: number;
+  note?: string;
+  updatedAt: string;
+}
+
+const bakiLedgerStore = new Map<string, BakiEntry[]>();
+
+function getOrInitBakiStore(shopId: string): BakiEntry[] {
+  if (!bakiLedgerStore.has(shopId)) {
+    bakiLedgerStore.set(shopId, []);
+  }
+  return bakiLedgerStore.get(shopId)!;
+}
+
+async function getWasteRescuePlan(shopId: string) {
+  const now = Date.now();
+  const batches = await prisma.inventoryBatch.findMany({
+    where: {
+      shopId,
+      quantityRemaining: { gt: 0 },
+      expiryDate: { not: null },
+    },
+    include: {
+      product: {
+        select: { id: true, name: true, sellingPrice: true, costPrice: true },
+      },
+    },
+    orderBy: { expiryDate: 'asc' },
+  });
+
+  const rescueItems = batches
+    .map((batch) => {
+      const expiryMs = batch.expiryDate ? new Date(batch.expiryDate).getTime() : now + 90 * 86400000;
+      const daysToExpiry = Math.max(0, Math.ceil((expiryMs - now) / 86400000));
+      if (daysToExpiry > 15) return null;
+
+      const discountPct = daysToExpiry <= 5 ? 15 : 10;
+      const unitSelling = Number(batch.product.sellingPrice || 0);
+      const discountedUnitPrice = round2(unitSelling * (1 - discountPct / 100));
+      const cashRecoveredBDT = round2(discountedUnitPrice * batch.quantityRemaining);
+      const potentialLossBDT = round2(Number(batch.costPrice || batch.product.costPrice || 0) * batch.quantityRemaining);
+
+      const banglaActionHeadline = `${batch.product.name} ${daysToExpiry} দিনে নষ্ট হবে, ${discountPct}% ছাড় দিন (${batch.quantityRemaining} পিস স্টক)`;
+      const banglaOfferPost = `🔥 আজকের বিশেষ অফার! তাজা ${batch.product.name} এখন পাচ্ছেন ${discountPct}% ছাড়ে মাত্র ৳${discountedUnitPrice} টাকায় (আগের দাম ৳${unitSelling})। স্টক সীমিত — আজই সংগ্রহ করুন!`;
+      const whyExplanation = `Batch ${batch.id.slice(0, 8)} expires in ${daysToExpiry} day(s) with ${batch.quantityRemaining} units remaining. Applying a ${discountPct}% clearance discount recovers ~৳${cashRecoveredBDT} cash instead of risking ৳${potentialLossBDT} cost loss.`;
+
+      return {
+        batchId: batch.id,
+        productId: batch.product.id,
+        productName: batch.product.name,
+        quantityRemaining: batch.quantityRemaining,
+        daysToExpiry,
+        recommendedDiscountPct: discountPct,
+        originalPriceBDT: unitSelling,
+        discountedPriceBDT: discountedUnitPrice,
+        cashRecoveredBDT,
+        potentialLossBDT,
+        banglaActionHeadline,
+        banglaOfferPost,
+        whyExplanation,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+
+  const totalCashRecoveredBDT = round2(
+    rescueItems.reduce((sum, item) => sum + item.cashRecoveredBDT, 0)
+  );
+
+  return {
+    shopId,
+    generatedAt: new Date().toISOString(),
+    totalAtRiskBatches: rescueItems.length,
+    totalCashRecoveredBDT,
+    items: rescueItems,
+  };
+}
+
+async function addOrUpdateBakiEntry(
+  shopId: string,
+  payload: {
+    customerName: string;
+    phone?: string;
+    amountBDT: number;
+    dueDays?: number;
+    note?: string;
+    action?: 'ADD' | 'PAY';
+  }
+) {
+  const entries = getOrInitBakiStore(shopId);
+  const normalizedName = payload.customerName.trim();
+  const existing = entries.find(
+    (e) => e.customerName.toLowerCase() === normalizedName.toLowerCase()
+  );
+
+  const delta = Number(payload.amountBDT || 0);
+  if (existing) {
+    if (payload.action === 'PAY') {
+      existing.amountBDT = Math.max(0, round2(existing.amountBDT - delta));
+    } else {
+      existing.amountBDT = round2(existing.amountBDT + delta);
+    }
+    if (payload.phone) existing.phone = payload.phone;
+    if (typeof payload.dueDays === 'number') existing.dueDays = payload.dueDays;
+    if (payload.note) existing.note = payload.note;
+    existing.updatedAt = new Date().toISOString();
+    return existing;
+  }
+
+  const created: BakiEntry = {
+    id: `baki_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+    shopId,
+    customerName: normalizedName,
+    phone: payload.phone || 'N/A',
+    amountBDT: payload.action === 'PAY' ? 0 : Math.max(0, round2(delta)),
+    dueDays: payload.dueDays ?? 7,
+    note: payload.note,
+    updatedAt: new Date().toISOString(),
+  };
+  entries.push(created);
+  return created;
+}
+
+async function getBakiLedgerAndReminders(shopId: string) {
+  const entries = getOrInitBakiStore(shopId).filter((e) => e.amountBDT > 0);
+  const ranked = entries
+    .map((entry) => {
+      const priorityScore = entry.amountBDT * 0.6 + entry.dueDays * 120;
+      const collectionPriority: 'HIGH' | 'MEDIUM' | 'LOW' =
+        entry.dueDays >= 14 || entry.amountBDT >= 3000
+          ? 'HIGH'
+          : entry.dueDays >= 7 || entry.amountBDT >= 1000
+          ? 'MEDIUM'
+          : 'LOW';
+
+      const politeBanglaReminder = `আসসালামু আলাইকুম ${entry.customerName} ভাই/আপু, আমাদের দোকানে আপনার পূর্বের বাকি ৳${entry.amountBDT} টাকা (${entry.dueDays} দিন ধরে বকেয়া) রয়েছে। আপনার সুবিধামতো সময়ে পরিশোধ করলে আমরা উপকৃত হবো। ধন্যবাদ!`;
+
+      return {
+        ...entry,
+        priorityScore: round2(priorityScore),
+        collectionPriority,
+        politeBanglaReminder,
+      };
+    })
+    .sort((a, b) => b.priorityScore - a.priorityScore);
+
+  const totalOutstandingBDT = round2(
+    ranked.reduce((sum, item) => sum + item.amountBDT, 0)
+  );
+
+  return {
+    shopId,
+    totalCustomers: ranked.length,
+    totalOutstandingBDT,
+    highPriorityCount: ranked.filter((r) => r.collectionPriority === 'HIGH').length,
+    entries: ranked,
+  };
+}
+
+async function scanSupplierChalan(
+  shopId: string,
+  payload: { imageBase64?: string; mimeType?: string; rawText?: string }
+) {
+  const products = await prisma.product.findMany({
+    where: { shopId },
+    select: { id: true, name: true, costPrice: true, sellingPrice: true },
+  });
+
+  let extractedItems: Array<{
+    productName: string;
+    quantity: number;
+    unitCostBDT: number;
+    totalBDT: number;
+  }> = [];
+  let provider: 'GEMINI_VISION' | 'LOCAL_PARSER' = 'LOCAL_PARSER';
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (apiKey && (payload.imageBase64 || payload.rawText)) {
+    try {
+      const parts: Array<Record<string, unknown>> = [
+        {
+          text: 'Extract supplier invoice/chalan line items as strict JSON array: [{"productName": string, "quantity": number, "unitCostBDT": number, "totalBDT": number}]. Return JSON only.',
+        },
+      ];
+      if (payload.rawText) {
+        parts.push({ text: `Chalan text:\n${payload.rawText}` });
+      }
+      if (payload.imageBase64) {
+        parts.push({
+          inlineData: {
+            mimeType: payload.mimeType || 'image/jpeg',
+            data: payload.imageBase64,
+          },
+        });
+      }
+
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts }] }),
+        }
+      );
+      if (resp.ok) {
+        const json = (await resp.json()) as {
+          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+        };
+        const raw = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const match = raw.match(/\[[\s\S]*\]/);
+        if (match) {
+          extractedItems = JSON.parse(match[0]);
+          provider = 'GEMINI_VISION';
+        }
+      }
+    } catch {
+      provider = 'LOCAL_PARSER';
+    }
+  }
+
+  if (extractedItems.length === 0 && payload.rawText) {
+    const lines = payload.rawText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+    for (const line of lines) {
+      const m = line.match(/^(.+?)\s*[xX×*-]\s*(\d+(?:\.\d+)?)\s*[@\-:]\s*(\d+(?:\.\d+)?)/);
+      if (m) {
+        const qty = Number(m[2]);
+        const unitCost = Number(m[3]);
+        extractedItems.push({
+          productName: m[1].trim(),
+          quantity: qty,
+          unitCostBDT: unitCost,
+          totalBDT: round2(qty * unitCost),
+        });
+      }
+    }
+  }
+
+  const preparedStockEntries = extractedItems.map((item) => {
+    const matched = products.find(
+      (p) =>
+        p.name.toLowerCase().includes(item.productName.toLowerCase()) ||
+        item.productName.toLowerCase().includes(p.name.toLowerCase())
+    );
+    return {
+      ...item,
+      matchedProductId: matched?.id ?? null,
+      matchedProductName: matched?.name ?? null,
+      readyForStockEntry: Boolean(matched),
+      suggestedSellingPriceBDT: matched
+        ? Number(matched.sellingPrice)
+        : round2(item.unitCostBDT * 1.15),
+    };
+  });
+
+  return {
+    shopId,
+    provider,
+    extractedCount: preparedStockEntries.length,
+    totalChalanCostBDT: round2(
+      preparedStockEntries.reduce((sum, i) => sum + Number(i.totalBDT || 0), 0)
+    ),
+    items: preparedStockEntries,
+  };
+}
+
+async function generateFestivalDemandForecasts(
+  shopId: string,
+  festival: FestivalType = 'NONE'
+) {
+  const baseForecasts = await generateDemandForecasts(shopId);
+  const festivalMultipliers: Record<FestivalType, { liftPct: number; labelBn: string }> = {
+    RAMADAN_EID: { liftPct: 35, labelBn: 'রমজান ও ঈদ চাহিদা বৃদ্ধি (+৩৫%)' },
+    POHELA_BOISHAKH: { liftPct: 20, labelBn: 'পহেলা বৈশাখ চাহিদা বৃদ্ধি (+২০%)' },
+    MONSOON_RAIN: { liftPct: 15, labelBn: 'বর্ষাকালীন চাহিদা বৃদ্ধি (+১৫%)' },
+    NONE: { liftPct: 0, labelBn: 'স্বাভাবিক মৌসুম' },
+  };
+
+  const fest = festivalMultipliers[festival] || festivalMultipliers.NONE;
+
+  return baseForecasts.map((item: any) => {
+    const dailyRate = Number(item.avgDailySales ?? item.predictedDailyDemand ?? 0);
+    const hasSufficientData = dailyRate > 0 && Number(item.totalSold ?? 0) >= 3;
+    const multiplier = 1 + fest.liftPct / 100;
+
+    return {
+      ...item,
+      festivalTag: festival,
+      festivalLabelBn: fest.labelBn,
+      festivalLiftPct: fest.liftPct,
+      dataSufficiencyStatus: hasSufficientData ? 'SUFFICIENT' : 'ডেটা অপর্যাপ্ত',
+      guardrailWarning: hasSufficientData
+        ? null
+        : 'ডেটা অপর্যাপ্ত — নির্ভরযোগ্য পূর্বাভাসের জন্য অন্তত ৩টি বিক্রয় রেকর্ড প্রয়োজন।',
+      forecast7Days: hasSufficientData ? Math.ceil(dailyRate * 7 * multiplier) : 0,
+      forecast15Days: hasSufficientData ? Math.ceil(dailyRate * 15 * multiplier) : 0,
+      forecast30Days: hasSufficientData ? Math.ceil(dailyRate * 30 * multiplier) : 0,
+    };
+  });
+}
+
+async function getBusinessHealthAndAnomalies(shopId: string) {
+  const [dashboard, wastePlan, bakiLedger, recentBatches] = await Promise.all([
+    getBusinessIntelligenceDashboard(shopId, '30d'),
+    getWasteRescuePlan(shopId),
+    getBakiLedgerAndReminders(shopId),
+    prisma.inventoryBatch.findMany({
+      where: { shopId },
+      include: { product: { select: { id: true, name: true, costPrice: true, sellingPrice: true } } },
+      orderBy: { createdAt: 'desc' },
+      take: 40,
+    }),
+  ]);
+
+  const overview = dashboard.businessOverview;
+  const marginPct = Number(overview.profitMarginPct || 0);
+  const restockCount = (dashboard.restockingRecommendations || []).length;
+
+  const profitMarginScore = Math.min(100, Math.max(20, Math.round(marginPct * 3)));
+  const wasteControlScore = Math.max(25, 100 - wastePlan.totalAtRiskBatches * 12);
+  const inventoryTurnoverScore = Math.max(30, 100 - restockCount * 8);
+  const bakiHealthScore = Math.max(
+    30,
+    100 - Math.round((bakiLedger.totalOutstandingBDT || 0) / 500)
+  );
+  const liquidityScore = overview.netProfit >= 0 ? 82 : 45;
+
+  const overallScore = Math.round(
+    (profitMarginScore +
+      wasteControlScore +
+      inventoryTurnoverScore +
+      bakiHealthScore +
+      liquidityScore) /
+      5
+  );
+
+  const anomalies: Array<{
+    type: 'MARGIN_LEAK' | 'EXPIRY_RISK' | 'BAKI_OVERDUE';
+    severity: 'HIGH' | 'MEDIUM';
+    productName?: string;
+    messageBn: string;
+    messageEn: string;
+  }> = [];
+
+  for (const batch of recentBatches) {
+    const batchCost = Number(batch.costPrice || 0);
+    const baseCost = Number(batch.product.costPrice || 0);
+    const selling = Number(batch.product.sellingPrice || 0);
+    if (baseCost > 0 && batchCost > baseCost * 1.05) {
+      const newMargin = selling > 0 ? round2(((selling - batchCost) / selling) * 100) : 0;
+      anomalies.push({
+        type: 'MARGIN_LEAK',
+        severity: newMargin < 10 ? 'HIGH' : 'MEDIUM',
+        productName: batch.product.name,
+        messageBn: `${batch.product.name}-এর ক্রয়মূল্য ৳${baseCost} থেকে বেড়ে ৳${batchCost} হয়েছে — লাভ কমে ${newMargin}% হয়েছে।`,
+        messageEn: `Purchase cost of ${batch.product.name} rose from ৳${baseCost} to ৳${batchCost}, compressing margin to ${newMargin}%.`,
+      });
+    }
+  }
+
+  return {
+    shopId,
+    overallScore,
+    grade: overallScore >= 80 ? 'A' : overallScore >= 60 ? 'B' : 'C',
+    categories: {
+      liquidity: liquidityScore,
+      inventoryTurnover: inventoryTurnoverScore,
+      profitMargin: profitMarginScore,
+      wasteControl: wasteControlScore,
+      bakiHealth: bakiHealthScore,
+    },
+    anomalies,
+  };
+}
+
+async function runWhatIfSimulation(
+  shopId: string,
+  scenario: {
+    type: 'DISCOUNT' | 'PRICE_CHANGE' | 'RESTOCK_BUDGET';
+    pct?: number;
+    budgetBDT?: number;
+  }
+) {
+  const dashboard = await getBusinessIntelligenceDashboard(shopId, '30d');
+  const baseRev = Number(dashboard.businessOverview.totalRevenue || 0);
+  const baseProfit = Number(dashboard.businessOverview.netProfit || 0);
+  const pct = Number(scenario.pct ?? 10);
+
+  let projectedRevenueBDT = baseRev;
+  let projectedProfitBDT = baseProfit;
+  let summaryBn = '';
+
+  if (scenario.type === 'DISCOUNT') {
+    const volumeLift = 1 + (pct * 1.4) / 100;
+    projectedRevenueBDT = round2(baseRev * (1 - pct / 100) * volumeLift);
+    projectedProfitBDT = round2(baseProfit * (1 - pct / 120) * volumeLift);
+    summaryBn = `${pct}% ছাড় দিলে বিক্রি ~${Math.round((volumeLift - 1) * 100)}% বাড়তে পারে এবং সম্ভাব্য আয় হবে ৳${projectedRevenueBDT}।`;
+  } else if (scenario.type === 'PRICE_CHANGE') {
+    projectedRevenueBDT = round2(baseRev * (1 + pct / 100));
+    projectedProfitBDT = round2(baseProfit + (projectedRevenueBDT - baseRev) * 0.85);
+    summaryBn = `দাম ${pct}% পরিবর্তন করলে সম্ভাব্য মাসিক আয় ৳${projectedRevenueBDT} ও নিট লাভ ৳${projectedProfitBDT} হতে পারে।`;
+  } else {
+    const budget = Number(scenario.budgetBDT ?? 10000);
+    projectedRevenueBDT = round2(baseRev + budget * 1.25);
+    projectedProfitBDT = round2(baseProfit + budget * 0.22);
+    summaryBn = `৳${budget} রিস্টক বাজেট বিনিয়োগে আনুমানিক ৳${round2(budget * 1.25)} অতিরিক্ত বিক্রি সম্ভব।`;
+  }
+
+  return {
+    shopId,
+    scenario,
+    baseline: { revenueBDT: baseRev, netProfitBDT: baseProfit },
+    projected: { revenueBDT: projectedRevenueBDT, netProfitBDT: projectedProfitBDT },
+    summaryBn,
+  };
+}
+
+async function getMorningBrief(shopId: string) {
+  const [waste, baki, restocks] = await Promise.all([
+    getWasteRescuePlan(shopId),
+    getBakiLedgerAndReminders(shopId),
+    getRestockingRecommendations(shopId),
+  ]);
+
+  const tasks: string[] = [];
+  if (waste.items.length > 0) {
+    tasks.push(waste.items[0].banglaActionHeadline);
+  } else {
+    tasks.push('মেয়াদোত্তীর্ণ হওয়ার ঝুঁকিতে থাকা কোনো পণ্য নেই।');
+  }
+
+  if (baki.entries.length > 0) {
+    tasks.push(
+      `${baki.entries[0].customerName}-এর কাছ থেকে ৳${baki.entries[0].amountBDT} বাকি আদায়ের তাগাদা দিন।`
+    );
+  } else {
+    tasks.push('আজ কোনো জরুরি বাকি আদায়ের তালিকা নেই।');
+  }
+
+  if (restocks.length > 0) {
+    tasks.push(`${restocks[0].productName} দ্রুত রিস্টক করুন।`);
+  } else {
+    tasks.push('সব পণ্যের স্টক পর্যাপ্ত রয়েছে।');
+  }
+
+  return {
+    titleBn: 'আজকের ৩টি কাজ',
+    tasks: tasks.slice(0, 3),
+  };
+}
+
+async function getSmartComboOffers(shopId: string) {
+  const perf = await analyzeProductPerformance(shopId, '30d');
+  const top = (perf.products || []).slice(0, 2);
+  if (top.length < 2) {
+    return [];
+  }
+  const combinedPrice = round2(Number(top[0].sellingPrice || 0) + Number(top[1].sellingPrice || 0));
+  const comboPrice = round2(combinedPrice * 0.92);
+  return [
+    {
+      comboName: `${top[0].productName} + ${top[1].productName} সেভিংস কম্বো`,
+      products: [top[0].productName, top[1].productName],
+      regularPriceBDT: combinedPrice,
+      comboPriceBDT: comboPrice,
+      discountPct: 8,
+    },
+  ];
+}
+
+async function getImpactSummary(shopId: string) {
+  const [waste, restocks, baki] = await Promise.all([
+    getWasteRescuePlan(shopId),
+    getRestockingRecommendations(shopId),
+    getBakiLedgerAndReminders(shopId),
+  ]);
+  return {
+    shopId,
+    wastePreventedBDT: waste.totalCashRecoveredBDT,
+    stockoutsPreventedCount: restocks.length,
+    bakiTrackedAndRecoveredBDT: baki.totalOutstandingBDT,
+  };
+}
+
+async function askBusinessAssistant(
+  shopId: string,
+  question: string,
+  language: 'bn' | 'en' = 'bn'
+) {
+  const [health, waste, baki, brief, impact] = await Promise.all([
+    getBusinessHealthAndAnomalies(shopId),
+    getWasteRescuePlan(shopId),
+    getBakiLedgerAndReminders(shopId),
+    getMorningBrief(shopId),
+    getImpactSummary(shopId),
+  ]);
+
+  const readOnlyToolContext = {
+    shopId,
+    healthScore: health.overallScore,
+    anomaliesCount: health.anomalies.length,
+    wasteRescueCashBDT: waste.totalCashRecoveredBDT,
+    atRiskBatches: waste.totalAtRiskBatches,
+    bakiOutstandingBDT: baki.totalOutstandingBDT,
+    morningBrief: brief.tasks,
+    impact,
+  };
+
+  let provider: 'GEMINI_LLM' | 'LOCAL_TOOL_FALLBACK' = 'LOCAL_TOOL_FALLBACK';
+  let answerBn = `আপনার দোকানের হেলথ স্কোর ${health.overallScore}/100। মেয়াদ-ঝুঁকির পণ্য থেকে ৳${waste.totalCashRecoveredBDT} ক্যাশ ফেরত আনা সম্ভব এবং মোট বাকি রয়েছে ৳${baki.totalOutstandingBDT}। আজকের কাজ: ${brief.tasks.join(' | ')}`;
+  let answerEn = `Your shop health score is ${health.overallScore}/100. Waste Rescue can recover ৳${waste.totalCashRecoveredBDT} across ${waste.totalAtRiskBatches} batch(es), and total Baki outstanding is ৳${baki.totalOutstandingBDT}.`;
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (apiKey) {
+    try {
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  {
+                    text: `You are BizMind AI, a read-only retail assistant for shopId=${shopId}. Answer strictly using this read-only tool data: ${JSON.stringify(
+                      readOnlyToolContext
+                    )}. User question (${language}): "${question}". Return JSON only: {"answerBn": string, "answerEn": string}.`,
+                  },
+                ],
+              },
+            ],
+          }),
+        }
+      );
+      if (resp.ok) {
+        const json = (await resp.json()) as {
+          candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+        };
+        const raw = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        const match = raw.match(/\{[\s\S]*\}/);
+        if (match) {
+          const parsed = JSON.parse(match[0]) as { answerBn?: string; answerEn?: string };
+          if (parsed.answerBn) answerBn = parsed.answerBn;
+          if (parsed.answerEn) answerEn = parsed.answerEn;
+          provider = 'GEMINI_LLM';
+        }
+      }
+    } catch {
+      provider = 'LOCAL_TOOL_FALLBACK';
+    }
+  }
+
+  return {
+    shopId,
+    provider,
+    toolsUsed: [
+      'getBusinessHealthAndAnomalies',
+      'getWasteRescuePlan',
+      'getBakiLedgerAndReminders',
+      'getMorningBrief',
+      'getImpactSummary',
+    ],
+    answerBn,
+    answerEn,
+    chart: {
+      type: 'bar',
+      title: 'Shop Health Breakdown (0-100)',
+      labels: ['Liquidity', 'Turnover', 'Margin', 'Waste Control', 'Baki Health'],
+      datasets: [
+        {
+          label: 'Score',
+          data: [
+            health.categories.liquidity,
+            health.categories.inventoryTurnover,
+            health.categories.profitMargin,
+            health.categories.wasteControl,
+            health.categories.bakiHealth,
+          ],
+        },
+      ],
+    },
+    morningBrief: brief,
+    impactSummary: impact,
+  };
+}
+
 export const AIService = {
   analyzeProductPerformance,
-  generateDemandForecasts,
+  generateDemandForecasts: generateFestivalDemandForecasts,
   getRestockingRecommendations,
   getDiscountRecommendations,
   getBusinessIntelligenceDashboard,
+  askBusinessAssistant,
+  getWasteRescuePlan,
+  getBakiLedgerAndReminders,
+  addOrUpdateBakiEntry,
+  scanSupplierChalan,
+  generateFestivalDemandForecasts,
+  getBusinessHealthAndAnomalies,
+  runWhatIfSimulation,
+  getMorningBrief,
+  getSmartComboOffers,
+  getImpactSummary,
 };
+
