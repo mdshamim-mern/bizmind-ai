@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BizMind AI - 10-Section Business Intelligence Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex">
+<aside class="w-64 bg-slate-900 text-slate-100 flex flex-col shrink-0 min-h-screen">
+<div class="p-5 border-b border-slate-800">
+<h1 class="text-xl font-bold text-emerald-400">BizMind AI</h1>
+<p class="text-xs text-slate-400 mt-1">Bismillah Super Grocery</p>
+<span id="modeBadge" class="inline-block mt-2 text-[11px] px-2 py-0.5 rounded bg-emerald-900 text-emerald-300">30-Day Demo Mode</span>
+</div>
+<nav id="sidebarNav" class="flex-1 p-3 space-y-1 text-sm overflow-y-auto"></nav>
+<div class="p-4 border-t border-slate-800 text-xs space-y-2">
+<input id="apiBase" type="text" value="/api/v1" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200" placeholder="API Base URL" />
+<button onclick="syncApi()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 rounded font-medium">Sync /api/v1</button>
+</div>
+</aside>
+
+<main class="flex-1 flex flex-col min-w-0">
+<header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+<div>
+<h2 id="sectionTitle" class="text-xl font-bold text-slate-900">1. Dashboard</h2>
+<p class="text-xs text-slate-500">Owner: demo@bizmind.ai | Currency: BDT (৳) | 30-Day Grocery Intelligence</p>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-medium text-slate-500">Period:</span>
+<button onclick="setPeriod('daily')" id="btn-daily" class="period-btn px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white">Daily</button>
+<button onclick="setPeriod('weekly')" id="btn-weekly" class="period-btn px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white">Weekly</button>
+<button onclick="setPeriod('monthly')" id="btn-monthly" class="period-btn px-3 py-1.5 text-xs rounded-lg bg-emerald-600 text-white">Monthly (30d)</button>
+</div>
+</header>
+
+<div class="p-6 space-y-6 overflow-y-auto flex-1">
+<!-- 1. Dashboard -->
+<section id="sec-1" class="tab-section space-y-6">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" id="kpiGrid"></div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<h3 class="font-semibold text-slate-800 mb-3">4-Week Sales Unit Trend (50 → 65 → 80 → 100)</h3>
+<canvas id="trendChart" height="150"></canvas>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<h3 class="font-semibold text-slate-800 mb-3">Revenue vs COGS & Expenses (৳)</h3>
+<canvas id="financeChart" height="150"></canvas>
+</div>
+</div>
+</section>
+
+<!-- 2. Inventory & Batches -->
+<section id="sec-2" class="tab-section hidden space-y-4">
+<div class="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-sm flex justify-between items-center">
+<span><strong>Stock Discrepancy Alert:</strong> 5 broken Farm Eggs recorded as <code>DAMAGE</code> (Loss: ৳50). FEFO priority active on expiring batches.</span>
+<button onclick="logDamageDemo()" class="bg-amber-600 text-white px-3 py-1 rounded text-xs">+ Log Damage</button>
+</div>
+<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+<table class="w-full text-sm text-left">
+<thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+<tr><th class="p-3">SKU</th><th class="p-3">Product</th><th class="p-3">Batch</th><th class="p-3">Qty</th><th class="p-3">Cost (৳)</th><th class="p-3">Expiry</th><th class="p-3">Status</th></tr>
+</thead>
+<tbody id="batchTableBody" class="divide-y divide-slate-100"></tbody>
+</table>
+</div>
+</section>
+
+<!-- 3. Sales (FEFO POS) -->
+<section id="sec-3" class="tab-section hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
+<div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<h3 class="font-semibold mb-3">FEFO Point of Sale — Quick Add</h3>
+<div id="posProductGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+<div>
+<h3 class="font-semibold mb-3">Current Invoice (FEFO Deduction)</h3>
+<div id="posCartItems" class="space-y-2 text-sm max-h-64 overflow-y-auto"></div>
+</div>
+<div class="border-t pt-4 mt-4 space-y-2 text-sm">
+<div class="flex justify-between"><span>Total Revenue:</span><strong id="posRev">৳0</strong></div>
+<div class="flex justify-between text-slate-500"><span>Estimated COGS:</span><span id="posCogs">৳0</span></div>
+<div class="flex justify-between text-emerald-600"><span>Gross Profit:</span><strong id="posProfit">৳0</strong></div>
+<button onclick="checkoutPos()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg font-medium">Complete FEFO Sale</button>
+</div>
+</div>
+</section>
+
+<!-- 4. Purchases -->
+<section id="sec-4" class="tab-section hidden space-y-4">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<h3 class="font-semibold mb-3">Suppliers & Lead Times</h3>
+<div id="supplierGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<h3 class="font-semibold mb-3">Recent Purchase Orders</h3>
+<table class="w-full text-sm text-left"><thead class="bg-slate-100 text-xs uppercase"><tr><th class="p-3">PO ID</th><th class="p-3">Supplier</th><th class="p-3">Items</th><th class="p-3">Total (৳)</th><th class="p-3">Status</th></tr></thead>
+<tbody id="purchaseTableBody" class="divide-y"></tbody></table>
+</div>
+</section>
+
+<!-- 5. Accounting & Profit -->
+<section id="sec-5" class="tab-section hidden space-y-6">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+<h3 class="font-semibold">30-Day Profit & Loss Summary</h3>
+<div id="pnlSummary" class="space-y-2 text-sm"></div>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<h3 class="font-semibold mb-3">Operating Expenses (RENT, UTILITIES, SALARY)</h3>
+<div id="expenseList" class="space-y-2 text-sm"></div>
+</div>
+</div>
+</section>
+
+<!-- 6. Product Intelligence -->
+<section id="sec-6" class="tab-section hidden">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+<h3 class="font-semibold mb-3">Product Intelligence Matrix (Margin, Velocity & Tier)</h3>
+<table class="w-full text-sm text-left"><thead class="bg-slate-100 text-xs uppercase"><tr><th class="p-3">Product</th><th class="p-3">Category</th><th class="p-3">Margin %</th><th class="p-3">30d Units</th><th class="p-3">Class</th><th class="p-3">Insight</th></tr></thead>
+<tbody id="intelTableBody" class="divide-y"></tbody></table>
+</div>
+</section>
+
+<!-- 7. Demand Forecast -->
+<section id="sec-7" class="tab-section hidden space-y-4">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+<h3 class="font-semibold mb-3">AI Demand Forecast (4-Week Trend → Week 5 Projection)</h3>
+<canvas id="forecastChart" height="120"></canvas>
+</div>
+</section>
+
+<!-- 8. Restock Advisor -->
+<section id="sec-8" class="tab-section hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+<h3 class="font-semibold">Restocking Calculator: ROP = (D × L) + SS, Q = max(0, ROP - S - I)</h3>
+<div class="grid grid-cols-2 gap-3 text-sm">
+<label>Avg Daily Demand (D)<input id="ropD" type="number" value="20" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
+<label>Lead Time Days (L)<input id="ropL" type="number" value="2" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
+<label>Safety Stock (SS)<input id="ropSS" type="number" value="30" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
+<label>Current Stock (S)<input id="ropS" type="number" value="55" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
+<label class="col-span-2">Incoming / In-Transit Stock (I)<input id="ropI" type="number" value="0" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
+</div>
+</div>
+<div class="bg-slate-900 text-white p-6 rounded-xl flex flex-col justify-center space-y-3">
+<div class="text-xs uppercase text-slate-400">Calculated Reorder Point & Order Qty</div>
+<div class="text-2xl font-bold text-emerald-400">ROP = <span id="ropVal">70</span> units</div>
+<div class="text-3xl font-bold">Order Qty (Q) = <span id="qVal">15</span> units</div>
+<p id="ropAdvice" class="text-sm text-slate-300"></p>
+</div>
+</section>
+
+<!-- 9. Discount Advisor -->
+<section id="sec-9" class="tab-section hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+<h3 class="font-semibold">Expiry-Aware Discount Simulator</h3>
+<label class="block text-sm">Select Expiring Batch
+<select id="discProduct" onchange="calcDiscount()" class="mt-1 w-full border rounded p-2">
+<option value="55|15|10|4">Farm Eggs (EGG-B01-FEFO) — 55 pcs, Exp in 4d, Price ৳15</option>
+<option value="18|95|75|3">Liquid Milk (MILK-B01-EXP) — 18 L, Exp in 3d, Price ৳95</option>
+</select>
+</label>
+<label class="block text-sm">Discount %: <strong id="discPctLabel">15%</strong>
+<input id="discPct" type="range" min="5" max="50" value="15" oninput="calcDiscount()" class="w-full mt-1" />
+</label>
+</div>
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 text-sm">
+<h3 class="font-semibold">Simulation Outcome</h3>
+<p>Discounted Price: <strong id="discNewPrice">৳12.75</strong></p>
+<p>Projected Recovery Revenue: <strong id="discRev" class="text-emerald-600">৳701.25</strong></p>
+<p>Waste Prevented (vs Expiry Loss): <strong id="discSaved" class="text-blue-600">৳550.00</strong></p>
+</div>
+</section>
+
+<!-- 10. AI Reports & QA -->
+<section id="sec-10" class="tab-section hidden space-y-4">
+<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+<h3 class="font-semibold">AI Business Q&A & Executive Reports</h3>
+<div class="flex gap-2">
+<input id="aiQuery" type="text" class="flex-1 border rounded-lg px-3 py-2 text-sm" placeholder="Ask about eggs profit, damage loss, or restocking..." value="How much profit did Farm Eggs generate and what is our damage loss?" />
+<button onclick="askAi()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Ask BizMind AI</button>
+</div>
+<div id="aiAnswer" class="bg-slate-50 border rounded-lg p-4 text-sm text-slate-700">Click "Ask BizMind AI" to analyze your 30-day store performance.</div>
+</div>
+</section>
+</div>
+</main>
+
+<script>
+const sections = [
+'1. Dashboard', '2. Inventory & Batches', '3. Sales (FEFO POS)', '4. Purchases',
+'5. Accounting & Profit', '6. Product Intelligence', '7. Demand Forecast',
+'8. Restock Advisor', '9. Discount Advisor', '10. AI Reports & QA'
+];
+
+const demoData = {
+products: [
+{ sku: 'EGG-001', name: 'Farm Eggs', category: 'Dairy & Eggs', cost: 10, price: 15, stock: 235, sold30d: 60 },
+{ sku: 'OIL-A01', name: 'Product A - Imported Olive Oil', category: 'Imported & Premium', cost: 850, price: 1250, stock: 30, sold30d: 14 },
+{ sku: 'RICE-B01', name: 'Product B - Miniket Rice', category: 'Grocery & Staples', cost: 62, price: 78, stock: 270, sold30d: 135 },
+{ sku: 'OIL-C01', name: 'Product C - Fortified Soybean Oil', category: 'Grocery & Staples', cost: 155, price: 185, stock: 95, sold30d: 58 },
+{ sku: 'MILK-001', name: 'Liquid Milk', category: 'Dairy & Eggs', cost: 75, price: 95, stock: 58, sold30d: 42 },
+{ sku: 'HONEY-001', name: 'Organic Honey', category: 'Imported & Premium', cost: 420, price: 600, stock: 22, sold30d: 10 }
+],
+batches: [
+{ sku: 'EGG-001', name: 'Farm Eggs', batch: 'EGG-B01-FEFO', qty: 55, cost: 10, expiryDays: 4 },
+{ sku: 'EGG-001', name: 'Farm Eggs', batch: 'EGG-B02-FRESH', qty: 180, cost: 10, expiryDays: 14 },
+{ sku: 'MILK-001', name: 'Liquid Milk', batch: 'MILK-B01-EXP', qty: 18, cost: 75, expiryDays: 3 },
+{ sku: 'MILK-001', name: 'Liquid Milk', batch: 'MILK-B02', qty: 40, cost: 75, expiryDays: 10 },
+{ sku: 'OIL-A01', name: 'Product A - Imported Olive Oil', batch: 'OLV-B01', qty: 14, cost: 850, expiryDays: 180 },
+{ sku: 'RICE-B01', name: 'Product B - Miniket Rice', batch: 'RICE-B01', qty: 120, cost: 62, expiryDays: 240 },
+{ sku: 'OIL-C01', name: 'Product C - Fortified Soybean Oil', batch: 'SOY-B01', qty: 35, cost: 155, expiryDays: 90 },
+{ sku: 'HONEY-001', name: 'Organic Honey', batch: 'HNY-B01', qty: 22, cost: 420, expiryDays: 365 }
+],
+suppliers: [
+{ name: 'Dhaka Fresh Agro Ltd', leadTimeDays: 2, phone: '+8801711000001' },
+{ name: 'Padma Grains & Oil', leadTimeDays: 4, phone: '+8801711000002' },
+{ name: 'Global Gourmet Imports', leadTimeDays: 7, phone: '+8801711000003' }
+],
+expenses: [
+{ title: 'Monthly Store Rent', category: 'RENT', amount: 25000 },
+{ title: 'Electricity & Cold Storage', category: 'UTILITIES', amount: 4800 },
+{ title: 'Store Staff Salary', category: 'SALARY', amount: 22000 }
+],
+weeklyTrend: [50, 65, 80, 100],
+periodMult: { daily: 0.033, weekly: 0.25, monthly: 1 }
+};
+
+let currentPeriod = 'monthly';
+let cart = [{ sku: 'EGG-001', name: 'Farm Eggs', qty: 60, price: 15, cost: 10 }];
+let charts = {};
+
+function initNav() {
+const nav = document.getElementById('sidebarNav');
+nav.innerHTML = sections.map((s, idx) => `<button onclick="showSection(${idx + 1})" id="nav-${idx + 1}" class="w-full text-left px-3 py-2 rounded-lg transition ${idx === 0 ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-800'}">${s}</button>`).join('');
+}
+
+function showSection(n) {
+document.querySelectorAll('.tab-section').forEach(el => el.classList.add('hidden'));
+document.getElementById(`sec-${n}`).classList.remove('hidden');
+document.getElementById('sectionTitle').textContent = sections[n - 1];
+sections.forEach((_, idx) => {
+const btn = document.getElementById(`nav-${idx + 1}`);
+btn.className = `w-full text-left px-3 py-2 rounded-lg transition ${idx + 1 === n ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`;
+});
+}
+
+function setPeriod(p) {
+currentPeriod = p;
+document.querySelectorAll('.period-btn').forEach(b => b.className = 'period-btn px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white');
+document.getElementById(`btn-${p}`).className = 'period-btn px-3 py-1.5 text-xs rounded-lg bg-emerald-600 text-white';
+renderDashboard();
+}
+
+function renderDashboard() {
+const m = demoData.periodMult[currentPeriod];
+const rev = Math.round(45650 * m);
+const cogs = Math.round(32100 * m);
+const gp = rev - cogs;
+const exp = Math.round(51800 * m);
+const dmg = 50;
+const kpis = [
+['Total Revenue', `৳${rev.toLocaleString()}`, 'text-slate-900'],
+['Total COGS', `৳${cogs.toLocaleString()}`, 'text-slate-700'],
+['Gross Profit', `৳${gp.toLocaleString()}`, 'text-emerald-600'],
+['Operating Expenses', `৳${exp.toLocaleString()}`, 'text-amber-600'],
+['Damage Loss (5 Eggs)', `৳${dmg}`, 'text-rose-600']
+];
+document.getElementById('kpiGrid').innerHTML = kpis.map(k => `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div class="text-xs text-slate-500">${k[0]}</div><div class="text-2xl font-bold mt-1 ${k[2]}">${k[1]}</div></div>`).join('');
+
+if (charts.trend) charts.trend.destroy();
+charts.trend = new Chart(document.getElementById('trendChart'), {
+type: 'line',
+data: { labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], datasets: [{ label: 'Units Sold', data: demoData.weeklyTrend, borderColor: '#10b981', tension: 0.3, fill: true, backgroundColor: 'rgba(16,185,129,0.1)' }] }
+});
+
+if (charts.finance) charts.finance.destroy();
+charts.finance = new Chart(document.getElementById('financeChart'), {
+type: 'bar',
+data: { labels: ['Revenue', 'COGS', 'Gross Profit', 'Expenses'], datasets: [{ label: 'BDT (৳)', data: [rev, cogs, gp, exp], backgroundColor: ['#0f172a', '#64748b', '#10b981', '#f59e0b'] }] }
+});
+
+if (charts.forecast) charts.forecast.destroy();
+charts.forecast = new Chart(document.getElementById('forecastChart'), {
+type: 'line',
+data: { labels: ['W1', 'W2', 'W3', 'W4', 'W5 (Forecast)'], datasets: [{ label: 'Demand Units', data: [50, 65, 80, 100, 115], borderColor: '#6366f1', borderDash: [5, 5] }] }
+});
+}
+
+function renderTables() {
+document.getElementById('batchTableBody').innerHTML = demoData.batches.map(b => `<tr><td class="p-3 font-mono">${b.sku}</td><td class="p-3">${b.name}</td><td class="p-3">${b.batch}</td><td class="p-3 font-semibold">${b.qty}</td><td class="p-3">৳${b.cost}</td><td class="p-3">${b.expiryDays} days</td><td class="p-3"><span class="px-2 py-0.5 rounded text-xs ${b.expiryDays <= 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">${b.expiryDays <= 5 ? 'FEFO Urgent' : 'Healthy'}</span></td></tr>`).join('');
+
+document.getElementById('posProductGrid').innerHTML = demoData.products.map(p => `<div class="border rounded-lg p-3 flex justify-between items-center"><div><div class="font-medium">${p.name}</div><div class="text-xs text-slate-500">৳${p.price} | Stock: ${p.stock}</div></div><button onclick="addCart('${p.sku}')" class="bg-slate-900 text-white px-3 py-1 rounded text-xs">+ Add</button></div>`).join('');
+
+document.getElementById('supplierGrid').innerHTML = demoData.suppliers.map(s => `<div class="border rounded-lg p-4"><div class="font-semibold">${s.name}</div><div class="text-xs text-slate-500 mt-1">Lead Time: <strong>${s.leadTimeDays} days</strong></div><div class="text-xs text-slate-500">${s.phone}</div></div>`).join('');
+
+document.getElementById('purchaseTableBody').innerHTML = `<tr><td class="p-3 font-mono">PO-1001</td><td class="p-3">Dhaka Fresh Agro Ltd</td><td class="p-3">300 Eggs, 100 Milk, 145 Rice</td><td class="p-3">৳19,450</td><td class="p-3"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs">COMPLETED</span></td></tr>`;
+
+document.getElementById('pnlSummary').innerHTML = `<div class="flex justify-between"><span>60 Farm Eggs Revenue</span><strong>৳900</strong></div><div class="flex justify-between"><span>60 Farm Eggs COGS</span><span>৳600</span></div><div class="flex justify-between text-emerald-600"><span>60 Farm Eggs Gross Profit</span><strong>৳300</strong></div><hr/><div class="flex justify-between"><span>30-Day Store Revenue</span><strong>৳45,650</strong></div><div class="flex justify-between"><span>Operating Expenses (RENT, UTILITIES, SALARY)</span><span class="text-rose-600">-৳51,800</span></div><div class="flex justify-between"><span>Stock Damage Loss (5 Broken Eggs)</span><span class="text-rose-600">-৳50</span></div>`;
+
+document.getElementById('expenseList').innerHTML = demoData.expenses.map(e => `<div class="flex justify-between border-b pb-2"><span>${e.title} <span class="text-xs bg-slate-100 px-2 py-0.5 rounded">${e.category}</span></span><strong>৳${e.amount.toLocaleString()}</strong></div>`).join('');
+
+document.getElementById('intelTableBody').innerHTML = demoData.products.map(p => {
+const margin = Math.round(((p.price - p.cost) / p.price) * 100);
+const cls = margin >= 30 ? 'A (High Margin)' : p.sold30d >= 50 ? 'B (High Velocity)' : 'C (Standard)';
+return `<tr><td class="p-3 font-medium">${p.name}</td><td class="p-3">${p.category}</td><td class="p-3">${margin}%</td><td class="p-3">${p.sold30d}</td><td class="p-3"><span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-xs">${cls}</span></td><td class="p-3 text-xs text-slate-500">FEFO Monitored</td></tr>`;
+}).join('');
+renderCart();
+}
+
+function addCart(sku) {
+const p = demoData.products.find(x => x.sku === sku);
+const existing = cart.find(c => c.sku === sku);
+if (existing) existing.qty += 1;
+else cart.push({ sku: p.sku, name: p.name, qty: 1, price: p.price, cost: p.cost });
+renderCart();
+}
+
+function renderCart() {
+let rev = 0, cogs = 0;
+document.getElementById('posCartItems').innerHTML = cart.map(c => {
+rev += c.qty * c.price; cogs += c.qty * c.cost;
+return `<div class="flex justify-between border-b pb-1"><span>${c.name} × ${c.qty}</span><strong>৳${c.qty * c.price}</strong></div>`;
+}).join('');
+document.getElementById('posRev').textContent = `৳${rev}`;
+document.getElementById('posCogs').textContent = `৳${cogs}`;
+document.getElementById('posProfit').textContent = `৳${rev - cogs}`;
+}
+
+function checkoutPos() {
+alert('FEFO Sale completed! Stock deducted from earliest-expiring batch.');
+cart = [];
+renderCart();
+}
+
+function logDamageDemo() {
+alert('Logged DAMAGE adjustment: 5 broken Farm Eggs (Loss: ৳50).');
+}
+
+function calcRop() {
+const D = +document.getElementById('ropD').value || 0;
+const L = +document.getElementById('ropL').value || 0;
+const SS = +document.getElementById('ropSS').value || 0;
+const S = +document.getElementById('ropS').value || 0;
+const I = +document.getElementById('ropI').value || 0;
+const rop = (D * L) + SS;
+const q = Math.max(0, rop - S - I);
+document.getElementById('ropVal').textContent = rop;
+document.getElementById('qVal').textContent = q;
+document.getElementById('ropAdvice').textContent = q > 0 ? `Action Needed: Place a purchase order for ${q} units now.` : 'Stock is sufficient above Reorder Point.';
+}
+
+function calcDiscount() {
+const [qty, price, cost, days] = document.getElementById('discProduct').value.split('|').map(Number);
+const pct = +document.getElementById('discPct').value;
+document.getElementById('discPctLabel').textContent = `${pct}%`;
+const newPrice = price * (1 - pct / 100);
+document.getElementById('discNewPrice').textContent = `৳${newPrice.toFixed(2)}`;
+document.getElementById('discRev').textContent = `৳${(newPrice * qty).toFixed(2)}`;
+document.getElementById('discSaved').textContent = `৳${(cost * qty).toFixed(2)}`;
+}
+
+async function askAi() {
+const q = document.getElementById('aiQuery').value;
+const base = document.getElementById('apiBase').value;
+try {
+const res = await fetch(`${base}/ai/ask`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q }) });
+if (res.ok) {
+const data = await res.json();
+document.getElementById('aiAnswer').textContent = data.answer || JSON.stringify(data);
+return;
+}
+} catch (_) {}
+document.getElementById('aiAnswer').innerHTML = `<strong>BizMind AI Insight (30-Day Demo):</strong> Farm Eggs generated <strong>৳900 Revenue</strong>, <strong>৳600 COGS</strong>, and <strong>৳300 Gross Profit</strong> across 60 units sold. Sales grew steadily across 4 weeks (<strong>50 → 65 → 80 → 100</strong>). A <strong>DAMAGE</strong> loss of <strong>৳50</strong> (5 broken eggs) was recorded. Prioritize FEFO clearance on 55 Farm Eggs (4 days left) and 18L Liquid Milk (3 days left).`;
+}
+
+async function syncApi() {
+const base = document.getElementById('apiBase').value;
+try {
+const res = await fetch(`${base}/inventory/products`);
+if (res.ok) {
+document.getElementById('modeBadge').textContent = 'Connected to /api/v1';
+return;
+}
+} catch (_) {}
+alert('Using 30-Day Demo Data (API server requires authentication or local server).');
+}
+
+initNav();
+renderDashboard();
+renderTables();
+calcRop();
+calcDiscount();
+</script>
+</body>
+</html>
