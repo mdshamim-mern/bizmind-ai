@@ -1,5 +1,5 @@
 // BizMind AI Offline-First Service Worker (PWA — "ইন্টারনেট ছাড়াও কাজ চলে")
-const CACHE_NAME = 'bizmind-ai-offline-v2';
+const CACHE_NAME = 'bizmind-ai-offline-v3';
 const CORE_ASSETS = ['./', './index.html', './manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {

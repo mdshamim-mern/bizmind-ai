@@ -96,6 +96,10 @@
     .no-scrollbar::-webkit-scrollbar { display: none; }
     
     /* Mobile-First Ergonomics & Budget Android 60fps Optimization */
+    html, body { max-width: 100%; overflow-x: hidden; }
+    *, *::before, *::after { box-sizing: border-box; }
+    select, input, textarea { max-width: 100%; }
+
     body { min-height: 100dvh; line-height: 1.65; }
     @media (max-width: 767px) {
       input, select, textarea { font-size: 16px !important; }
@@ -123,14 +127,14 @@
       </button>
 
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
-        <button type="button" id="openSearchBtn" class="hidden md:inline-flex items-center gap-2 min-h-[36px] px-3 py-1.5 rounded-xl glass-input text-xs text-muted hover:border-indigo-400">
+        <span class="hidden lg:inline-flex"><button type="button" id="openSearchBtn" class="hidden items-center gap-2 min-h-[36px] px-3 py-1.5 rounded-xl glass-input text-xs text-muted hover:border-indigo-400">
           <span>🔍</span><span data-i18n="searchTrigger"></span><kbd class="px-1.5 py-0.5 rounded bg-slate-500/20 text-[10px] font-mono">Ctrl+K</kbd>
-        </button>
+        </button></span>
         <button type="button" id="openLoginBtn" data-i18n="btnDemoLogin" class="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 text-white font-bold text-xs shadow-md"></button>
         <div id="sessionPillWrap" class="hidden items-center gap-1.5">
           <button type="button" id="backToDashNavBtn" class="hidden inline-flex items-center gap-1 min-h-[36px] px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 text-white font-bold text-xs shadow-md hover:brightness-110 transition"></button>
-          <button type="button" id="sessionRoleBadge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold cursor-pointer hover:bg-emerald-500/25 transition"></button>
-          <button type="button" id="planSwitchBtn" class="hidden sm:inline-flex items-center min-h-[36px] px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-extrabold text-xs"></button>
+          <span class="hidden md:inline-flex"><button type="button" id="sessionRoleBadge" class="inline-flex items-center px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold cursor-pointer hover:bg-emerald-500/25 transition"></button></span>
+          <span class="hidden md:inline-flex"><button type="button" id="planSwitchBtn" class="hidden items-center min-h-[36px] px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-extrabold text-xs"></button></span>
           <button type="button" id="logoutBtn" data-i18n="btnLogout" class="min-h-[36px] px-2.5 py-1.5 rounded-xl border border-rose-500/35 bg-rose-500/10 text-rose-600 dark:text-rose-300 font-bold text-xs"></button>
         </div>
         <button type="button" id="langToggleBtn" class="min-h-[36px] px-2.5 py-1.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/35 font-bold text-xs"></button>
@@ -264,18 +268,18 @@
             <span class="font-bold text-emerald-300" data-i18n="btBadge"></span>
             <span class="px-2 py-0.5 rounded-full bg-white/10 text-[10px]" data-i18n="btDemoTag"></span>
           </div>
-          <div class="grid grid-cols-3 gap-2.5">
-            <div class="p-3 rounded-xl bg-white/10 border border-white/15">
-              <div class="text-[11px] text-slate-200" data-i18n="btStockoutLbl"></div>
-              <div class="text-xl font-extrabold text-emerald-300 mt-1" id="heroBtStockout"></div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div class="p-3 rounded-xl bg-white/10 border border-white/15 flex sm:block items-center justify-between">
+              <div class="text-xs text-slate-200" data-i18n="btStockoutLbl"></div>
+              <div class="text-lg sm:text-xl font-extrabold text-emerald-300 sm:mt-1" id="heroBtStockout"></div>
             </div>
-            <div class="p-3 rounded-xl bg-white/10 border border-white/15">
-              <div class="text-[11px] text-slate-200" data-i18n="btWasteLbl"></div>
-              <div class="text-xl font-extrabold text-amber-300 mt-1" id="heroBtWaste"></div>
+            <div class="p-3 rounded-xl bg-white/10 border border-white/15 flex sm:block items-center justify-between">
+              <div class="text-xs text-slate-200" data-i18n="btWasteLbl"></div>
+              <div class="text-lg sm:text-xl font-extrabold text-amber-300 sm:mt-1" id="heroBtWaste"></div>
             </div>
-            <div class="p-3 rounded-xl bg-white/10 border border-white/15">
-              <div class="text-[11px] text-slate-200" data-i18n="btExtraRevLbl"></div>
-              <div class="text-xl font-extrabold text-sky-300 mt-1" id="heroBtRev"></div>
+            <div class="p-3 rounded-xl bg-white/10 border border-white/15 flex sm:block items-center justify-between">
+              <div class="text-xs text-slate-200" data-i18n="btExtraRevLbl"></div>
+              <div class="text-lg sm:text-xl font-extrabold text-sky-300 sm:mt-1" id="heroBtRev"></div>
             </div>
           </div>
           <div class="p-3 rounded-xl bg-indigo-500/25 border border-indigo-300/30 text-xs leading-relaxed" data-i18n="heroArchitectureLine"></div>
@@ -1373,7 +1377,7 @@
       document.getElementById('openLoginBtn').classList.toggle('hidden', loggedIn);
       document.getElementById('sessionPillWrap').classList.toggle('hidden', !loggedIn);
       document.getElementById('sessionPillWrap').classList.toggle('flex', loggedIn);
-      document.getElementById('openSearchBtn').classList.toggle('hidden', !(loggedIn && session.role !== 'SUPER_ADMIN'));
+      const _sb = document.getElementById('openSearchBtn'); const _showSb = loggedIn && session.role !== 'SUPER_ADMIN'; _sb.classList.toggle('hidden', !_showSb); _sb.classList.toggle('inline-flex', _showSb);
       document.getElementById('activePlanBadge').classList.toggle('hidden', !(loggedIn && session.role !== 'SUPER_ADMIN'));
 
       if (!loggedIn) { document.getElementById('backToDashNavBtn').classList.add('hidden'); document.getElementById('activeContextSubtitle').textContent = L('স্মার্ট রিটেইল এআই প্ল্যাটফর্ম', 'Smart Retail AI Platform'); return; }
@@ -1384,7 +1388,7 @@
       backBtn.textContent = L('📊 ড্যাশবোর্ডে ফিরুন', '📊 Dashboard');
       document.getElementById('heroDemoLoginBtn').textContent = L(`📊 ${roleLabel(session.role)} ড্যাশবোর্ডে ফিরুন →`, `📊 Return to ${roleLabel(session.role)} Dashboard →`);
       document.getElementById('activePlanBadge').textContent = session.plan === 'PREMIUM' ? L('প্রিমিয়াম', 'PREMIUM') : L('ফ্রি', 'FREE');
-      document.getElementById('planSwitchBtn').classList.toggle('hidden', session.role === 'SUPER_ADMIN');
+      const _pb = document.getElementById('planSwitchBtn'); const _showPb = session.role !== 'SUPER_ADMIN'; _pb.classList.toggle('hidden', !_showPb); _pb.classList.toggle('inline-flex', _showPb);
       document.getElementById('planSwitchBtn').textContent = session.plan === 'FREE' ? L('⚡ প্রিমিয়াম নিন', '⚡ Upgrade Pro') : L('👑 প্রিমিয়াম', '👑 Pro');
       if (session.role === 'SUPER_ADMIN') { document.getElementById('activeContextSubtitle').textContent = L('প্ল্যাটফর্ম অপারেশনস', 'Platform Operations'); return; }
 
@@ -1409,13 +1413,28 @@
         .join('');
       document.querySelectorAll('.side-nav-btn').forEach((b) => b.addEventListener('click', () => switchShopTab(b.getAttribute('data-stab'))));
 
-      const mTabs = allowed.slice(0, 5);
+      const hasMore = allowed.length > 4;
+      const mTabs = hasMore ? allowed.slice(0, 4) : allowed;
+      const cols = mTabs.length + (hasMore ? 1 : 0);
       const grid = document.getElementById('mobileBottomNavGrid');
-      grid.className = `grid grid-cols-${mTabs.length} px-1 py-1.5`;
+      grid.className = 'grid px-1 py-1';
+      grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0, 1fr))`;
       grid.innerHTML = mTabs
-        .map((t) => `<button type="button" data-mtab="${t}" class="bnav-btn ${activeShopTab === t ? 'active' : ''} flex flex-col items-center gap-0.5 py-1"><span class="bnav-dot px-2.5 py-0.5 rounded-full text-sm">${meta[t].icon}</span><span class="text-[10px] font-bold truncate">${L(meta[t].bn, meta[t].en)}</span></button>`)
-        .join('');
-      document.querySelectorAll('.bnav-btn').forEach((b) => b.addEventListener('click', () => switchShopTab(b.getAttribute('data-mtab'))));
+        .map((t) => `<button type="button" data-mtab="${t}" class="bnav-btn ${activeShopTab === t ? 'active' : ''} flex flex-col items-center justify-center gap-0.5 py-1 min-w-0"><span class="bnav-dot px-2 py-0.5 rounded-full text-sm">${meta[t].icon}</span><span class="text-[10px] font-bold truncate max-w-full px-0.5">${L(meta[t].bn, meta[t].en)}</span></button>`)
+        .join('') + (hasMore ? `<button type="button" id="openMobileMoreBtn" class="bnav-btn flex flex-col items-center justify-center gap-0.5 py-1 min-w-0"><span class="bnav-dot px-2 py-0.5 rounded-full text-sm">☰</span><span class="text-[10px] font-bold truncate">${L('আরও', 'More')}</span></button>` : '');
+      document.querySelectorAll('[data-mtab]').forEach((b) => b.addEventListener('click', () => switchShopTab(b.getAttribute('data-mtab'))));
+      const moreBtn = document.getElementById('openMobileMoreBtn');
+      if (moreBtn) {
+        moreBtn.addEventListener('click', () => {
+          document.getElementById('whyModalTitle').textContent = L('সব মেনু', 'All Menus');
+          document.getElementById('whyModalBody').innerHTML = `<div class="grid grid-cols-2 gap-2">${allowed.map((t) => `<button type="button" data-drawer-tab="${t}" class="drawer-tab-btn p-3 rounded-xl sub-glass-row font-bold text-xs flex items-center gap-2 text-left">${meta[t].icon} <span>${L(meta[t].bn, meta[t].en)}</span></button>`).join('')}</div>`;
+          document.getElementById('whyModal').classList.remove('hidden');
+          document.querySelectorAll('.drawer-tab-btn').forEach((db) => db.addEventListener('click', () => {
+            document.getElementById('whyModal').classList.add('hidden');
+            switchShopTab(db.getAttribute('data-drawer-tab'));
+          }));
+        });
+      }
     }
 
     function renderShopContent() {
