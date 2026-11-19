@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import authenticateShop from '../../middlewares/auth.middleware';
+import { authenticateShop } from '../../middlewares/auth.middleware';
 import { AIService, DashboardPeriod } from './ai.service';
 
 const router = Router();
