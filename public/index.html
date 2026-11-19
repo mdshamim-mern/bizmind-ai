@@ -184,6 +184,76 @@
 <div id="aiAnswer" class="bg-slate-50 border rounded-lg p-4 text-sm text-slate-700">Click "Ask BizMind AI" to analyze your 30-day store performance.</div>
 </div>
 </section>
+<!-- 11. Bangla Voice -->
+<section id="sec-11" class="tab-section hidden space-y-4">
+  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+    <h3 class="font-semibold">Bangla Voice Co-Pilot</h3>
+    <div class="flex gap-2">
+      <input id="voiceInput" type="text" class="flex-1 border rounded-lg px-3 py-2 text-sm" placeholder="Ask in Bangla or Banglish (e.g., Aajke dim er stock koto?)" />
+      <button onclick="runBanglaVoice()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Ask Voice Co-Pilot</button>
+    </div>
+    <div id="voiceOutput" class="bg-slate-50 border rounded-lg p-4 text-sm text-slate-700">Ready for Bangla voice or text commands.</div>
+  </div>
+</section>
+
+<!-- 12. Waste Rescue AI -->
+<section id="sec-12" class="tab-section hidden space-y-4">
+  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+    <h3 class="font-semibold">Waste Rescue AI - Expiring Stock Recovery</h3>
+    <div class="grid md:grid-cols-2 gap-3 text-sm">
+      <div class="border rounded-lg p-3 bg-amber-50">
+        <p class="font-medium">Liquid Milk (MILK-B01-EXP) - Expires in 3 days</p>
+        <p class="text-slate-600">18 L remaining | Recommended: 20% Flash Rescue</p>
+        <button onclick="rescueBatch('Liquid Milk (20% Flash Rescue)')" class="mt-2 bg-amber-600 text-white px-3 py-1 rounded text-xs">Apply Rescue Offer</button>
+      </div>
+      <div class="border rounded-lg p-3 bg-amber-50">
+        <p class="font-medium">Farm Eggs (EGG-B01-FEFO) - Expires in 4 days</p>
+        <p class="text-slate-600">55 pcs remaining | Recommended: Bundle with Milk</p>
+        <button onclick="rescueBatch('Farm Eggs (Bundle Offer)')" class="mt-2 bg-amber-600 text-white px-3 py-1 rounded text-xs">Apply Rescue Offer</button>
+      </div>
+    </div>
+    <div id="wasteRescueStatus" class="text-sm text-emerald-700 font-medium"></div>
+  </div>
+</section>
+
+<!-- 13. Baki Khata -->
+<section id="sec-13" class="tab-section hidden space-y-4">
+  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+    <h3 class="font-semibold">Baki Khata (Digital Credit Ledger)</h3>
+    <div class="flex flex-wrap gap-2">
+      <input id="bakiName" type="text" class="border rounded-lg px-3 py-2 text-sm" placeholder="Customer Name" />
+      <input id="bakiAmount" type="number" class="border rounded-lg px-3 py-2 text-sm" placeholder="Amount" />
+      <button onclick="addBaki()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Add Baki</button>
+    </div>
+    <ul id="bakiList" class="divide-y text-sm">
+      <li class="py-2 flex justify-between"><span>Rahim Mia</span><span class="font-semibold text-rose-600">Due: 450</span></li>
+      <li class="py-2 flex justify-between"><span>Karim Store</span><span class="font-semibold text-rose-600">Due: 1200</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 14. Chalan Scanner -->
+<section id="sec-14" class="tab-section hidden space-y-4">
+  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+    <h3 class="font-semibold">Chalan Scanner (AI Invoice OCR)</h3>
+    <textarea id="chalanInput" rows="3" class="w-full border rounded-lg p-3 text-sm" placeholder="Paste supplier chalan text or invoice items (e.g., Miniket Rice 50kg @ 70)..."></textarea>
+    <button onclick="scanChalan()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Scan Chalan</button>
+    <div id="chalanResult" class="bg-slate-50 border rounded-lg p-4 text-sm text-slate-700">Upload or paste a supplier chalan to extract stock batches.</div>
+  </div>
+</section>
+
+<!-- 15. Impact Dashboard -->
+<section id="sec-15" class="tab-section hidden space-y-4">
+  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
+    <h3 class="font-semibold">Impact Dashboard</h3>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+      <div class="p-3 bg-emerald-50 rounded-lg border"><p class="text-slate-500">Waste Prevented</p><p class="text-lg font-bold text-emerald-700">18.5 kg</p></div>
+      <div class="p-3 bg-blue-50 rounded-lg border"><p class="text-slate-500">Revenue Recovered</p><p class="text-lg font-bold text-blue-700">3,420</p></div>
+      <div class="p-3 bg-amber-50 rounded-lg border"><p class="text-slate-500">Baki Collection Rate</p><p class="text-lg font-bold text-amber-700">88%</p></div>
+      <div class="p-3 bg-purple-50 rounded-lg border"><p class="text-slate-500">Co-Pilot Time Saved</p><p class="text-lg font-bold text-purple-700">4.2 hrs/wk</p></div>
+    </div>
+  </div>
+</section>
 </div>
 </main>
 
@@ -191,7 +261,9 @@
 const sections = [
 '1. Dashboard', '2. Inventory & Batches', '3. Sales (FEFO POS)', '4. Purchases',
 '5. Accounting & Profit', '6. Product Intelligence', '7. Demand Forecast',
-'8. Restock Advisor', '9. Discount Advisor', '10. AI Reports & QA'
+'8. Restock Advisor', '9. Discount Advisor', '10. AI Reports & QA',
+'11. Bangla Voice', '12. Waste Rescue AI', '13. Baki Khata',
+'14. Chalan Scanner', '15. Impact Dashboard'
 ];
 
 const demoData = {
@@ -385,7 +457,33 @@ return;
 }
 } catch (_) {}
 alert('Using 30-Day Demo Data (API server requires authentication or local server).');
+}function runBanglaVoice() {
+  const q = document.getElementById('voiceInput').value.trim();
+  document.getElementById('voiceOutput').textContent = q
+    ? 'Bangla Voice Co-Pilot: "' + q + '" -> Stock & profit summary ready (Farm Eggs: 55 pcs, Liquid Milk: 18 L).'
+    : 'Please enter a Bangla or Banglish query.';
 }
+function rescueBatch(label) {
+  document.getElementById('wasteRescueStatus').textContent = 'Activated Waste Rescue AI offer for: ' + label;
+}
+function addBaki() {
+  const name = document.getElementById('bakiName').value.trim();
+  const amt = document.getElementById('bakiAmount').value.trim();
+  if (!name || !amt) return;
+  const li = document.createElement('li');
+  li.className = 'py-2 flex justify-between';
+  li.innerHTML = '<span>' + name + '</span><span class="font-semibold text-rose-600">Due: ' + amt + '</span>';
+  document.getElementById('bakiList').appendChild(li);
+  document.getElementById('bakiName').value = '';
+  document.getElementById('bakiAmount').value = '';
+}
+function scanChalan() {
+  const txt = document.getElementById('chalanInput').value.trim();
+  document.getElementById('chalanResult').textContent = txt
+    ? 'Extracted Chalan Items: ' + txt + ' (Ready to import into Inventory Batches)'
+    : 'Please paste chalan text to scan.';
+}
+
 
 initNav();
 renderDashboard();
