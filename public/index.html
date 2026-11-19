@@ -279,17 +279,7 @@
             </div>
             <div class="flex items-center gap-1.5">
               <button type="button" id="autoSpeakToggleBtn" class="min-h-[34px] px-2.5 py-1 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-700 text-xs font-bold"></button>
-              <button type="button" id="toggleApiKeyPanelBtn" class="min-h-[34px] px-2.5 py-1 rounded-xl border border-slate-300 bg-slate-100 text-slate-700 text-xs font-bold">🔑 API</button>
               <button type="button" id="clearChatBtn" data-i18n="btnClearChat" class="min-h-[34px] px-2.5 py-1 rounded-xl border border-slate-300 bg-slate-100 text-slate-700 text-xs font-bold"></button>
-            </div>
-          </div>
-
-          <!-- Optional Real Gemini LLM API Key Drawer (Stored Locally in Browser Only) -->
-          <div id="apiKeyPanel" class="hidden surface-sub p-3 rounded-xl bg-indigo-50/70 border border-indigo-200 space-y-2">
-            <p class="text-xs text-slate-700 font-medium" data-i18n="apiKeyHelp"></p>
-            <div class="flex flex-col sm:flex-row gap-2">
-              <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." class="flex-1 min-h-[38px] text-xs border border-slate-300 rounded-lg px-3 py-1.5" />
-              <button type="button" id="saveApiKeyBtn" data-i18n="btnSaveKey" class="min-h-[38px] px-4 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold"></button>
             </div>
           </div>
 
@@ -1540,17 +1530,10 @@
     let autoSpeakEnabled = true;
     let activeRecognition = null;
 
-    function getSavedGeminiKey() {
-      try { return localStorage.getItem('bizmind_gemini_api_key') || ''; } catch (_e) { return ''; }
-    }
-
     function updateVoiceHeaderBadges() {
-      const key = getSavedGeminiKey();
       const badge = document.getElementById('aiEngineStatusBadge');
       if (badge) {
-        badge.textContent = key
-          ? L('জেমিনি এআই সংযুক্ত', 'Gemini Live LLM')
-          : L('স্মার্ট লোকাল এআই', 'Smart Local AI');
+        badge.textContent = L('সরাসরি ভয়েস ও চ্যাট প্রস্তুত', 'Zero-Setup Voice AI Ready');
       }
       const autoBtn = document.getElementById('autoSpeakToggleBtn');
       if (autoBtn) {
@@ -1580,8 +1563,8 @@
           <div class="flex justify-start">
             <div class="surface-card max-w-[85%] bg-white border border-slate-200 rounded-2xl rounded-tl-sm px-3.5 py-2.5 text-xs sm:text-sm text-slate-800 shadow-sm leading-relaxed">
               ${L(
-                'আসসালামু আলাইকুম! আমি আপনার বিজমাইন্ড এআই পার্টনার। আপনি মাইক্রোফোনে কথা বলে অথবা লিখে ব্যবসার যেকোনো হিসাব জিজ্ঞেস করতে পারেন কিংবা আমার সাথে মন খুলে গল্পও করতে পারেন। আজ আপনাকে কীভাবে সাহায্য করব?',
-                "Hello! I'm your BizMind AI business partner. Tap the microphone or type anything—ask about your shop's profit, specific products, customer dues, or just chat casually with me. How can I help you today?"
+                'আসসালামু আলাইকুম ভাই! আমি আপনার দোকানের ডিজিটাল পার্টনার। কোনো ঝামেলা ছাড়াই সরাসরি লাল 🎤 বাটনে চাপ দিয়ে বাংলায় কথা বলুন—দোকানের লাভ, বাকি, কোন মাল কিনতে হবে বা যেকোনো গল্প আমার সাথে করতে পারেন!',
+                "Hello! I'm your shop's AI partner. No setup needed—just tap the 🎤 mic button and talk naturally about your profit, stock, customer dues, or anything on your mind!"
               )}
             </div>
           </div>
@@ -1626,21 +1609,30 @@
       let labels = shop.products.map((p) => L(p.nameBn, p.nameEn));
       let values = shop.products.map((p) => p.weeklySales[3] * (p.sellingPrice - p.purchasePrice));
 
-      // 1. Greetings & Small Talk / Storytelling
+      // 1. Natural Small Talk & Conversational Bangla/English
       if (/^(hi|hello|hey|salam|assalamu|হ্যালো|হাই|সালাম|আসসালামু|নমস্কার|শুভ সকাল|good morning|good evening)/i.test(q)) {
         return {
           reply: L(
-            `ওয়ালাইকুম আসসালাম! কেমন আছেন ভাই? ${shop.nameBn}-এর আজকের বেচাকেনা কেমন চলছে? চাইলে ব্যবসার হিসাব জিজ্ঞেস করতে পারেন, কিংবা এমনিই কোনো গল্প করতে চাইলে বলুন—আমি শুনছি!`,
-            `Hello there! How are you doing today? How is business at ${shop.nameEn}? You can ask me anything about your sales, inventory, or credit dues—or just chat casually with me!`
+            `ওয়ালাইকুম আসসালাম ভাই! কেমন আছেন? ${shop.nameBn}-এ আজ বেচাকেনা কেমন চলছে?`,
+            `Hello! How are you doing today? How is business going at ${shop.nameEn}?`
           ),
           chartTitle, labels, values
         };
       }
-      if (q.includes('কেমন আছ') || q.includes('how are you') || q.includes('kemon acho')) {
+      if (q.includes('কেমন আছ') || q.includes('how are you') || q.includes('kemon acho') || q.includes('কি খবর') || q.includes('ki khobor')) {
         return {
           reply: L(
-            'আমি দারুণ আছি ভাই! আপনার দোকানের হিসাব-নিকাশ আর অপচয় কমানোর কাজে সবসময় প্রস্তুত। আপনার দিনকাল কেমন যাচ্ছে?',
-            "I'm doing great, thanks for asking! Always ready to help you grow your shop and save money. How is your day going?"
+            'আলহামদুলিল্লাহ, আমি ভালো আছি ভাই! আপনার দোকানের সব হিসাব একদম গুছিয়ে রেখেছি। আপনার দোকানে আজ কাস্টমার কেমন?',
+            "I'm doing great, thank you! Everything in your shop is tracked and ready. How are customers today?"
+          ),
+          chartTitle, labels, values
+        };
+      }
+      if (q.includes('ভালো') && (q.includes('আমি') || q.includes('আলহামদুলিল্লাহ') || q.includes('আছি'))) {
+        return {
+          reply: L(
+            'শুনে খুব ভালো লাগল! ব্যবসার কোনো হিসাব জানতে চাইলে বা আজকের কোনো মজার গল্প শেয়ার করতে চাইলে নির্দ্বিধায় বলুন।',
+            'Glad to hear that! Feel free to ask about your shop numbers or share anything on your mind.'
           ),
           chartTitle, labels, values
         };
@@ -1648,8 +1640,8 @@
       if (q.includes('তুমি কে') || q.includes('তোমার নাম') || q.includes('who are you') || q.includes('your name')) {
         return {
           reply: L(
-            'আমি বিজমাইন্ড এআই—আপনার ডিজিটাল বিজনেস পার্টনার। আমি আপনার দোকানের স্টক, লাভ-ক্ষতি, বাকি আদায় এবং অপচয় রোধে সাহায্য করি, আর অবসর সময়ে আপনার সাথে গল্পও করতে পারি!',
-            "I'm BizMind AI, your smart business co-pilot. I track your shop's inventory, profits, expiry alerts, and credit dues—and I'm always happy to chat with you too!"
+            'আমি বিজমাইন্ড এআই—আপনার দোকানের ডিজিটাল ম্যানেজার ও বন্ধু। আমি আপনার দোকানের স্টক, বাকি, লাভ-ক্ষতি আর অপচয় কমানোর হিসাব রাখি।',
+            "I'm BizMind AI—your shop's smart digital partner. I help you track stock, profits, expiry alerts, and customer dues effortlessly."
           ),
           chartTitle, labels, values
         };
@@ -1657,20 +1649,20 @@
       if (q.includes('গল্প') || q.includes('story') || q.includes('golpo') || q.includes('মজা') || q.includes('joke')) {
         return {
           reply: L(
-            'অবশ্যই! ছোট্ট একটা ব্যবসার গল্প বলি: এক মুদি দোকানদার প্রতিদিন ১০০টা ডিম আনতেন, কিন্তু পুরোনো ডিম পেছনে পড়ে থাকায় প্রতি সপ্তাহে ১০টা ডিম নষ্ট হতো। পরে তিনি যখন মেয়াদ অনুযায়ী আগে-পরে সাজানো শুরু করলেন আর শেষ ৩ দিনে ১০% ছাড় দিলেন, তখন এক মাসেই তাঁর ৫,০০০ টাকা বাড়তি লাভ হলো! আপনার দোকানের কোনো মজার অভিজ্ঞতা থাকলে আমাকে শোনান।',
-            'Sure! Here is a quick retail story: A local shopkeeper used to lose 10 eggs every week because older trays sat at the back. Once he switched to selling earliest-expiring stock first and running a 15% flash discount 3 days before expiry, he saved over ৳5,000 in a single month! Want to share a story from your shop too?'
+            'শুনুন তাহলে: গ্রামের এক মুদি দোকানদার ভাই প্রতি সপ্তাহে মেয়াদ শেষ হওয়া দুধ আর ডিম ফেলে দিয়ে লোকসান গুনতেন। পরে তিনি মেয়াদ শেষ হওয়ার ৪ দিন আগে ১০% ছাড় দিয়ে কাস্টমারদের জানিয়ে দিলেন—তাতে লোকসান তো বন্ধ হলোই, উল্টো দোকানে নতুন ক্রেতাও বেড়ে গেল!',
+            'Here is a quick story: A neighborhood grocer used to throw away expired milk and eggs every week. When he started offering a 15% discount 3 days before expiry, he turned waste into cash and attracted new daily shoppers!'
           ),
           chartTitle, labels, values
         };
       }
       if (q.includes('ধন্যবাদ') || q.includes('থ্যাংক') || q.includes('thank')) {
         return {
-          reply: L('আপনাকেও অসংখ্য ধন্যবাদ ভাই! যখনই দরকার হবে আমাকে ডাকবেন।', "You're very welcome! Anytime you need help or want to talk, I'm right here."),
+          reply: L('আপনাকেও অনেক ধন্যবাদ ভাই! যখনই দরকার হবে শুধু মাইকে চাপ দিয়ে কথা বলবেন।', "You're most welcome! Just tap the mic whenever you need me."),
           chartTitle, labels, values
         };
       }
 
-      // 2. Specific Product Lookup (Dynamic — answers ONLY about the mentioned product)
+      // 2. Specific Product Lookup
       const matchedProd = shop.products.find((p) =>
         q.includes(p.nameBn.split(' ')[0].toLowerCase()) ||
         q.includes(p.nameEn.split(' ')[0].toLowerCase()) ||
@@ -1686,8 +1678,8 @@
         const unitProfit = matchedProd.sellingPrice - matchedProd.purchasePrice;
         return {
           reply: L(
-            `${matchedProd.nameBn}-এর বর্তমান তথ্য:\n• মোট মজুদ: ${stock}টি\n• কেনা দাম: ৳${matchedProd.purchasePrice} | বিক্রয়মূল্য: ৳${matchedProd.sellingPrice} (প্রতিটিতে লাভ ৳${unitProfit})\n• সবচেয়ে কাছের মেয়াদ বাকি: ${soonestExp} দিন\n• গত সপ্তাহের বিক্রি: ${matchedProd.weeklySales[3]}টি।`,
-            `Current status for ${matchedProd.nameEn}:\n• In Stock: ${stock} units\n• Cost: ৳${matchedProd.purchasePrice} | Selling Price: ৳${matchedProd.sellingPrice} (৳${unitProfit} profit/unit)\n• Soonest Batch Expiry: ${soonestExp} days\n• Last Week Sales: ${matchedProd.weeklySales[3]} units.`
+            `${matchedProd.nameBn}-এর খবর:\n• দোকানে মজুদ আছে: ${stock}টি\n• কেনা দাম ৳${matchedProd.purchasePrice}, বিক্রি ৳${matchedProd.sellingPrice} (লাভ ৳${unitProfit}/পিস)\n• মেয়াদ বাকি: ${soonestExp} দিন।`,
+            `${matchedProd.nameEn} status:\n• In Stock: ${stock} units\n• Cost ৳${matchedProd.purchasePrice}, Sell ৳${matchedProd.sellingPrice} (৳${unitProfit}/unit profit)\n• Soonest Expiry: ${soonestExp} days.`
           ),
           chartTitle: L(`${matchedProd.nameBn} — ৪ সপ্তাহের বিক্রি`, `${matchedProd.nameEn} — 4-Week Sales`),
           labels: [L('সপ্তাহ ১', 'Week 1'), L('সপ্তাহ ২', 'Week 2'), L('সপ্তাহ ৩', 'Week 3'), L('সপ্তাহ ৪', 'Week 4')],
@@ -1695,13 +1687,13 @@
         };
       }
 
-      // 3. Specific Customer Lookup in Baki Ledger
+      // 3. Specific Customer Lookup
       const matchedCust = shop.bakiLedger.find((b) => q.includes(b.nameBn.split(' ')[0].toLowerCase()) || q.includes(b.nameEn.split(' ')[0].toLowerCase()));
       if (matchedCust) {
         return {
           reply: L(
-            `${matchedCust.nameBn}-এর কাছে আপনার ৳${matchedCust.amount.toLocaleString()} টাকা বাকি আছে (${matchedCust.daysOverdue} দিন ধরে, বিবরণ: ${matchedCust.notesBn})। মোবাইল নম্বর: ${matchedCust.phone}।`,
-            `${matchedCust.nameEn} currently owes ৳${matchedCust.amount.toLocaleString()} (${matchedCust.daysOverdue} days overdue for ${matchedCust.notesEn}). Phone: ${matchedCust.phone}.`
+            `${matchedCust.nameBn}-এর কাছে আপনার ৳${matchedCust.amount.toLocaleString()} টাকা বাকি আছে (${matchedCust.daysOverdue} দিন ধরে, ${matchedCust.notesBn})। ফোন: ${matchedCust.phone}।`,
+            `${matchedCust.nameEn} owes ৳${matchedCust.amount.toLocaleString()} (${matchedCust.daysOverdue} days overdue for ${matchedCust.notesEn}). Phone: ${matchedCust.phone}.`
           ),
           chartTitle: L('কাস্টমারের বকেয়া (৳)', 'Customer Credit Dues (৳)'),
           labels: shop.bakiLedger.map((b) => L(b.nameBn, b.nameEn)),
@@ -1709,16 +1701,16 @@
         };
       }
 
-      // 4. Specific Business Intent Queries (Only answers what was asked)
-      if (q.includes('কিনতে') || q.includes('অর্ডার') || q.includes('reorder') || q.includes('restock') || q.includes('order')) {
+      // 4. Specific Business Intent Queries
+      if (q.includes('কিনতে') || q.includes('অর্ডার') || q.includes('মাল') || q.includes('reorder') || q.includes('restock') || q.includes('order')) {
         return {
           reply: L(
             restocks.length
-              ? `আপনার অর্ডার তালিকা:\n` + restocks.map((r) => `• ${r.product.nameBn}: ${r.Q}টি কিনুন (বর্তমান মজুদ ${r.S}টি)`).join('\n')
-              : 'বর্তমানে আপনার সব পণ্যের পর্যাপ্ত মজুদ আছে, নতুন অর্ডারের দরকার নেই।',
+              ? `এই সপ্তাহে আপনার নিচের মালগুলো অর্ডার করা দরকার:\n` + restocks.map((r) => `• ${r.product.nameBn}: ${r.Q}টি অর্ডার করুন (মজুদ আছে ${r.S}টি)`).join('\n')
+              : 'সব পণ্যের পর্যাপ্ত মজুদ আছে, এখন নতুন অর্ডার লাগবে না।',
             restocks.length
-              ? `Here is what you should reorder:\n` + restocks.map((r) => `• ${r.product.nameEn}: Order ${r.Q} units (Current stock: ${r.S})`).join('\n')
-              : 'All your products currently have sufficient stock—no immediate reorders needed.'
+              ? `Recommended reorders this week:\n` + restocks.map((r) => `• ${r.product.nameEn}: Order ${r.Q} units (Stock: ${r.S})`).join('\n')
+              : 'All items have sufficient stock right now.'
           ),
           chartTitle: L('প্রস্তাবিত অর্ডার পরিমাণ', 'Recommended Reorder Qty'),
           labels: restocks.map((r) => L(r.product.nameBn, r.product.nameEn)),
@@ -1729,8 +1721,8 @@
       if (q.includes('নষ্ট') || q.includes('মেয়াদ') || q.includes('waste') || q.includes('expir') || q.includes('ছাড়')) {
         return {
           reply: L(
-            waste.length ? waste.map((w) => `• ${w.headline}`).join('\n') : 'দারুণ খবর! কোনো ব্যাচ এখন মেয়াদোত্তীর্ণের ঝুঁকিতে নেই।',
-            waste.length ? waste.map((w) => `• ${w.headline}`).join('\n') : 'Good news! No batches are currently at immediate expiry risk.'
+            waste.length ? waste.map((w) => `• ${w.headline}`).join('\n') : 'কোনো পণ্য নষ্ট হওয়ার ঝুঁকিতে নেই।',
+            waste.length ? waste.map((w) => `• ${w.headline}`).join('\n') : 'No batches at immediate expiry risk.'
           ),
           chartTitle: L('অপচয় রোধে নগদ রিকভারি (৳)', 'Waste Rescue Cash Recovery (৳)'),
           labels: waste.map((w) => w.productName),
@@ -1741,8 +1733,8 @@
       if (q.includes('বাকি') || q.includes('baki') || q.includes('due') || q.includes('credit') || q.includes('পাওনা')) {
         return {
           reply: L(
-            `মোট বাকি পাওনা ৳${totalBaki.toLocaleString()}:\n` + shop.bakiLedger.map((b) => `• ${b.nameBn}: ৳${b.amount.toLocaleString()} (${b.daysOverdue} দিন)`).join('\n'),
-            `Total outstanding credit dues: ৳${totalBaki.toLocaleString()}:\n` + shop.bakiLedger.map((b) => `• ${b.nameEn}: ৳${b.amount.toLocaleString()} (${b.daysOverdue}d overdue)`).join('\n')
+            `দোকানে মোট বাকি পাওনা ৳${totalBaki.toLocaleString()}:\n` + shop.bakiLedger.map((b) => `• ${b.nameBn}: ৳${b.amount.toLocaleString()} (${b.daysOverdue} দিন)`).join('\n'),
+            `Total credit dues ৳${totalBaki.toLocaleString()}:\n` + shop.bakiLedger.map((b) => `• ${b.nameEn}: ৳${b.amount.toLocaleString()} (${b.daysOverdue}d)`).join('\n')
           ),
           chartTitle: L('কাস্টমারের বকেয়া (৳)', 'Customer Credit Dues (৳)'),
           labels: shop.bakiLedger.map((b) => L(b.nameBn, b.nameEn)),
@@ -1753,8 +1745,8 @@
       if (q.includes('খরচ') || q.includes('expense') || q.includes('cost')) {
         return {
           reply: L(
-            `এই মাসে আপনার দোকানের মোট পরিচালনা খরচ ৳${expenses.toLocaleString()} এবং স্টক ক্ষতি ৳${losses.toLocaleString()}।`,
-            `Your shop's total operating expenses are ৳${expenses.toLocaleString()} and recognized inventory losses are ৳${losses.toLocaleString()}.`
+            `এই মাসে দোকানের পরিচালনা খরচ হয়েছে ৳${expenses.toLocaleString()} এবং স্টক ক্ষতি ৳${losses.toLocaleString()}।`,
+            `Operating expenses this month are ৳${expenses.toLocaleString()} and inventory losses are ৳${losses.toLocaleString()}.`
           ),
           chartTitle, labels, values
         };
@@ -1763,18 +1755,18 @@
       if (q.includes('লাভ') || q.includes('বিক্রি') || q.includes('profit') || q.includes('sale') || q.includes('revenue') || q.includes('আয়')) {
         return {
           reply: L(
-            `${shop.nameBn}-এ মোট বিক্রি হয়েছে ৳${revenue.toLocaleString()} এবং সব খরচ ও স্টক ক্ষতি বাদ দিয়ে আসল নিট লাভ হয়েছে ৳${net.toLocaleString()}।`,
-            `At ${shop.nameEn}, total revenue is ৳${revenue.toLocaleString()} and net profit (after expenses & stock loss) is ৳${net.toLocaleString()}.`
+            `${shop.nameBn}-এ মোট বিক্রি ৳${revenue.toLocaleString()} এবং সব খরচ বাদ দিয়ে আসল নিট লাভ হয়েছে ৳${net.toLocaleString()}।`,
+            `At ${shop.nameEn}, total sales are ৳${revenue.toLocaleString()} and net profit is ৳${net.toLocaleString()}.`
           ),
           chartTitle, labels, values
         };
       }
 
-      // 5. Open-ended conversational reply (Echoes user's exact topic instead of dumping a fixed financial template)
+      // 5. Natural conversational acknowledgment when chatting freely
       return {
         reply: L(
-          `আপনি বললেন: "${userMessage}" — দারুণ কথা বলেছেন! আমি আপনার সাথে মুক্তভাবে যেকোনো বিষয়ে গল্প করতে বা গভীর আলোচনা করতে পারি। আনলিমিটেড রিয়েল-টাইম জেমিনি এআই কথোপকথনের জন্য ওপরের "🔑 API" বাটনে আপনার ফ্রি Gemini API Key বসিয়ে দিন, অথবা এখনই নির্দিষ্ট কোনো পণ্য (ডিম, চাল, তেল, দুধ), বাকি, খরচ বা লাভ নিয়ে প্রশ্ন করুন!`,
-          `You said: "${userMessage}" — I hear you! For completely free-flowing, unlimited AI conversations and storytelling on any topic, add your free Google Gemini API key via the "🔑 API" button above. Right now I can also answer specific questions about any product (eggs, rice, oil, milk), customer dues, expenses, or profits!`
+          `বুঝলাম ভাই—আপনি বললেন "${userMessage}"। আপনার কথা শুনে খুব ভালো লাগল! ব্যবসার ব্যাপারে ডিম, চাল, তেল, দুধ, বাকি বা লাভ-ক্ষতির কোনো হিসাব জানতে চাইলে সেটাও জিজ্ঞেস করতে পারেন।`,
+          `Got it! You mentioned "${userMessage}". I'm right here to chat with you, and anytime you want to check eggs, rice, oil, milk, customer dues, or profit, just ask!`
         ),
         chartTitle, labels, values
       };
@@ -1788,65 +1780,30 @@
       renderChatMessages();
 
       const localResult = buildSmartLocalResponse(userText);
-      const apiKey = getSavedGeminiKey();
 
-      if (apiKey) {
-        // Show typing indicator
-        chatHistory.push({ role: 'ai', text: L('ভাবছি...', 'Thinking...') });
-        renderChatMessages();
-
-        const shop = getShop();
-        const revenue = shop.sales.reduce((s, x) => s + x.revenue, 0);
-        const cogs = shop.sales.reduce((s, x) => s + x.cogs, 0);
-        const expenses = shop.expenses.reduce((s, x) => s + x.amount, 0);
-        const losses = shop.adjustments.reduce((s, x) => s + x.financialLoss, 0);
-        const net = revenue - cogs - expenses - losses;
-        const waste = computeWasteRescue(shop);
-        const restocks = computeRestocks(shop).filter((r) => r.Q > 0);
-
-        const sysPrompt = `You are BizMind AI, a warm, intelligent conversational voice partner for "${L(shop.nameBn, shop.nameEn)}".
-Respond ONLY to what the user actually said—if they want to chat casually or tell stories, engage naturally and warmly like a human friend. If they ask about their business, use ONLY these verified live shop figures:
-- Revenue: ৳${revenue}, Net Profit: ৳${net}, Expenses: ৳${expenses}, Stock Loss: ৳${losses}
-- Products: ${shop.products.map((p) => `${L(p.nameBn, p.nameEn)} (Stock: ${p.batches.reduce((s, b) => s + b.currentQty, 0)}, Price: ৳${p.sellingPrice})`).join('; ')}
-- Restock Needed: ${restocks.map((r) => `${L(r.product.nameBn, r.product.nameEn)}: ${r.Q} units`).join(', ') || 'None'}
-- Expiring Batches: ${waste.map((w) => w.headline).join(' | ') || 'None'}
-- Credit Dues: ${shop.bakiLedger.map((b) => `${L(b.nameBn, b.nameEn)}: ৳${b.amount} (${b.daysOverdue}d)`).join(', ') || 'None'}
-Language rule: Respond in ${currentLang === 'bn' ? 'natural pure Bengali (Bangla)' : 'clear natural English'}. Keep voice replies concise (2-4 sentences).`;
-
-        const recentTurns = chatHistory.slice(-7, -1).map((m) => ({
-          role: m.role === 'user' ? 'user' : 'model',
-          parts: [{ text: m.text }]
-        }));
-
+      // Zero-Setup Architecture: If connected to live backend server (where developer configures GEMINI_API_KEY in .env),
+      // seamlessly use /api/v1/ai/assistant/chat without asking the shopkeeper for any API key.
+      let token = '';
+      try { token = localStorage.getItem('bizmind_jwt_token') || ''; } catch (_e) {}
+      if (token && window.location.protocol !== 'file:' && !window.location.hostname.endsWith('github.io')) {
         try {
-          const resp = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-            {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                systemInstruction: { parts: [{ text: sysPrompt }] },
-                contents: recentTurns
-              })
-            }
-          );
+          const resp = await fetch('/api/v1/ai/assistant/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ question: userText, festival: currentFestival })
+          });
           if (resp.ok) {
-            const data = await resp.json();
-            const replyText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-            if (replyText) {
-              chatHistory[chatHistory.length - 1] = { role: 'ai', text: replyText.trim() };
-              lastSpokenAnswer = replyText.trim();
+            const json = await resp.json();
+            if (json?.data?.answer) {
+              chatHistory.push({ role: 'ai', text: json.data.answer });
+              lastSpokenAnswer = json.data.answer;
               renderChatMessages();
               updateAssistantChart(localResult.chartTitle, localResult.labels, localResult.values);
               if (autoSpeakEnabled) speakText(lastSpokenAnswer);
               return;
             }
           }
-          // If key invalid or API failed, remove typing bubble and fall back gracefully
-          chatHistory.pop();
-        } catch (_err) {
-          chatHistory.pop();
-        }
+        } catch (_e) {}
       }
 
       chatHistory.push({ role: 'ai', text: localResult.reply });
@@ -1977,28 +1934,12 @@ Language rule: Respond in ${currentLang === 'bn' ? 'natural pure Bengali (Bangla
       document.getElementById('closeWhyModalBtn').addEventListener('click', () => document.getElementById('whyModal').classList.add('hidden'));
       document.getElementById('closeToastBtn').addEventListener('click', () => document.getElementById('toastBanner').classList.add('hidden'));
 
-      // Voice AI Controls: Auto-Speak, API Key Drawer, Clear Chat, Real Interim Speech-to-Text
+      // Voice AI Controls: Zero-Setup Auto-Speak & Real Interim Speech-to-Text
       updateVoiceHeaderBadges();
-      document.getElementById('geminiApiKeyInput').value = getSavedGeminiKey();
 
       document.getElementById('autoSpeakToggleBtn').addEventListener('click', () => {
         autoSpeakEnabled = !autoSpeakEnabled;
         updateVoiceHeaderBadges();
-      });
-
-      document.getElementById('toggleApiKeyPanelBtn').addEventListener('click', () => {
-        document.getElementById('apiKeyPanel').classList.toggle('hidden');
-      });
-
-      document.getElementById('saveApiKeyBtn').addEventListener('click', () => {
-        const key = document.getElementById('geminiApiKeyInput').value.trim();
-        try {
-          if (key) localStorage.setItem('bizmind_gemini_api_key', key);
-          else localStorage.removeItem('bizmind_gemini_api_key');
-        } catch (_e) {}
-        updateVoiceHeaderBadges();
-        document.getElementById('apiKeyPanel').classList.add('hidden');
-        showToast(key ? L('জেমিনি এআই কী সংরক্ষিত হয়েছে! এখন যেকোনো গল্প বা প্রশ্ন করুন।', 'Gemini API Key saved! Full free-form AI conversation is now live.') : L('লোকাল এআই মোড চালু হয়েছে।', 'Switched to local AI mode.'));
       });
 
       document.getElementById('clearChatBtn').addEventListener('click', () => {
