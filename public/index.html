@@ -1781,29 +1781,66 @@
 
       const localResult = buildSmartLocalResponse(userText);
 
-      // Zero-Setup Architecture: If connected to live backend server (where developer configures GEMINI_API_KEY in .env),
-      // seamlessly use /api/v1/ai/assistant/chat without asking the shopkeeper for any API key.
-      let token = '';
-      try { token = localStorage.getItem('bizmind_jwt_token') || ''; } catch (_e) {}
-      if (token && window.location.protocol !== 'file:' && !window.location.hostname.endsWith('github.io')) {
-        try {
-          const resp = await fetch('/api/v1/ai/assistant/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ question: userText, festival: currentFestival })
-          });
-          if (resp.ok) {
-            const json = await resp.json();
-            if (json?.data?.answer) {
-              chatHistory.push({ role: 'ai', text: json.data.answer });
-              lastSpokenAnswer = json.data.answer;
-              renderChatMessages();
-              updateAssistantChart(localResult.chartTitle, localResult.labels, localResult.values);
-              if (autoSpeakEnabled) speakText(lastSpokenAnswer);
-              return;
-            }
+      // Live Vercel Backend + Gemini 2.5 Flash + Google Search Grounding (Works from GitHub Pages & Mobile!)
+      const shop = getShop();
+      const revenue = shop.sales.reduce((s, x) => s + x.revenue, 0);
+      const cogs = shop.sales.reduce((s, x) => s + x.cogs, 0);
+      const expenses = shop.expenses.reduce((s, x) => s + x.amount, 0);
+      const losses = shop.adjustments.reduce((s, x) => s + x.financialLoss, 0);
+      const net = revenue - cogs - expenses - losses;
+      const waste = computeWasteRescue(shop);
+      const restocks = computeRestocks(shop).filter((r) => r.Q > 0);
+
+      chatHistory.push({ role: 'ai', text: L('🔍 লাইভ এআই উত্তর খুঁজছি...', '🔍 Thinking & searching live...') });
+      renderChatMessages();
+
+      const shopContext = {
+        shopName: L(shop.nameBn, shop.nameEn),
+        revenue,
+        netProfit: net,
+        expenses,
+        losses,
+        products: shop.products.map((p) => ({
+          name: L(p.nameBn, p.nameEn),
+          stock: p.batches.reduce((s, b) => s + b.currentQty, 0),
+          cost: p.purchasePrice,
+          price: p.sellingPrice
+        })),
+        restocks: restocks.map((r) => ({ name: L(r.product.nameBn, r.product.nameEn), orderQty: r.Q })),
+        expiring: waste.map((w) => w.headline),
+        baki: shop.bakiLedger.map((b) => ({ name: L(b.nameBn, b.nameEn), amount: b.amount, daysOverdue: b.daysOverdue }))
+      };
+
+      const historyPayload = chatHistory.slice(-7, -1).map((m) => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        text: m.text
+      }));
+
+      try {
+        const resp = await fetch('https://bizmind-ai-orcin.vercel.app/api/v1/public-ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userText,
+            lang: currentLang,
+            history: historyPayload,
+            shopContext
+          })
+        });
+        if (resp.ok) {
+          const json = await resp.json();
+          if (json && json.answer) {
+            chatHistory[chatHistory.length - 1] = { role: 'ai', text: json.answer };
+            lastSpokenAnswer = json.answer;
+            renderChatMessages();
+            updateAssistantChart(localResult.chartTitle, localResult.labels, localResult.values);
+            if (autoSpeakEnabled) speakText(lastSpokenAnswer);
+            return;
           }
-        } catch (_e) {}
+        }
+        chatHistory.pop();
+      } catch (_err) {
+        chatHistory.pop();
       }
 
       chatHistory.push({ role: 'ai', text: localResult.reply });
