@@ -2,7 +2,7 @@
 <html lang="bn" id="htmlRoot">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#4f46e5" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14,14 +14,31 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: 'Inter', sans-serif; transition: background-color 0.2s, color 0.2s; }
+    body {
+      font-family: 'Inter', sans-serif;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     .nav-btn.active {
       background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
       color: #ffffff;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);
+      box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
     }
-    html.dark body { background-color: #0b1120; color: #e2e8f0; }
-    html.dark header { background-color: #0f172a; border-color: #1e293b; }
+    .bottom-nav-btn.active {
+      color: #4f46e5;
+    }
+    .bottom-nav-btn.active .bnav-pill {
+      background-color: #eef2ff;
+    }
+    /* Dark Mode Theme */
+    html.dark body { background-color: #090e1a; color: #e2e8f0; }
+    html.dark header { background-color: rgba(15, 23, 42, 0.92); border-color: #1e293b; }
+    html.dark .mobile-bottom-nav { background-color: rgba(15, 23, 42, 0.96) !important; border-color: #1e293b !important; }
+    html.dark .bottom-nav-btn { color: #94a3b8; }
+    html.dark .bottom-nav-btn.active { color: #818cf8; }
+    html.dark .bottom-nav-btn.active .bnav-pill { background-color: rgba(79, 70, 229, 0.22); }
     html.dark .surface-card { background-color: #111827 !important; border-color: #1f2937 !important; color: #f1f5f9 !important; }
     html.dark .surface-sub { background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
     html.dark .text-slate-900 { color: #f8fafc !important; }
@@ -40,48 +57,65 @@
       border-color: #475569 !important;
     }
     html.dark tr:hover { background-color: #1e293b !important; }
+    .safe-pb { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
-  <!-- Top Navbar -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-emerald-600 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col overflow-x-hidden">
+  <!-- Glassmorphic Sticky Top Header (Clean Single-Row on Mobile, Full Toolbar on Tablet/Laptop) -->
+  <header class="bg-white/95 backdrop-blur-md border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between gap-2">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-2.5 min-w-0">
+        <div class="w-9 h-9 sm:w-10 sm:h-10 shrink-0 rounded-xl bg-gradient-to-br from-indigo-600 via-blue-600 to-emerald-500 text-white flex items-center justify-center font-extrabold text-sm sm:text-base shadow-md">
           BM
         </div>
-        <div>
-          <div class="flex flex-wrap items-center gap-2">
-            <h1 class="font-bold text-lg text-slate-900" data-i18n="appName">বিজমাইন্ড এআই</h1>
-            <span id="brandTagBadge" data-i18n="brandTag" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <div class="min-w-0">
+          <div class="flex items-center gap-1.5">
+            <h1 class="font-extrabold text-sm sm:text-lg text-slate-900 truncate" data-i18n="appName">বিজমাইন্ড এআই</h1>
+            <span id="brandTagBadge" data-i18n="brandTag" class="hidden sm:inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 truncate">
               মুদি দোকানের এআই পার্টনার
             </span>
           </div>
-          <p class="text-xs text-slate-500" id="activeShopSubtitle" data-i18n="subtitle">
+          <p class="text-[11px] sm:text-xs text-slate-500 truncate" id="activeShopSubtitle" data-i18n="subtitle">
             অপচয় কমায় · বাকি আদায় করে · লাভ বাড়ায়
           </p>
         </div>
       </div>
 
-      <!-- Navbar Controls -->
-      <div class="flex flex-wrap items-center gap-2">
-        <button type="button" id="langToggleBtn" class="px-2.5 py-1.5 rounded-lg border border-indigo-300 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 text-xs font-bold transition">
-          🌐 English
+      <!-- Compact Action Controls (Always visible & touch-friendly) -->
+      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button type="button" id="langToggleBtn" class="min-h-[36px] px-2.5 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 text-xs font-bold transition">
+          🌐 EN
         </button>
-        <button type="button" id="themeToggleBtn" class="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 text-xs font-bold transition">
-          🌙 ডার্ক মোড
+        <button type="button" id="themeToggleBtn" class="min-h-[36px] px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-800 hover:bg-slate-200 text-xs font-bold transition">
+          🌙
         </button>
-        <select id="shopSelector" class="text-xs font-medium bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800"></select>
-        <select id="festivalSelector" class="text-xs font-semibold bg-amber-50 border border-amber-300 rounded-lg px-2.5 py-1.5 text-amber-900"></select>
-        <button type="button" id="resetDemoBtn" data-i18n="resetDemo" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm">
-          ডেমো চালাও (৯০ দিন)
+        <!-- Mobile Filter Toggle Button -->
+        <button type="button" id="mobileFilterToggleBtn" class="lg:hidden min-h-[36px] px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-800 text-xs font-bold flex items-center gap-1">
+          ⚙️ <span class="hidden sm:inline" data-i18n="btnFilters"></span>
         </button>
+
+        <!-- Laptop/Desktop Inline Controls -->
+        <div class="hidden lg:flex items-center gap-2">
+          <select id="shopSelector" class="text-xs font-medium bg-slate-100 border border-slate-300 rounded-xl px-2.5 py-2 text-slate-800"></select>
+          <select id="festivalSelector" class="text-xs font-semibold bg-amber-50 border border-amber-300 rounded-xl px-2.5 py-2 text-amber-900"></select>
+          <button type="button" id="resetDemoBtn" data-i18n="resetDemo" class="text-xs font-semibold px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm"></button>
+        </div>
       </div>
     </div>
 
-    <!-- Navigation Tabs -->
-    <div class="bg-slate-900 text-slate-300 border-t border-slate-800">
-      <div class="max-w-7xl mx-auto px-4 py-2 flex items-center gap-1.5 overflow-x-auto" id="navTabsContainer">
+    <!-- Collapsible Mobile/Tablet Control Drawer (Shop, Festival, 90-Day Demo) -->
+    <div id="mobileFilterDrawer" class="hidden lg:hidden border-t border-slate-200 px-3 py-3 bg-slate-50/90 space-y-2.5">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <select id="mobileShopSelector" class="w-full min-h-[42px] text-xs font-medium bg-white border border-slate-300 rounded-xl px-3 py-2 text-slate-800"></select>
+        <select id="mobileFestivalSelector" class="w-full min-h-[42px] text-xs font-semibold bg-amber-50 border border-amber-300 rounded-xl px-3 py-2 text-amber-900"></select>
+        <button type="button" id="mobileResetDemoBtn" data-i18n="resetDemo" class="w-full min-h-[42px] text-xs font-bold px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"></button>
+      </div>
+    </div>
+
+    <!-- Tablet & Laptop Top Navigation Bar (Hidden on Mobile Phones in favor of Native Bottom Bar) -->
+    <div class="hidden md:block bg-slate-900 text-slate-300 border-t border-slate-800">
+      <div class="max-w-7xl mx-auto px-4 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar" id="navTabsContainer">
         <button type="button" data-tab="dashboard" id="navTab_dashboard" data-i18n="tab_dashboard" class="nav-btn active whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition"></button>
         <button type="button" data-tab="assistant" id="navTab_assistant" data-i18n="tab_assistant" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition"></button>
         <button type="button" data-tab="waste" id="navTab_waste" data-i18n="tab_waste" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition"></button>
@@ -95,136 +129,172 @@
     </div>
   </header>
 
-  <!-- Toast Banner -->
-  <div id="toastBanner" class="hidden fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 flex items-center justify-between gap-3">
+  <!-- Toast Banner (Positioned cleanly above Mobile Bottom Nav) -->
+  <div id="toastBanner" class="hidden fixed bottom-20 md:bottom-6 left-3 right-3 sm:left-auto sm:right-5 z-50 sm:max-w-md bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center justify-between gap-3">
     <span id="toastMessage" class="text-xs font-medium"></span>
-    <button type="button" id="closeToastBtn" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
+    <button type="button" id="closeToastBtn" class="text-slate-400 hover:text-white text-xs font-bold p-1">✕</button>
   </div>
 
   <!-- Explainable AI Modal -->
-  <div id="whyModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="surface-card bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-200 space-y-3">
-      <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+  <div id="whyModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="surface-card bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-200 space-y-3">
+      <div class="w-10 h-1 bg-slate-300 rounded-full mx-auto sm:hidden mb-1"></div>
+      <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
         <h3 class="font-bold text-sm text-indigo-700" id="whyModalTitle"></h3>
-        <button type="button" id="closeWhyModalBtn" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+        <button type="button" id="closeWhyModalBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs">✕</button>
       </div>
-      <div id="whyModalBody" class="text-xs text-slate-700 space-y-2 leading-relaxed"></div>
+      <div id="whyModalBody" class="text-xs sm:text-sm text-slate-700 space-y-2 leading-relaxed"></div>
     </div>
   </div>
 
-  <main class="max-w-7xl w-full mx-auto px-4 py-6 flex-1 space-y-6">
+  <!-- Mobile "More Tools" Bottom Sheet Drawer -->
+  <div id="mobileMoreSheet" class="hidden md:hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end">
+    <div class="surface-card bg-white w-full rounded-t-3xl p-5 pb-8 shadow-2xl border-t border-slate-200 space-y-4">
+      <div class="w-10 h-1 bg-slate-300 rounded-full mx-auto"></div>
+      <div class="flex items-center justify-between">
+        <h3 class="font-bold text-sm text-slate-900" data-i18n="moreSheetTitle"></h3>
+        <button type="button" id="closeMoreSheetBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs">✕</button>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <button type="button" data-sheet-tab="chalan" class="sheet-tab-btn surface-sub min-h-[54px] p-3 rounded-2xl bg-slate-50 border border-slate-200 text-left flex items-center gap-2.5">
+          <span class="text-lg">📷</span>
+          <span class="text-xs font-bold text-slate-800" data-i18n="mTab_chalan"></span>
+        </button>
+        <button type="button" data-sheet-tab="forecast" class="sheet-tab-btn surface-sub min-h-[54px] p-3 rounded-2xl bg-slate-50 border border-slate-200 text-left flex items-center gap-2.5">
+          <span class="text-lg">📈</span>
+          <span class="text-xs font-bold text-slate-800" data-i18n="mTab_forecast"></span>
+        </button>
+        <button type="button" data-sheet-tab="restock" class="sheet-tab-btn surface-sub min-h-[54px] p-3 rounded-2xl bg-slate-50 border border-slate-200 text-left flex items-center gap-2.5">
+          <span class="text-lg">📦</span>
+          <span class="text-xs font-bold text-slate-800" data-i18n="mTab_restock"></span>
+        </button>
+        <button type="button" data-sheet-tab="pos" class="sheet-tab-btn surface-sub min-h-[54px] p-3 rounded-2xl bg-slate-50 border border-slate-200 text-left flex items-center gap-2.5">
+          <span class="text-lg">🧾</span>
+          <span class="text-xs font-bold text-slate-800" data-i18n="mTab_pos"></span>
+        </button>
+        <button type="button" data-sheet-tab="simulator" class="sheet-tab-btn surface-sub col-span-2 min-h-[52px] p-3 rounded-2xl bg-indigo-50 border border-indigo-200 text-left flex items-center gap-2.5">
+          <span class="text-lg">⚡</span>
+          <span class="text-xs font-bold text-indigo-800" data-i18n="mTab_simulator"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Workspace (Extra bottom padding on mobile for Bottom Navigation Bar) -->
+  <main class="max-w-7xl w-full mx-auto px-3 sm:px-5 py-4 sm:py-6 pb-24 md:pb-8 flex-1 space-y-5 sm:space-y-6">
     <!-- TAB 1: COMMAND CENTER -->
-    <section id="tab-dashboard" class="tab-panel space-y-6">
-      <div class="bg-gradient-to-r from-emerald-900 via-teal-900 to-indigo-950 text-white rounded-2xl p-5 shadow-md space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <span class="text-xs font-bold uppercase tracking-wider text-emerald-300" id="impactSubBadge" data-i18n="impactSub"></span>
-            <h2 class="text-lg md:text-xl font-extrabold mt-0.5" id="impactHeadlineText"></h2>
+    <section id="tab-dashboard" class="tab-panel space-y-4 sm:space-y-6">
+      <div class="bg-gradient-to-br from-emerald-900 via-teal-900 to-indigo-950 text-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-lg space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div class="space-y-1">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-300" id="impactSubBadge" data-i18n="impactSub"></span>
+            <h2 class="text-base sm:text-xl font-extrabold leading-snug" id="impactHeadlineText"></h2>
           </div>
-          <button type="button" id="storyDemoBtn" data-i18n="storyBtn" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow transition"></button>
+          <button type="button" id="storyDemoBtn" data-i18n="storyBtn" class="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow transition text-center"></button>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div class="bg-white/10 border border-white/15 rounded-xl p-3.5">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+          <div class="bg-white/10 border border-white/15 rounded-2xl p-3.5 flex sm:block items-center justify-between">
             <p class="text-xs text-emerald-200" id="lblImpactWaste" data-i18n="lblImpactWaste"></p>
-            <p class="text-2xl font-extrabold mt-0.5" id="impactWasteSaved"></p>
+            <p class="text-xl sm:text-2xl font-extrabold sm:mt-0.5" id="impactWasteSaved"></p>
           </div>
-          <div class="bg-white/10 border border-white/15 rounded-xl p-3.5">
+          <div class="bg-white/10 border border-white/15 rounded-2xl p-3.5 flex sm:block items-center justify-between">
             <p class="text-xs text-sky-200" id="lblImpactStockout" data-i18n="lblImpactStockout"></p>
-            <p class="text-2xl font-extrabold mt-0.5" id="impactStockouts"></p>
+            <p class="text-xl sm:text-2xl font-extrabold sm:mt-0.5" id="impactStockouts"></p>
           </div>
-          <div class="bg-white/10 border border-white/15 rounded-xl p-3.5">
+          <div class="bg-white/10 border border-white/15 rounded-2xl p-3.5 flex sm:block items-center justify-between">
             <p class="text-xs text-amber-200" id="lblImpactBaki" data-i18n="lblImpactBaki"></p>
-            <p class="text-2xl font-extrabold mt-0.5" id="impactBaki"></p>
+            <p class="text-xl sm:text-2xl font-extrabold sm:mt-0.5" id="impactBaki"></p>
           </div>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 surface-card bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between">
+      <!-- KPI Grid (2x2 crisp cards on Mobile, 4x1 on Laptop) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div class="surface-card bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium" id="lblKpiRev" data-i18n="lblKpiRev"></p>
+          <p class="text-xl sm:text-2xl font-extrabold text-slate-900 mt-1" id="kpiRevenue"></p>
+        </div>
+        <div class="surface-card bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium" id="lblKpiGross" data-i18n="lblKpiGross"></p>
+          <p class="text-xl sm:text-2xl font-extrabold text-indigo-600 mt-1" id="kpiGrossProfit"></p>
+        </div>
+        <div class="surface-card bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium" id="lblKpiLoss" data-i18n="lblKpiLoss"></p>
+          <p class="text-xl sm:text-2xl font-extrabold text-rose-600 mt-1" id="kpiInvLoss"></p>
+        </div>
+        <div class="surface-card bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200 shadow-sm">
+          <p class="text-[11px] sm:text-xs text-slate-500 font-medium" id="lblKpiNet" data-i18n="lblKpiNet"></p>
+          <p class="text-xl sm:text-2xl font-extrabold text-emerald-600 mt-1" id="kpiNetProfit"></p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div class="lg:col-span-2 surface-card bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3.5">
+          <div class="flex items-center justify-between gap-2">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600" data-i18n="morningSub"></span>
-              <h3 class="text-base font-bold text-slate-900" id="lblMorningTitle" data-i18n="lblMorningTitle"></h3>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-600" data-i18n="morningSub"></span>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900" id="lblMorningTitle" data-i18n="lblMorningTitle"></h3>
             </div>
-            <button type="button" id="whyMorningBriefBtn" data-i18n="whyBtn" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100"></button>
+            <button type="button" id="whyMorningBriefBtn" data-i18n="whyBtn" class="min-h-[34px] text-xs font-bold px-3 py-1 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100"></button>
           </div>
           <div id="morningBriefList" class="space-y-2.5"></div>
         </div>
 
-        <div class="surface-card bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+        <div class="surface-card bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm space-y-3">
           <div class="flex items-center justify-between">
             <div>
-              <span class="text-xs font-bold uppercase tracking-wider text-emerald-600" data-i18n="healthSub"></span>
-              <h3 class="text-base font-bold text-slate-900" id="lblHealthTitle" data-i18n="lblHealthTitle"></h3>
+              <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-600" data-i18n="healthSub"></span>
+              <h3 class="text-sm sm:text-base font-bold text-slate-900" id="lblHealthTitle" data-i18n="lblHealthTitle"></h3>
             </div>
             <div class="text-right">
-              <span class="text-3xl font-extrabold text-indigo-600" id="healthScoreValue"></span>
+              <span class="text-2xl sm:text-3xl font-extrabold text-indigo-600" id="healthScoreValue"></span>
               <span class="text-xs font-bold text-slate-400" data-i18n="outOf100"></span>
             </div>
           </div>
-          <div id="healthBreakdownList" class="space-y-2 text-xs"></div>
+          <div id="healthBreakdownList" class="space-y-2.5 text-xs"></div>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="surface-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <p class="text-xs text-slate-500 font-medium" id="lblKpiRev" data-i18n="lblKpiRev"></p>
-          <p class="text-2xl font-extrabold text-slate-900 mt-1" id="kpiRevenue"></p>
-        </div>
-        <div class="surface-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <p class="text-xs text-slate-500 font-medium" id="lblKpiGross" data-i18n="lblKpiGross"></p>
-          <p class="text-2xl font-extrabold text-indigo-600 mt-1" id="kpiGrossProfit"></p>
-        </div>
-        <div class="surface-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <p class="text-xs text-slate-500 font-medium" id="lblKpiLoss" data-i18n="lblKpiLoss"></p>
-          <p class="text-2xl font-extrabold text-rose-600 mt-1" id="kpiInvLoss"></p>
-        </div>
-        <div class="surface-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-          <p class="text-xs text-slate-500 font-medium" id="lblKpiNet" data-i18n="lblKpiNet"></p>
-          <p class="text-2xl font-extrabold text-emerald-600 mt-1" id="kpiNetProfit"></p>
-        </div>
-      </div>
-
-      <div class="surface-card bg-rose-50 border border-rose-200 rounded-xl p-4 space-y-2" id="marginLeakBox">
-        <div class="flex items-center justify-between">
+      <div class="surface-card bg-rose-50 border border-rose-200 rounded-2xl p-4 space-y-2" id="marginLeakBox">
+        <div class="flex items-center justify-between gap-2">
           <h4 class="text-xs font-bold text-rose-700 uppercase tracking-wider" data-i18n="marginLeakHeading"></h4>
-          <span class="text-xs font-semibold text-rose-600" id="lblMarginBadge" data-i18n="lblMarginBadge"></span>
+          <span class="text-[11px] font-semibold text-rose-600" id="lblMarginBadge" data-i18n="lblMarginBadge"></span>
         </div>
-        <div id="marginLeakAlerts" class="space-y-1.5 text-xs"></div>
+        <div id="marginLeakAlerts" class="space-y-2 text-xs"></div>
       </div>
     </section>
 
     <!-- TAB 2: VOICE ASSISTANT & AI CHAT -->
-    <section id="tab-assistant" class="tab-panel hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="lg:col-span-2 surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
+    <section id="tab-assistant" class="tab-panel hidden space-y-4 sm:space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div class="lg:col-span-2 surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h3 class="text-base font-bold text-slate-900" id="lblVoiceTitle" data-i18n="voiceTitle"></h3>
-              <p class="text-xs text-slate-500" id="lblVoiceSub" data-i18n="voiceSub"></p>
+              <p class="text-xs text-slate-500 mt-0.5" id="lblVoiceSub" data-i18n="voiceSub"></p>
             </div>
-            <button type="button" id="voiceSpeakBtn" data-i18n="voiceBtn" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition"></button>
+            <button type="button" id="voiceSpeakBtn" data-i18n="voiceBtn" class="w-full sm:w-auto min-h-[44px] px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md transition"></button>
           </div>
 
-          <div class="flex flex-wrap gap-2" id="quickAskContainer"></div>
+          <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1" id="quickAskContainer"></div>
 
-          <form id="aiChatForm" class="flex gap-2">
-            <input type="text" id="aiChatInput" class="flex-1 text-xs border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            <button type="submit" id="btnAskSubmit" data-i18n="askSubmitBtn" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs"></button>
+          <form id="aiChatForm" class="flex flex-col sm:flex-row gap-2">
+            <input type="text" id="aiChatInput" class="flex-1 min-h-[44px] text-xs sm:text-sm border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <button type="submit" id="btnAskSubmit" data-i18n="askSubmitBtn" class="min-h-[44px] px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs"></button>
           </form>
 
-          <div id="aiChatResponseBox" class="p-4 rounded-xl bg-slate-900 text-slate-100 space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+          <div id="aiChatResponseBox" class="p-4 rounded-2xl bg-slate-900 text-slate-100 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700 pb-2">
               <span class="text-xs font-bold text-emerald-400" data-i18n="toolCallingBadge"></span>
-              <button type="button" id="readAloudAnswerBtn" data-i18n="readAloudBtn" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold"></button>
+              <button type="button" id="readAloudAnswerBtn" data-i18n="readAloudBtn" class="min-h-[34px] text-xs px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold"></button>
             </div>
-            <p id="aiChatAnswerText" class="text-xs leading-relaxed whitespace-pre-line"></p>
+            <p id="aiChatAnswerText" class="text-xs sm:text-sm leading-relaxed whitespace-pre-line"></p>
           </div>
         </div>
 
-        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
           <h4 class="text-sm font-bold text-slate-900" id="chatChartTitle"></h4>
-          <div class="relative h-72">
+          <div class="relative h-64 sm:h-72">
             <canvas id="assistantChart"></canvas>
           </div>
         </div>
@@ -232,48 +302,48 @@
     </section>
 
     <!-- TAB 3: WASTE RESCUE -->
-    <section id="tab-waste" class="tab-panel hidden space-y-6">
-      <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-2">
+    <section id="tab-waste" class="tab-panel hidden space-y-4 sm:space-y-6">
+      <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>
-            <span class="text-xs font-bold text-amber-600 uppercase" data-i18n="wasteStarTag"></span>
+            <span class="text-[11px] font-bold text-amber-600 uppercase" data-i18n="wasteStarTag"></span>
             <h3 class="text-base font-bold text-slate-900" id="lblWasteTitle" data-i18n="wasteTitle"></h3>
-            <p class="text-xs text-slate-500" id="lblWasteSub" data-i18n="wasteSub"></p>
+            <p class="text-xs text-slate-500 mt-0.5" id="lblWasteSub" data-i18n="wasteSub"></p>
           </div>
-          <span class="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-xs" id="wasteTotalRecoverableBadge"></span>
+          <span class="self-start sm:self-auto px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-xs" id="wasteTotalRecoverableBadge"></span>
         </div>
         <div id="wasteRescueGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
       </div>
     </section>
 
     <!-- TAB 4: BAKI KHATA -->
-    <section id="tab-baki" class="tab-panel hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+    <section id="tab-baki" class="tab-panel hidden space-y-4 sm:space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h3 class="text-base font-bold text-slate-900" id="lblBakiAddTitle" data-i18n="bakiAddTitle"></h3>
           <form id="addBakiForm" class="space-y-3">
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblCustName"></label>
-              <input type="text" id="bakiName" required class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+              <input type="text" id="bakiName" required class="w-full min-h-[42px] text-xs border border-slate-300 rounded-xl px-3 py-2" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblCustPhone"></label>
-              <input type="text" id="bakiPhone" required value="01715-000000" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+              <input type="text" id="bakiPhone" required value="01715-000000" class="w-full min-h-[42px] text-xs border border-slate-300 rounded-xl px-3 py-2" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblDueAmount"></label>
-              <input type="number" id="bakiAmount" required value="1250" min="1" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+              <input type="number" id="bakiAmount" required value="1250" min="1" class="w-full min-h-[42px] text-xs border border-slate-300 rounded-xl px-3 py-2" />
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblNotes"></label>
-              <input type="text" id="bakiNotes" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+              <input type="text" id="bakiNotes" class="w-full min-h-[42px] text-xs border border-slate-300 rounded-xl px-3 py-2" />
             </div>
-            <button type="submit" data-i18n="btnAddBaki" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-lg"></button>
+            <button type="submit" data-i18n="btnAddBaki" class="w-full min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-xl"></button>
           </form>
         </div>
 
-        <div class="lg:col-span-2 surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between">
+        <div class="lg:col-span-2 surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-base font-bold text-slate-900" id="lblBakiListTitle" data-i18n="bakiListTitle"></h3>
             <span class="text-xs font-bold px-3 py-1 rounded-full bg-rose-100 text-rose-800" id="totalBakiBadge"></span>
           </div>
@@ -283,40 +353,43 @@
     </section>
 
     <!-- TAB 5: CHALAN SCANNER -->
-    <section id="tab-chalan" class="tab-panel hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <span class="text-xs font-bold text-indigo-600 uppercase" data-i18n="chalanStarTag"></span>
+    <section id="tab-chalan" class="tab-panel hidden space-y-4 sm:space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <span class="text-[11px] font-bold text-indigo-600 uppercase" data-i18n="chalanStarTag"></span>
           <h3 class="text-base font-bold text-slate-900" id="lblChalanTitle" data-i18n="chalanTitle"></h3>
           <p class="text-xs text-slate-500" data-i18n="chalanSub"></p>
           <div class="space-y-3">
-            <input type="file" id="chalanFileInput" accept="image/*" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700" />
+            <input type="file" id="chalanFileInput" accept="image/*" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2.5 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700" />
             <textarea id="chalanTextInput" rows="4" class="w-full text-xs border border-slate-300 rounded-xl p-3"></textarea>
-            <button type="button" id="scanChalanBtn" data-i18n="btnScanChalan" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-xl"></button>
+            <button type="button" id="scanChalanBtn" data-i18n="btnScanChalan" class="w-full min-h-[44px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-xl"></button>
           </div>
         </div>
 
-        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <div class="flex items-center justify-between gap-2">
+        <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h4 class="text-sm font-bold text-slate-900" data-i18n="chalanExtractedTitle"></h4>
-            <button type="button" id="commitChalanStockBtn" data-i18n="btnCommitChalan" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"></button>
+            <button type="button" id="commitChalanStockBtn" data-i18n="btnCommitChalan" class="w-full sm:w-auto min-h-[40px] px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs"></button>
           </div>
           <div id="chalanExtractedList" class="space-y-2 text-xs"></div>
         </div>
       </div>
     </section>
 
-    <!-- TAB 6: FESTIVAL FORECAST -->
-    <section id="tab-forecast" class="tab-panel hidden space-y-6">
-      <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+    <!-- TAB 6: FESTIVAL FORECAST (Mobile Cards + Tablet/Desktop Table) -->
+    <section id="tab-forecast" class="tab-panel hidden space-y-4 sm:space-y-6">
+      <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div>
             <h3 class="text-base font-bold text-slate-900" id="lblForecastTitle" data-i18n="forecastTitle"></h3>
-            <p class="text-xs text-slate-500" data-i18n="forecastSub"></p>
+            <p class="text-xs text-slate-500 mt-0.5" data-i18n="forecastSub"></p>
           </div>
           <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-xs" id="activeFestivalBadge"></span>
         </div>
-        <div class="overflow-x-auto">
+        <!-- Mobile Card List -->
+        <div id="forecastMobileCards" class="md:hidden space-y-3"></div>
+        <!-- Tablet/Laptop Table -->
+        <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
@@ -335,14 +408,17 @@
       </div>
     </section>
 
-    <!-- TAB 7: SMART REORDER -->
-    <section id="tab-restock" class="tab-panel hidden space-y-6">
-      <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+    <!-- TAB 7: SMART REORDER (Mobile Cards + Tablet/Desktop Table) -->
+    <section id="tab-restock" class="tab-panel hidden space-y-4 sm:space-y-6">
+      <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
         <div>
           <h3 class="text-base font-bold text-slate-900" id="lblRestockTitle" data-i18n="restockTitle"></h3>
-          <p class="text-xs text-slate-500" data-i18n="restockSub"></p>
+          <p class="text-xs text-slate-500 mt-0.5" data-i18n="restockSub"></p>
         </div>
-        <div class="overflow-x-auto">
+        <!-- Mobile Card List -->
+        <div id="restockMobileCards" class="md:hidden space-y-3"></div>
+        <!-- Tablet/Laptop Table -->
+        <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
               <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
@@ -360,33 +436,36 @@
       </div>
     </section>
 
-    <!-- TAB 8: POS & BATCH INVENTORY -->
-    <section id="tab-pos" class="tab-panel hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+    <!-- TAB 8: POS & BATCH INVENTORY (Mobile Cards + Tablet/Desktop Table) -->
+    <section id="tab-pos" class="tab-panel hidden space-y-4 sm:space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h3 class="text-base font-bold text-slate-900" data-i18n="posFormTitle"></h3>
           <form id="posSaleForm" class="space-y-3">
             <div>
               <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblSelectProd"></label>
-              <select id="posProductSelect" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2"></select>
+              <select id="posProductSelect" class="w-full min-h-[42px] text-xs border border-slate-300 rounded-xl px-3 py-2"></select>
             </div>
             <div class="grid grid-cols-2 gap-2">
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblQty"></label>
-                <input type="number" id="posQty" value="10" min="1" required class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+                <input type="number" id="posQty" value="10" min="1" required class="w-full min-h-[42px] text-xs border border-slate-300 rounded-xl px-3 py-2" />
               </div>
               <div>
                 <label class="block text-xs font-semibold text-slate-700 mb-1" data-i18n="lblPayment"></label>
-                <select id="posMethod" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2"></select>
+                <select id="posMethod" class="w-full min-h-[42px] text-xs border border-slate-300 rounded-xl px-3 py-2"></select>
               </div>
             </div>
-            <button type="submit" data-i18n="btnCompleteSale" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-lg"></button>
+            <button type="submit" data-i18n="btnCompleteSale" class="w-full min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl"></button>
           </form>
         </div>
 
-        <div class="lg:col-span-2 surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="lg:col-span-2 surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h3 class="text-base font-bold text-slate-900" data-i18n="posBatchTitle"></h3>
-          <div class="overflow-x-auto">
+          <!-- Mobile Batch Cards -->
+          <div id="posBatchMobileCards" class="md:hidden space-y-2.5"></div>
+          <!-- Tablet/Laptop Table -->
+          <div class="hidden md:block overflow-x-auto">
             <table class="w-full text-left border-collapse text-xs">
               <thead>
                 <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
@@ -406,29 +485,29 @@
     </section>
 
     <!-- TAB 9: WHAT-IF SIMULATOR & COMBO OFFERS -->
-    <section id="tab-simulator" class="tab-panel hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+    <section id="tab-simulator" class="tab-panel hidden space-y-4 sm:space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h3 class="text-base font-bold text-slate-900" data-i18n="simTitle"></h3>
           <p class="text-xs text-slate-500" data-i18n="simSub"></p>
-          <div class="space-y-3">
+          <div class="space-y-4">
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1"><span data-i18n="lblSimPrice"></span>: <span id="simPriceVal" class="text-indigo-600 font-bold"></span></label>
-              <input type="range" id="simPriceRange" min="-20" max="25" value="10" class="w-full" />
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5"><span data-i18n="lblSimPrice"></span>: <span id="simPriceVal" class="text-indigo-600 font-bold"></span></label>
+              <input type="range" id="simPriceRange" min="-20" max="25" value="10" class="w-full accent-indigo-600" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1"><span data-i18n="lblSimMkt"></span>: <span id="simMktVal" class="text-indigo-600 font-bold"></span></label>
-              <input type="range" id="simMktRange" min="0" max="10000" step="500" value="1000" class="w-full" />
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5"><span data-i18n="lblSimMkt"></span>: <span id="simMktVal" class="text-indigo-600 font-bold"></span></label>
+              <input type="range" id="simMktRange" min="0" max="10000" step="500" value="1000" class="w-full accent-indigo-600" />
             </div>
             <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1"><span data-i18n="lblSimStock"></span>: <span id="simStockVal" class="text-indigo-600 font-bold"></span></label>
-              <input type="range" id="simStockRange" min="0" max="50000" step="1000" value="5000" class="w-full" />
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5"><span data-i18n="lblSimStock"></span>: <span id="simStockVal" class="text-indigo-600 font-bold"></span></label>
+              <input type="range" id="simStockRange" min="0" max="50000" step="1000" value="5000" class="w-full accent-indigo-600" />
             </div>
-            <div class="p-4 rounded-xl bg-slate-900 text-white space-y-1.5 text-xs" id="whatIfOutputBox"></div>
+            <div class="p-4 rounded-2xl bg-slate-900 text-white space-y-1.5 text-xs" id="whatIfOutputBox"></div>
           </div>
         </div>
 
-        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <h3 class="text-base font-bold text-slate-900" data-i18n="comboTitle"></h3>
           <p class="text-xs text-slate-500" data-i18n="comboSub"></p>
           <div id="comboOffersList" class="space-y-3"></div>
@@ -437,18 +516,45 @@
     </section>
   </main>
 
+  <!-- Native App-Style Mobile Bottom Navigation Bar (Visible on Mobile < 768px) -->
+  <nav class="mobile-bottom-nav md:hidden fixed bottom-0 inset-x-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 safe-pb shadow-[0_-4px_20px_rgba(15,23,42,0.08)]">
+    <div class="grid grid-cols-5 px-1.5 py-1.5">
+      <button type="button" data-btab="dashboard" class="bottom-nav-btn active flex flex-col items-center justify-center gap-0.5 py-1 text-slate-500">
+        <span class="bnav-pill px-3 py-0.5 rounded-full text-base transition">🏠</span>
+        <span class="text-[10px] font-bold truncate" data-i18n="bnav_home"></span>
+      </button>
+      <button type="button" data-btab="assistant" class="bottom-nav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-slate-500">
+        <span class="bnav-pill px-3 py-0.5 rounded-full text-base transition">🎤</span>
+        <span class="text-[10px] font-bold truncate" data-i18n="bnav_voice"></span>
+      </button>
+      <button type="button" data-btab="waste" class="bottom-nav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-slate-500">
+        <span class="bnav-pill px-3 py-0.5 rounded-full text-base transition">🥚</span>
+        <span class="text-[10px] font-bold truncate" data-i18n="bnav_waste"></span>
+      </button>
+      <button type="button" data-btab="baki" class="bottom-nav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-slate-500">
+        <span class="bnav-pill px-3 py-0.5 rounded-full text-base transition">📒</span>
+        <span class="text-[10px] font-bold truncate" data-i18n="bnav_baki"></span>
+      </button>
+      <button type="button" id="openMoreSheetBtn" class="bottom-nav-btn flex flex-col items-center justify-center gap-0.5 py-1 text-slate-500">
+        <span class="bnav-pill px-3 py-0.5 rounded-full text-base transition">✨</span>
+        <span class="text-[10px] font-bold truncate" data-i18n="bnav_more"></span>
+      </button>
+    </div>
+  </nav>
+
   <script>
     // ========================================================================
-    // 100% Pure Bangla & 100% Pure English Localization System
+    // 100% Pure Bangla & 100% Pure English Localization + Mobile-First Engine
     // ========================================================================
     const dict = {
       bn: {
         appName: 'বিজমাইন্ড এআই',
         brandTag: 'মুদি দোকানের এআই পার্টনার',
         subtitle: 'অপচয় কমায় · বাকি আদায় করে · লাভ বাড়ায়',
-        langBtn: '🌐 English',
-        darkBtn: '🌙 ডার্ক মোড',
-        lightBtn: '☀️ লাইট মোড',
+        langBtn: '🌐 EN',
+        darkBtn: '🌙',
+        lightBtn: '☀️',
+        btnFilters: 'ফিল্টার',
         resetDemo: 'ডেমো চালাও (৯০ দিন)',
         storyBtn: 'রহিম ভাইয়ের ৫৫টি ডিমের গল্প দেখুন →',
         impactSub: 'প্রভাব ড্যাশবোর্ড · টাকার হিসাবে এআই-এর অবদান',
@@ -462,11 +568,22 @@
         outOf100: '/১০০',
         whyBtn: 'কেন?',
         lblKpiRev: 'মোট বিক্রি',
-        lblKpiGross: 'মোট প্রাথমিক লাভ',
-        lblKpiLoss: 'স্টক ক্ষতি (একবার গণনা)',
+        lblKpiGross: 'প্রাথমিক লাভ',
+        lblKpiLoss: 'স্টক ক্ষতি',
         lblKpiNet: 'আসল নিট লাভ',
         marginLeakHeading: 'লাভ কমে যাওয়া ও অস্বাভাবিকতা শনাক্তকরণ',
         lblMarginBadge: 'স্বয়ংক্রিয় সতর্কবার্তা',
+        bnav_home: 'হোম',
+        bnav_voice: 'ভয়েস এআই',
+        bnav_waste: 'অপচয় রোধ',
+        bnav_baki: 'বাকির খাতা',
+        bnav_more: 'আরও টুলস',
+        moreSheetTitle: 'সব স্মার্ট বিজনেস টুলস',
+        mTab_chalan: 'চালান স্ক্যানার',
+        mTab_forecast: 'উৎসব পূর্বাভাস',
+        mTab_restock: 'স্মার্ট অর্ডার',
+        mTab_pos: 'বিক্রি ও ব্যাচ',
+        mTab_simulator: 'সিমুলেটর ও কম্বো অফার',
         tab_dashboard: '১. কমান্ড সেন্টার',
         tab_assistant: '২. বাংলা ভয়েস ও চ্যাট',
         tab_waste: '৩. অপচয় রোধ এআই',
@@ -482,7 +599,7 @@
         askSubmitBtn: 'জিজ্ঞাসা করুন',
         chatPlaceholder: 'বাংলায় প্রশ্ন লিখুন (যেমন: আজ কত বিক্রি হলো?)...',
         toolCallingBadge: 'নিরাপদ ডেটাবেস বিশ্লেষণ ও এআই উত্তর',
-        readAloudBtn: '🔊 উত্তর পড়ে শোনাও',
+        readAloudBtn: '🔊 পড়ে শোনাও',
         wasteStarTag: 'সেরা ফিচার ১',
         wasteTitle: 'অপচয় রোধ এআই — ছাড় ও বাংলা অফার পোস্ট',
         wasteSub: 'মেয়াদ শেষ হওয়ার আগেই এআই ছাড় দিয়ে নগদ টাকা ফেরত আনার হিসাব ও বাংলা অফার পোস্ট লিখে দেবে।',
@@ -499,8 +616,8 @@
         btnScanChalan: '🔍 চালান স্ক্যান করে পণ্য বের করুন',
         chalanExtractedTitle: 'স্ক্যান করা পণ্যের তালিকা',
         btnCommitChalan: '✓ সব পণ্য স্টকে যোগ করুন',
-        forecastTitle: '৭, ১৫ ও ৩০ দিনের চাহিদা পূর্বাভাস ও বাংলাদেশের উৎসব বিশ্লেষণ',
-        forecastSub: 'ওপর থেকে রমজান ও ঈদ, পহেলা বৈশাখ বা বর্ষাকাল বাছাই করে দেখুন চাহিদা কীভাবে বদলায়।',
+        forecastTitle: '৭, ১৫ ও ৩০ দিনের চাহিদা পূর্বাভাস ও উৎসব বিশ্লেষণ',
+        forecastSub: 'ফিল্টার থেকে রমজান ও ঈদ, পহেলা বৈশাখ বা বর্ষাকাল বাছাই করে দেখুন চাহিদা কীভাবে বদলায়।',
         restockTitle: 'স্মার্ট অর্ডার পরামর্শ (কবে ও কতটি কিনবেন)',
         restockSub: 'দৈনিক বিক্রি, সাপ্লায়ার ডেলিভারি সময় ও সেফটি স্টক হিসাব করে সঠিক অর্ডারের পরিমাণ।',
         posFormTitle: 'বিক্রি রেকর্ড করুন (আগে মেয়াদ শেষ হওয়া ব্যাচ থেকে)',
@@ -539,14 +656,15 @@
         brandTag: 'AI Grocery Business Co-Pilot',
         subtitle: 'Cuts Waste · Recovers Credit Dues · Boosts Profit',
         langBtn: '🌐 বাংলা',
-        darkBtn: '🌙 Dark Mode',
-        lightBtn: '☀️ Light Mode',
+        darkBtn: '🌙',
+        lightBtn: '☀️',
+        btnFilters: 'Filters',
         resetDemo: 'Run 90-Day Demo',
         storyBtn: "Watch Rahim's 55-Egg Rescue Story →",
         impactSub: 'Impact Dashboard · Verified Financial Proof in BDT',
         lblImpactWaste: 'Waste Prevented',
         lblImpactStockout: 'Stockouts Prevented',
-        lblImpactBaki: 'Credit Dues Tracked & Recovered',
+        lblImpactBaki: 'Credit Dues Tracked',
         morningSub: 'Daily Executive Brief',
         lblMorningTitle: "Today's Top 3 Priority Actions",
         healthSub: 'AI Business Health Index',
@@ -555,10 +673,21 @@
         whyBtn: 'Why?',
         lblKpiRev: 'Total Revenue',
         lblKpiGross: 'Gross Profit',
-        lblKpiLoss: 'Inventory Loss (Counted Once)',
+        lblKpiLoss: 'Inventory Loss',
         lblKpiNet: 'Net Profit',
         marginLeakHeading: 'Margin Leak & Anomaly Detector',
-        lblMarginBadge: 'Automated Profit Protection',
+        lblMarginBadge: 'Automated Alert',
+        bnav_home: 'Home',
+        bnav_voice: 'Voice AI',
+        bnav_waste: 'Rescue',
+        bnav_baki: 'Credit',
+        bnav_more: 'More',
+        moreSheetTitle: 'All Smart Business Tools',
+        mTab_chalan: 'Invoice Scanner',
+        mTab_forecast: 'Festival Forecast',
+        mTab_restock: 'Smart Reorder',
+        mTab_pos: 'POS & Batches',
+        mTab_simulator: 'What-If & Smart Combos',
         tab_dashboard: '1. AI Command Center',
         tab_assistant: '2. Voice & AI Chat',
         tab_waste: '3. Waste Rescue AI',
@@ -589,10 +718,10 @@
         chalanTitle: 'Supplier Invoice Photo / Memo to Auto Stock Entry',
         chalanSub: 'Upload a supplier invoice photo or paste memo text — AI extracts product names, quantities, and unit costs directly into inventory.',
         btnScanChalan: '🔍 Scan Invoice & Extract Items',
-        chalanExtractedTitle: 'Extracted Invoice Items (Ready for Stock)',
-        btnCommitChalan: '✓ Add All Items to Inventory',
-        forecastTitle: '7, 15 & 30-Day Demand Forecast + Bangladesh Festival Intelligence',
-        forecastSub: 'Switch the festival selector above (Ramadan & Eid, Pohela Boishakh, Monsoon) to see seasonal demand surges.',
+        chalanExtractedTitle: 'Extracted Invoice Items',
+        btnCommitChalan: '✓ Add All to Inventory',
+        forecastTitle: '7, 15 & 30-Day Demand Forecast + Festival Intelligence',
+        forecastSub: 'Switch the festival selector in Filters (Ramadan & Eid, Pohela Boishakh, Monsoon) to see seasonal demand surges.',
         restockTitle: 'Smart Stock Reorder Advisor (When & How Much to Order)',
         restockSub: 'Uses ROP = (Daily Demand × Lead Time) + Safety Stock with estimated stockout dates and explainable calculations.',
         posFormTitle: 'Record Customer Sale (FEFO POS)',
@@ -815,22 +944,23 @@
     }
 
     function populateSelectors() {
-      const shopSel = document.getElementById('shopSelector');
-      shopSel.innerHTML = `
+      const shopHtml = `
         <option value="shop_1" ${currentShopKey === 'shop_1' ? 'selected' : ''}>${L('রহিম ভাইয়ের মুদি দোকান', "Rahim's Grocery Store")}</option>
         <option value="shop_2" ${currentShopKey === 'shop_2' ? 'selected' : ''}>${L('গ্রিনকেয়ার ফার্মেসি ও মার্ট', 'GreenCare Pharmacy & Mart')}</option>
       `;
+      document.getElementById('shopSelector').innerHTML = shopHtml;
+      document.getElementById('mobileShopSelector').innerHTML = shopHtml;
 
-      const festSel = document.getElementById('festivalSelector');
-      festSel.innerHTML = `
+      const festHtml = `
         <option value="NONE" ${currentFestival === 'NONE' ? 'selected' : ''}>${L('উৎসব: স্বাভাবিক সময়', 'Season: Normal Period')}</option>
         <option value="RAMADAN_EID" ${currentFestival === 'RAMADAN_EID' ? 'selected' : ''}>${L('উৎসব: রমজান ও ঈদ (+৪০%)', 'Festival: Ramadan & Eid (+40%)')}</option>
         <option value="POHELA_BOISHAKH" ${currentFestival === 'POHELA_BOISHAKH' ? 'selected' : ''}>${L('উৎসব: পহেলা বৈশাখ (+২৫%)', 'Festival: Pohela Boishakh (+25%)')}</option>
         <option value="MONSOON_RAIN" ${currentFestival === 'MONSOON_RAIN' ? 'selected' : ''}>${L('উৎসব: বর্ষাকাল (+২০%)', 'Season: Monsoon Rain (+20%)')}</option>
       `;
+      document.getElementById('festivalSelector').innerHTML = festHtml;
+      document.getElementById('mobileFestivalSelector').innerHTML = festHtml;
 
-      const paySel = document.getElementById('posMethod');
-      paySel.innerHTML = `
+      document.getElementById('posMethod').innerHTML = `
         <option value="CASH">${L('নগদ', 'Cash')}</option>
         <option value="BKASH">${L('বিকাশ', 'bKash')}</option>
         <option value="NAGAD">${L('নগদ অ্যাপ', 'Nagad')}</option>
@@ -857,15 +987,14 @@
         'Brown Farm Eggs 100 @ 10\nFortified Soybean Oil (2L) 20 @ 325\nPasteurized Liquid Milk (1L) 25 @ 80'
       );
 
-      // Quick Ask Chips
       const chips = [
-        { key: 'sales', bn: 'আজ কত বিক্রি হলো?', en: "What are today's sales & profit?", cls: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' },
-        { key: 'restock', bn: 'কোন জিনিস কিনতে হবে?', en: 'Which products should I reorder?', cls: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
-        { key: 'waste', bn: 'ডিম বা পণ্য নষ্ট হবে কি?', en: 'Which items are expiring soon?', cls: 'bg-amber-50 text-amber-800 hover:bg-amber-100' },
-        { key: 'baki', bn: 'কার বাকি আগে তুলব?', en: 'Whose credit due is top priority?', cls: 'bg-rose-50 text-rose-700 hover:bg-rose-100' }
+        { key: 'sales', bn: 'আজ কত বিক্রি হলো?', en: "Today's sales & profit?", cls: 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100' },
+        { key: 'restock', bn: 'কোন জিনিস কিনতে হবে?', en: 'What to reorder?', cls: 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' },
+        { key: 'waste', bn: 'কোন পণ্য নষ্ট হবে?', en: 'Expiring soon?', cls: 'bg-amber-50 text-amber-800 hover:bg-amber-100' },
+        { key: 'baki', bn: 'কার বাকি আগে তুলব?', en: 'Top credit dues?', cls: 'bg-rose-50 text-rose-700 hover:bg-rose-100' }
       ];
       document.getElementById('quickAskContainer').innerHTML = chips
-        .map((c) => `<button type="button" data-qkey="${c.key}" class="quick-ask-btn text-xs px-3 py-1.5 rounded-full font-semibold ${c.cls}">${L(c.bn, c.en)}</button>`)
+        .map((c) => `<button type="button" data-qkey="${c.key}" class="quick-ask-btn whitespace-nowrap min-h-[36px] text-xs px-3.5 py-1.5 rounded-full font-semibold ${c.cls}">${L(c.bn, c.en)}</button>`)
         .join('');
 
       document.querySelectorAll('.quick-ask-btn').forEach((btn) => {
@@ -965,7 +1094,7 @@
       document.getElementById('impactBaki').textContent = `৳${totalBakiImpact.toLocaleString()}`;
       document.getElementById('impactHeadlineText').textContent = L(
         `বিজমাইন্ড এআই এই মাসে ${shopName}-এ ৳${totalWasteSaved.toLocaleString()} অপচয় বাঁচিয়েছে, ${totalStockouts}টি পণ্যের স্টক শেষ হওয়া এড়িয়েছে এবং ৳${totalBakiImpact.toLocaleString()} বাকি আদায়ে সাহায্য করেছে।`,
-        `BizMind AI saved ৳${totalWasteSaved.toLocaleString()} from expiry waste, prevented ${totalStockouts} stockouts, and helped track/recover ৳${totalBakiImpact.toLocaleString()} in credit dues at ${shopName} this month.`
+        `BizMind AI saved ৳${totalWasteSaved.toLocaleString()} from expiry waste, prevented ${totalStockouts} stockouts, and helped recover ৳${totalBakiImpact.toLocaleString()} in credit dues at ${shopName} this month.`
       );
 
       document.getElementById('kpiRevenue').textContent = `৳${revenue.toLocaleString()}`;
@@ -984,16 +1113,16 @@
 
       document.getElementById('morningBriefList').innerHTML = `
         <div class="surface-sub p-3 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between gap-2 text-xs">
-          <span><strong>${L('১) স্টক অর্ডার:', '1) Restock Order:')}</strong> ${topRestockTxt}</span>
-          <button type="button" data-go-tab="restock" class="go-tab-btn px-2.5 py-1 rounded bg-indigo-600 text-white font-semibold">${L('দেখুন', 'View')}</button>
+          <span class="leading-relaxed"><strong>${L('১) স্টক অর্ডার:', '1) Restock Order:')}</strong> ${topRestockTxt}</span>
+          <button type="button" data-go-tab="restock" class="go-tab-btn shrink-0 min-h-[34px] px-3 py-1 rounded-lg bg-indigo-600 text-white font-semibold">${L('দেখুন', 'View')}</button>
         </div>
         <div class="surface-sub p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2 text-xs">
-          <span><strong>${L('২) অপচয় রোধ:', '2) Waste Rescue:')}</strong> ${topWasteTxt}</span>
-          <button type="button" data-go-tab="waste" class="go-tab-btn px-2.5 py-1 rounded bg-amber-600 text-white font-semibold">${L('অফার দিন', 'Offer')}</button>
+          <span class="leading-relaxed"><strong>${L('২) অপচয় রোধ:', '2) Waste Rescue:')}</strong> ${topWasteTxt}</span>
+          <button type="button" data-go-tab="waste" class="go-tab-btn shrink-0 min-h-[34px] px-3 py-1 rounded-lg bg-amber-600 text-white font-semibold">${L('অফার দিন', 'Offer')}</button>
         </div>
         <div class="surface-sub p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-2 text-xs">
-          <span><strong>${L('৩) বাকি আদায়:', '3) Credit Collection:')}</strong> ${topBakiTxt}</span>
-          <button type="button" data-go-tab="baki" class="go-tab-btn px-2.5 py-1 rounded bg-rose-600 text-white font-semibold">${L('তাগাদা দিন', 'Remind')}</button>
+          <span class="leading-relaxed"><strong>${L('৩) বাকি আদায়:', '3) Credit Collection:')}</strong> ${topBakiTxt}</span>
+          <button type="button" data-go-tab="baki" class="go-tab-btn shrink-0 min-h-[34px] px-3 py-1 rounded-lg bg-rose-600 text-white font-semibold">${L('তাগাদা দিন', 'Remind')}</button>
         </div>
       `;
       document.querySelectorAll('.go-tab-btn').forEach((btn) => {
@@ -1006,7 +1135,7 @@
         { label: L('বিক্রির গতি ও প্রবৃদ্ধি (২৫%)', 'Sales Growth (25%)'), score: 22, max: 25 },
         { label: L('স্টক ও মেয়াদ সুরক্ষা (২০%)', 'Inventory Health (20%)'), score: Math.max(8, 20 - wasteItems.length * 2), max: 20 },
         { label: L('খরচ নিয়ন্ত্রণ (১৫%)', 'Expense Control (15%)'), score: 13, max: 15 },
-        { label: L('বাকি আদায় ও ক্রেতা ধরে রাখা (১০%)', 'Credit Recovery & Retention (10%)'), score: Math.max(4, 10 - shop.bakiLedger.length), max: 10 }
+        { label: L('বাকি আদায় ও ক্রেতা ধরে রাখা (১০%)', 'Credit Recovery (10%)'), score: Math.max(4, 10 - shop.bakiLedger.length), max: 10 }
       ];
       document.getElementById('healthScoreValue').textContent = healthRows.reduce((s, r) => s + r.score, 0);
       document.getElementById('healthBreakdownList').innerHTML = healthRows
@@ -1014,7 +1143,7 @@
           (r) => `
           <div>
             <div class="flex justify-between font-semibold text-slate-700"><span>${r.label}</span><span>${r.score}/${r.max}</span></div>
-            <div class="w-full h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden">
+            <div class="w-full h-2 bg-slate-200 rounded-full mt-1 overflow-hidden">
               <div class="h-full bg-indigo-600 rounded-full" style="width: ${Math.round((r.score / r.max) * 100)}%"></div>
             </div>
           </div>
@@ -1028,7 +1157,7 @@
         ? leaks
             .map((p) => {
               const margin = (((p.sellingPrice - p.purchasePrice) / p.sellingPrice) * 100).toFixed(1);
-              return `<div class="surface-sub bg-white p-2.5 rounded-lg border border-rose-200">
+              return `<div class="surface-sub bg-white p-3 rounded-xl border border-rose-200 leading-relaxed">
                 ${L(
                   `<strong>লাভ কমে যাওয়ার সতর্কতা:</strong> ${p.nameBn}-এর কেনা দাম ৳${p.purchasePrice} হওয়ায় লাভ কমে মাত্র <strong>${margin}%</strong>-এ নেমেছে (বিক্রয়মূল্য ৳${p.sellingPrice})।`,
                   `<strong>Margin Leak Alert:</strong> ${p.nameEn} purchase cost rose to ৳${p.purchasePrice}, compressing profit margin to only <strong>${margin}%</strong> (selling price ৳${p.sellingPrice}).`
@@ -1046,17 +1175,17 @@
       document.getElementById('wasteRescueGrid').innerHTML = wasteItems
         .map(
           (w, idx) => `
-          <div class="surface-sub p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2.5">
+          <div class="surface-sub p-4 rounded-2xl bg-amber-50/70 border border-amber-200 space-y-3">
             <div class="flex items-start justify-between gap-2">
-              <h4 class="font-bold text-sm text-slate-900">${w.headline}</h4>
-              <button type="button" data-why-waste="${idx}" class="why-waste-btn shrink-0 text-xs font-bold px-2 py-1 rounded bg-white border border-amber-300 text-amber-900">${dict[currentLang].whyBtn}</button>
+              <h4 class="font-bold text-sm text-slate-900 leading-snug">${w.headline}</h4>
+              <button type="button" data-why-waste="${idx}" class="why-waste-btn shrink-0 min-h-[32px] text-xs font-bold px-2.5 py-1 rounded-lg bg-white border border-amber-300 text-amber-900">${dict[currentLang].whyBtn}</button>
             </div>
             <p class="text-xs text-slate-600">${L(
-              `ব্যাচ: <strong>${w.batchNumber}</strong> · নিয়মিত দাম ৳${w.normalPrice} → অফার দাম <strong>৳${w.rescuePrice}</strong> (ক্ষতি এড়ানো: ৳${w.potentialLoss})`,
+              `ব্যাচ: <strong>${w.batchNumber}</strong> · নিয়মিত ৳${w.normalPrice} → অফার <strong>৳${w.rescuePrice}</strong> (ক্ষতি এড়ানো: ৳${w.potentialLoss})`,
               `Batch: <strong>${w.batchNumber}</strong> · Regular ৳${w.normalPrice} → Offer <strong>৳${w.rescuePrice}</strong> (Loss Avoided: ৳${w.potentialLoss})`
             )}</p>
-            <div class="surface-card p-2.5 rounded-lg bg-white border border-amber-200 text-xs text-slate-800">${w.offerPost}</div>
-            <button type="button" data-copy-post="${idx}" class="copy-waste-post-btn px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs">
+            <div class="surface-card p-3 rounded-xl bg-white border border-amber-200 text-xs text-slate-800 leading-relaxed">${w.offerPost}</div>
+            <button type="button" data-copy-post="${idx}" class="copy-waste-post-btn w-full sm:w-auto min-h-[40px] px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs">
               📋 ${L('বাংলা অফার পোস্ট কপি করুন', 'Copy Promotional Offer Post')}
             </button>
           </div>
@@ -1089,25 +1218,24 @@
       document.getElementById('bakiCardsList').innerHTML = shop.bakiLedger
         .map((b, idx) => {
           const cName = L(b.nameBn, b.nameEn);
-          const cNotes = L(b.notesBn, b.notesEn);
           const msg = L(
             `আসসালামু আলাইকুম ${b.nameBn} ভাই/আপা, কেমন আছেন? আমাদের দোকানে আপনার পূর্বের মুদি বাজারের বাকি ৳${b.amount.toLocaleString()} টাকা জমা রয়েছে (${b.notesBn})। আপনার সুবিধামতো সময়ে পরিশোধ করে দিলে আমাদের হিসাব হালনাগাদ রাখতে খুব উপকার হতো। ধন্যবাদ!`,
             `Hello ${b.nameEn}, hope you are doing well! This is a friendly reminder from our grocery store regarding your pending credit balance of ৳${b.amount.toLocaleString()} (${b.notesEn}). Settling it at your convenience would be greatly appreciated. Thank you!`
           );
           return `
-            <div class="surface-sub p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <div class="surface-sub p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <span class="font-bold text-sm text-slate-900">${cName}</span>
-                  <span class="text-xs text-slate-500 ml-2">${b.phone} · ${L(`${b.daysOverdue} দিন বকেয়া`, `${b.daysOverdue}d overdue`)}</span>
+                  <div class="text-xs text-slate-500">${b.phone} · ${L(`${b.daysOverdue} দিন বকেয়া`, `${b.daysOverdue}d overdue`)}</div>
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="text-sm font-extrabold text-rose-600">৳${b.amount.toLocaleString()}</span>
-                  <button type="button" data-collect-baki="${b.id}" class="collect-baki-btn px-2.5 py-1 rounded bg-emerald-600 text-white text-xs font-bold">✓ ${L('বাকি আদায়', 'Mark Paid')}</button>
+                  <span class="text-base font-extrabold text-rose-600">৳${b.amount.toLocaleString()}</span>
+                  <button type="button" data-collect-baki="${b.id}" class="collect-baki-btn min-h-[36px] px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-xs font-bold">✓ ${L('বাকি আদায়', 'Mark Paid')}</button>
                 </div>
               </div>
-              <div class="surface-card p-2.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-700">${msg}</div>
-              <button type="button" data-copy-baki="${idx}" class="copy-baki-btn px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-semibold">📋 ${L('ভদ্র তাগাদা মেসেজ কপি করুন', 'Copy Polite Reminder')}</button>
+              <div class="surface-card p-3 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 leading-relaxed">${msg}</div>
+              <button type="button" data-copy-baki="${idx}" class="copy-baki-btn w-full sm:w-auto min-h-[40px] px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-semibold">📋 ${L('ভদ্র তাগাদা মেসেজ কপি করুন', 'Copy Polite Reminder')}</button>
             </div>
           `;
         })
@@ -1140,15 +1268,15 @@
       document.getElementById('chalanExtractedList').innerHTML = shop.pendingChalanItems.length
         ? shop.pendingChalanItems
             .map(
-              (c) => `<div class="surface-sub p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex justify-between">
+              (c) => `<div class="surface-sub p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2">
                 <span class="font-bold">${L(c.nameBn, c.nameEn)}</span>
-                <span>${c.quantity} × ৳${c.unitCost} = <strong>৳${(c.quantity * c.unitCost).toLocaleString()}</strong></span>
+                <span class="whitespace-nowrap">${c.quantity} × ৳${c.unitCost} = <strong>৳${(c.quantity * c.unitCost).toLocaleString()}</strong></span>
               </div>`
             )
             .join('')
         : `<p class="text-slate-500">${L('স্ক্যান বাটনে ক্লিক করলে চালানের পণ্যগুলো এখানে দেখা যাবে।', 'Click Scan to extract line items from the supplier invoice.')}</p>`;
 
-      // Forecast Tab
+      // Forecast Tab (Mobile Cards + Desktop Table)
       const festMap = {
         NONE: L('স্বাভাবিক সময়', 'Normal Period'),
         RAMADAN_EID: L('রমজান ও ঈদ (+৪০%)', 'Ramadan & Eid (+40%)'),
@@ -1156,6 +1284,45 @@
         MONSOON_RAIN: L('বর্ষাকাল (+২০%)', 'Monsoon Rain (+20%)')
       };
       document.getElementById('activeFestivalBadge').textContent = festMap[currentFestival];
+
+      document.getElementById('forecastMobileCards').innerHTML = restocks
+        .map((r, idx) => {
+          const f7 = r.forecast7d;
+          const f15 = Math.round(f7 * (15 / 7));
+          const f30 = Math.round(f7 * (30 / 7));
+          const hasData = r.product.weeklySales.some((x) => x > 0);
+          return `
+            <div class="surface-sub p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <div class="font-bold text-sm text-slate-900">${L(r.product.nameBn, r.product.nameEn)}</div>
+                  <div class="text-xs text-slate-500">${dict[currentLang].colStock}: <strong>${r.S}</strong></div>
+                </div>
+                <button type="button" data-why-f="${idx}" class="why-forecast-btn min-h-[32px] px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 font-bold text-xs">${dict[currentLang].whyBtn}</button>
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="surface-card bg-white p-2 rounded-xl border border-slate-200">
+                  <div class="text-[10px] text-slate-500">${dict[currentLang].col7d}</div>
+                  <div class="text-sm font-extrabold text-indigo-600">${hasData ? f7 : '—'}</div>
+                </div>
+                <div class="surface-card bg-white p-2 rounded-xl border border-slate-200">
+                  <div class="text-[10px] text-slate-500">${dict[currentLang].col15d}</div>
+                  <div class="text-sm font-extrabold text-indigo-600">${hasData ? f15 : '—'}</div>
+                </div>
+                <div class="surface-card bg-white p-2 rounded-xl border border-slate-200">
+                  <div class="text-[10px] text-slate-500">${dict[currentLang].col30d}</div>
+                  <div class="text-sm font-extrabold text-indigo-600">${hasData ? f30 : '—'}</div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between text-xs">
+                ${hasData ? `<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold">${L('উচ্চ (ত্রুটি ৪.২)', 'HIGH (MAE 4.2)')}</span>` : `<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 font-bold">${L('ডেটা অপর্যাপ্ত', 'Insufficient Data')}</span>`}
+                ${r.mult > 1 ? `<span class="text-amber-600 font-bold">×${r.mult}</span>` : ''}
+              </div>
+            </div>
+          `;
+        })
+        .join('');
+
       document.getElementById('forecastTableBody').innerHTML = restocks
         .map((r, idx) => {
           const f7 = r.forecast7d;
@@ -1190,7 +1357,31 @@
         });
       });
 
-      // Restock Tab
+      // Restock Tab (Mobile Cards + Desktop Table)
+      document.getElementById('restockMobileCards').innerHTML = restocks
+        .map(
+          (r, idx) => `
+          <div class="surface-sub p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="font-bold text-sm text-slate-900">${L(r.product.nameBn, r.product.nameEn)}</div>
+                <div class="text-xs text-slate-500">${L(r.product.supplierBn, r.product.supplierEn)}</div>
+              </div>
+              <span class="text-sm font-extrabold ${r.Q > 0 ? 'text-rose-600' : 'text-emerald-600'}">${r.Q} ${L('টি', 'units')}</span>
+            </div>
+            <div class="flex items-center justify-between text-xs text-slate-600">
+              <span>${dict[currentLang].colStockS}: <strong>${r.S}</strong> · ${dict[currentLang].colRop}: <strong>${r.ROP}</strong></span>
+              <span>${r.daysLeft < 30 ? `<strong class="text-rose-600">${L(`${r.daysLeft} দিন বাকি`, `${r.daysLeft}d left`)}</strong>` : L('নিরাপদ', 'Safe')}</span>
+            </div>
+            <div class="flex gap-2">
+              <button type="button" data-why-rop="${idx}" class="why-rop-btn flex-1 min-h-[38px] rounded-xl bg-indigo-50 text-indigo-700 font-bold text-xs">${dict[currentLang].whyBtn}</button>
+              ${r.Q > 0 ? `<button type="button" data-order-rop="${idx}" class="order-rop-btn flex-1 min-h-[38px] rounded-xl bg-emerald-600 text-white font-bold text-xs">${L('অর্ডার করুন', 'Approve Order')}</button>` : ''}
+            </div>
+          </div>
+        `
+        )
+        .join('');
+
       document.getElementById('restockTableBody').innerHTML = restocks
         .map(
           (r, idx) => `
@@ -1239,35 +1430,49 @@
         });
       });
 
-      // POS Tab
+      // POS & Batches (Mobile Cards + Desktop Table)
       document.getElementById('posProductSelect').innerHTML = shop.products
         .map((p) => `<option value="${p.id}">${L(p.nameBn, p.nameEn)} (${L('মজুদ', 'Stock')}: ${p.batches.reduce((s, b) => s + b.currentQty, 0)}, ৳${p.sellingPrice})</option>`)
         .join('');
 
       const batchRows = [];
+      const mobileBatchCards = [];
       shop.products.forEach((p) => {
         p.batches.forEach((b) => {
+          const badge = b.expiryDays <= 7 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800';
           batchRows.push(`<tr class="hover:bg-slate-50">
             <td class="py-2 px-3 font-bold">${L(p.nameBn, p.nameEn)}</td>
             <td class="py-2 px-3 font-mono text-indigo-600">${b.batchNumber}</td>
             <td class="py-2 px-3 text-right">৳${b.purchasePrice}</td>
             <td class="py-2 px-3 text-right">৳${b.sellingPrice}</td>
             <td class="py-2 px-3 text-right font-bold">${b.currentQty}</td>
-            <td class="py-2 px-3"><span class="px-2 py-0.5 rounded-full font-bold ${b.expiryDays <= 7 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">${b.expiryDays} ${L('দিন', 'days')}</span></td>
+            <td class="py-2 px-3"><span class="px-2 py-0.5 rounded-full font-bold ${badge}">${b.expiryDays} ${L('দিন', 'days')}</span></td>
           </tr>`);
+
+          mobileBatchCards.push(`<div class="surface-sub p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between gap-2 text-xs">
+            <div>
+              <div class="font-bold text-slate-900">${L(p.nameBn, p.nameEn)}</div>
+              <div class="text-slate-500 font-mono">${b.batchNumber} · ৳${b.purchasePrice} → ৳${b.sellingPrice}</div>
+            </div>
+            <div class="text-right">
+              <div class="font-extrabold text-slate-900">${b.currentQty} ${L('টি', 'pcs')}</div>
+              <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full font-bold text-[10px] ${badge}">${b.expiryDays} ${L('দিন', 'd')}</span>
+            </div>
+          </div>`);
         });
       });
       document.getElementById('posBatchTableBody').innerHTML = batchRows.join('');
+      document.getElementById('posBatchMobileCards').innerHTML = mobileBatchCards.join('');
 
       // Combo Offers Tab
       document.getElementById('comboOffersList').innerHTML = `
-        <div class="surface-sub p-4 rounded-xl bg-indigo-50 border border-indigo-200 space-y-1.5 text-xs">
+        <div class="surface-sub p-4 rounded-2xl bg-indigo-50 border border-indigo-200 space-y-1.5 text-xs">
           <div class="font-bold text-sm text-indigo-700">${L('১) ফ্যামিলি বাজার কম্বো (চাল ৫ কেজি + সয়াবিন তেল ২ লিটার)', '1) Family Staples Combo (5kg Miniket Rice + 2L Soybean Oil)')}</div>
-          <p class="text-slate-700">${L('যারা চাল কেনেন তাদের ৭৮% ক্রেতা তেলও কেনেন। নিয়মিত দাম ৳৭১০ → কম্বো অফার <strong>৳৬৮৯</strong> দিলে গড় বিক্রি বাড়বে।', '78% of rice buyers also buy soybean oil. Bundling at <strong>৳689</strong> (regular ৳710) increases average basket value.')}</p>
+          <p class="text-slate-700 leading-relaxed">${L('যারা চাল কেনেন তাদের ৭৮% ক্রেতা তেলও কেনেন। নিয়মিত দাম ৳৭১০ → কম্বো অফার <strong>৳৬৮৯</strong> দিলে গড় বিক্রি বাড়বে।', '78% of rice buyers also buy soybean oil. Bundling at <strong>৳689</strong> (regular ৳710) increases average basket value.')}</p>
         </div>
-        <div class="surface-sub p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5 text-xs">
+        <div class="surface-sub p-4 rounded-2xl bg-emerald-50 border border-emerald-200 space-y-1.5 text-xs">
           <div class="font-bold text-sm text-emerald-700">${L('২) সকালের নাস্তা কম্বো (ফার্মের ডিম ১ ডজন + তরল দুধ ১ লিটার)', '2) Breakfast Saver Combo (1 Dozen Farm Eggs + 1L Liquid Milk)')}</div>
-          <p class="text-slate-700">${L('দুটি পণ্যেরই মেয়াদ ৩–৪ দিনের মধ্যে শেষ হচ্ছে — একসাথে <strong>৳২৫৫</strong> কম্বো দিলে কোনো পণ্য নষ্ট হবে না।', 'Both items expire within 3–4 days. Offering them together at <strong>৳255</strong> clears perishable stock with zero waste.')}</p>
+          <p class="text-slate-700 leading-relaxed">${L('দুটি পণ্যেরই মেয়াদ ৩–৪ দিনের মধ্যে শেষ হচ্ছে — একসাথে <strong>৳২৫৫</strong> কম্বো দিলে কোনো পণ্য নষ্ট হবে না।', 'Both items expire within 3–4 days. Offering them together at <strong>৳255</strong> clears perishable stock with zero waste.')}</p>
         </div>
       `;
 
@@ -1371,11 +1576,21 @@
 
     function switchTab(tab) {
       document.querySelectorAll('.nav-btn').forEach((b) => b.classList.toggle('active', b.getAttribute('data-tab') === tab));
+      document.querySelectorAll('.bottom-nav-btn[data-btab]').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-btab') === tab);
+      });
+      const moreBtn = document.getElementById('openMoreSheetBtn');
+      const secondaryTabs = ['chalan', 'forecast', 'restock', 'pos', 'simulator'];
+      moreBtn.classList.toggle('active', secondaryTabs.includes(tab));
+
       document.querySelectorAll('.tab-panel').forEach((p) => p.classList.add('hidden'));
       document.getElementById('tab-' + tab).classList.remove('hidden');
+      document.getElementById('mobileMoreSheet').classList.add('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     window.addEventListener('DOMContentLoaded', () => {
+      // Language Toggle
       document.getElementById('langToggleBtn').addEventListener('click', () => {
         currentLang = currentLang === 'bn' ? 'en' : 'bn';
         applyLanguage();
@@ -1383,34 +1598,64 @@
         showToast(L('সম্পূর্ণ ওয়েবসাইট বাংলায় পরিবর্তন করা হয়েছে!', 'Switched entire website to English!'));
       });
 
+      // Light / Dark Mode Toggle
       document.getElementById('themeToggleBtn').addEventListener('click', () => {
         isDarkMode = !isDarkMode;
         applyTheme();
         showToast(isDarkMode ? L('ডার্ক মোড চালু হয়েছে!', 'Dark Mode enabled!') : L('লাইট মোড চালু হয়েছে!', 'Light Mode enabled!'));
       });
 
+      // Mobile Filter Drawer Toggle
+      document.getElementById('mobileFilterToggleBtn').addEventListener('click', () => {
+        document.getElementById('mobileFilterDrawer').classList.toggle('hidden');
+      });
+
+      // Mobile More Sheet Controls
+      document.getElementById('openMoreSheetBtn').addEventListener('click', () => {
+        document.getElementById('mobileMoreSheet').classList.remove('hidden');
+      });
+      document.getElementById('closeMoreSheetBtn').addEventListener('click', () => {
+        document.getElementById('mobileMoreSheet').classList.add('hidden');
+      });
+      document.querySelectorAll('.sheet-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-sheet-tab')));
+      });
+
+      // Top & Bottom Nav Tabs
       document.querySelectorAll('.nav-btn').forEach((btn) => {
         btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
       });
-
-      document.getElementById('shopSelector').addEventListener('change', (e) => {
-        currentShopKey = e.target.value;
-        renderAll();
+      document.querySelectorAll('.bottom-nav-btn[data-btab]').forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-btab')));
       });
 
-      document.getElementById('festivalSelector').addEventListener('change', (e) => {
-        currentFestival = e.target.value;
+      // Synced Shop & Festival Selectors (Desktop + Mobile)
+      function handleShopChange(val) {
+        currentShopKey = val;
+        populateSelectors();
+        renderAll();
+      }
+      function handleFestivalChange(val) {
+        currentFestival = val;
+        populateSelectors();
         showToast(L('উৎসবভিত্তিক পূর্বাভাস আপডেট করা হয়েছে!', 'Festival demand forecast updated!'));
         renderAll();
-      });
-
-      document.getElementById('resetDemoBtn').addEventListener('click', () => {
+      }
+      function handleDemoReset() {
         stores = createInitialStores();
         currentFestival = 'NONE';
         applyLanguage();
         renderAll();
+        document.getElementById('mobileFilterDrawer').classList.add('hidden');
         showToast(L('৯০ দিনের বাস্তবসম্মত ডেমো লোড করা হয়েছে!', '90-day realistic shop demo dataset loaded!'));
-      });
+      }
+
+      document.getElementById('shopSelector').addEventListener('change', (e) => handleShopChange(e.target.value));
+      document.getElementById('mobileShopSelector').addEventListener('change', (e) => handleShopChange(e.target.value));
+      document.getElementById('festivalSelector').addEventListener('change', (e) => handleFestivalChange(e.target.value));
+      document.getElementById('mobileFestivalSelector').addEventListener('change', (e) => handleFestivalChange(e.target.value));
+      document.getElementById('resetDemoBtn').addEventListener('click', handleDemoReset);
+      document.getElementById('mobileResetDemoBtn').addEventListener('click', handleDemoReset);
 
       document.getElementById('storyDemoBtn').addEventListener('click', () => {
         switchTab('waste');
