@@ -181,23 +181,6 @@
     </div>
   </div>
 
-  <!-- Super Admin 2FA Login Modal -->
-  <div id="adminLoginModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4">
-    <div class="glass-chrome border rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-      <div class="flex items-center justify-between border-b border-slate-500/25 pb-3">
-        <h3 class="font-extrabold text-base" data-i18n="adminGateTitle"></h3>
-        <button type="button" id="closeAdminLoginBtn" class="w-8 h-8 rounded-full bg-slate-500/20 font-bold text-xs">✕</button>
-      </div>
-      <form id="adminLoginForm" class="space-y-3 text-xs sm:text-sm">
-        <input type="email" id="adminEmailIn" required class="w-full min-h-[42px] glass-input rounded-xl px-3" placeholder="admin@bizmind.ai" />
-        <input type="password" id="adminPassIn" required class="w-full min-h-[42px] glass-input rounded-xl px-3" placeholder="••••••••••••" />
-        <input type="text" id="adminOtpIn" required maxlength="6" class="w-full min-h-[42px] glass-input rounded-xl px-3 font-mono" placeholder="6-digit 2FA OTP" />
-        <p id="adminLoginErr" class="hidden text-xs text-rose-500 font-semibold"></p>
-        <button type="submit" data-i18n="btnAdminVerify" class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 text-white font-extrabold text-xs"></button>
-      </form>
-    </div>
-  </div>
-
   <!-- Ctrl+K Search Modal -->
   <div id="searchModal" class="hidden fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex items-start justify-center pt-20 p-4">
     <div class="glass-chrome border rounded-2xl max-w-lg w-full p-4 shadow-2xl space-y-3">
@@ -331,20 +314,8 @@
 
     <footer class="flex flex-wrap items-center justify-between gap-3 text-xs text-muted pt-4 border-t border-slate-500/25">
       <span data-i18n="footerCopy"></span>
-      <button type="button" id="openAdminPortalFooterBtn" class="opacity-70 hover:opacity-100 hover:underline font-semibold" data-i18n="footAdminPortal"></button>
+      
     </footer>
-  </section>
-
-  <!-- WORKSPACE 2: SUPER ADMIN -->
-  <section id="workspace-admin" class="hidden max-w-[1440px] w-full mx-auto px-3 sm:px-5 py-6 pb-24 space-y-5 fade-in-up">
-    <h2 class="text-xl sm:text-2xl font-extrabold" data-i18n="adminTitle"></h2>
-    <div class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-semibold" data-i18n="adminPrivacyNotice"></div>
-    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <div class="bento-card p-4"><p class="text-xs text-muted" data-i18n="admShops"></p><p class="text-2xl font-extrabold mt-1">4</p></div>
-      <div class="bento-card p-4"><p class="text-xs text-muted" data-i18n="admDau"></p><p class="text-2xl font-extrabold mt-1">1,284</p></div>
-      <div class="bento-card p-4"><p class="text-xs text-muted" data-i18n="admAiCost"></p><p class="text-2xl font-extrabold text-amber-400 mt-1">$14.82</p></div>
-      <div class="bento-card p-4"><p class="text-xs text-muted" data-i18n="admDbHealth"></p><p class="text-2xl font-extrabold text-emerald-400 mt-1">99.98%</p></div>
-    </div>
   </section>
 
   <!-- WORKSPACE 3: ROLE-LOCKED SHOP APP -->
@@ -1213,7 +1184,7 @@
 
     function setWorkspace(ws) {
       activeWorkspace = ws;
-      ['landing', 'shop', 'admin', '404'].forEach((w) => document.getElementById('workspace-' + w).classList.toggle('hidden', w !== ws));
+      ['landing', 'shop', '404'].forEach((w) => document.getElementById('workspace-' + w).classList.toggle('hidden', w !== ws));
       document.getElementById('mobileBottomBar').classList.toggle('hidden', ws !== 'shop');
       renderAll();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1591,20 +1562,6 @@
       document.querySelectorAll('.demo-login-btn').forEach((b) => b.addEventListener('click', () => loginAsDemo(b.getAttribute('data-demo-role'))));
       document.getElementById('logoutBtn').addEventListener('click', () => { session = null; setWorkspace('landing'); });
 
-      document.getElementById('openAdminPortalFooterBtn').addEventListener('click', () => document.getElementById('adminLoginModal').classList.remove('hidden'));
-      document.getElementById('closeAdminLoginBtn').addEventListener('click', () => document.getElementById('adminLoginModal').classList.add('hidden'));
-      document.getElementById('adminLoginForm').addEventListener('submit', (e) => {
-        e.preventDefault();
-        if (document.getElementById('adminEmailIn').value.trim().toLowerCase() === 'admin@bizmind.ai' && document.getElementById('adminPassIn').value === 'BizMind#Judge2026' && document.getElementById('adminOtpIn').value.trim() === '246810') {
-          session = { role: 'SUPER_ADMIN', plan: 'PREMIUM' };
-          document.getElementById('adminLoginModal').classList.add('hidden');
-          setWorkspace('admin');
-        } else {
-          const err = document.getElementById('adminLoginErr');
-          err.textContent = L('ভুল তথ্য বা ২এফএ কোড।', 'Invalid credentials or 2FA OTP.');
-          err.classList.remove('hidden');
-        }
-      });
 
       document.getElementById('testRouteGuardBtn').addEventListener('click', () => switchShopTab('overview'));
       document.getElementById('genUiStateSelect').addEventListener('change', (e) => { genUiScenario = e.target.value; renderGenerativeUi(); });

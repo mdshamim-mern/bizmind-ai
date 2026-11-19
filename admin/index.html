@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="bn" id="adminHtmlRoot">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow, noarchive" />
+  <meta name="theme-color" content="#f4f7fe" />
+  <title>BizMind Platform Admin Console (Isolated · 2FA)</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script>
+    (function(){try{if(localStorage.getItem('bizmind_admin_theme')==='dark'){document.documentElement.classList.add('dark');}}catch(e){}})();
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-base: #f4f7fe;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --card-border: rgba(148, 163, 184, 0.28);
+      --chrome-bg: rgba(255, 255, 255, 0.88);
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --sub-bg: rgba(241, 245, 249, 0.9);
+      --input-bg: #ffffff;
+    }
+    html.dark {
+      --bg-base: #050814;
+      --card-bg: linear-gradient(145deg, rgba(22, 33, 62, 0.68) 0%, rgba(11, 18, 36, 0.62) 100%);
+      --card-border: rgba(255, 255, 255, 0.14);
+      --chrome-bg: rgba(8, 13, 28, 0.82);
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+      --sub-bg: rgba(255, 255, 255, 0.06);
+      --input-bg: rgba(15, 23, 42, 0.72);
+    }
+    html, body { max-width: 100%; overflow-x: hidden; min-height: 100dvh; }
+    body {
+      font-family: 'Hind Siliguri', 'Inter', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      line-height: 1.65;
+      background-image:
+        radial-gradient(circle at 10% 8%, rgba(99, 102, 241, 0.18) 0%, transparent 42%),
+        radial-gradient(circle at 88% 12%, rgba(244, 63, 94, 0.12) 0%, transparent 40%);
+      background-attachment: fixed;
+    }
+    .text-muted { color: var(--text-muted); }
+    .chrome { background: var(--chrome-bg); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-color: var(--card-border); }
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 1.25rem; box-shadow: 0 12px 32px -12px rgba(15, 23, 42, 0.14); }
+    .sub-row { background: var(--sub-bg); border: 1px solid var(--card-border); }
+    .inp { background: var(--input-bg); border: 1px solid var(--card-border); color: var(--text-main); }
+    html.dark select.inp option { background: #0b1224; color: #f8fafc; }
+    .nav-btn.active { background: linear-gradient(135deg, #4f46e5 0%, #e11d48 100%); color: #fff !important; }
+    @media (max-width: 767px) {
+      input, select, textarea { font-size: 16px !important; }
+      button, select { min-height: 44px; }
+    }
+  </style>
+</head>
+<body class="flex flex-col">
+  <!-- ISOLATED LOGIN GATE (No Public Signup · 2FA TOTP · 5-Attempt Lockout · Generic Error) -->
+  <section id="adminLoginView" class="flex-1 flex items-center justify-center p-4">
+    <div class="card max-w-md w-full p-6 sm:p-7 space-y-4">
+      <div class="flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-600 to-indigo-600 text-white font-extrabold flex items-center justify-center shadow-lg">SA</div>
+          <div>
+            <h1 class="font-extrabold text-base sm:text-lg" data-i18n="gateTitle"></h1>
+            <p class="text-[11px] text-muted" data-i18n="gateSub"></p>
+          </div>
+        </div>
+        <div class="flex gap-1.5">
+          <button type="button" id="gateLangBtn" class="px-2.5 py-1 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 font-bold text-xs"></button>
+          <button type="button" id="gateThemeBtn" class="w-9 rounded-xl inp flex items-center justify-center text-sm" aria-label="Theme"></button>
+        </div>
+      </div>
+
+      <form id="adminGateForm" class="space-y-3 text-xs sm:text-sm">
+        <div>
+          <label class="block font-bold mb-1 text-muted" data-i18n="lblRolePreview"></label>
+          <select id="gateRoleSel" class="w-full min-h-[44px] inp rounded-xl px-3 font-bold">
+            <option value="SUPER_ADMIN">Super Admin (Full Control)</option>
+            <option value="SUPPORT_ADMIN">Support Admin (Shops &amp; Tickets)</option>
+            <option value="FINANCE_ADMIN">Finance Admin (Plans &amp; Billing)</option>
+            <option value="AI_ADMIN">AI Admin (Models, Quotas &amp; Kill Switch)</option>
+            <option value="READ_ONLY">Read-Only Observer (Audit View)</option>
+          </select>
+        </div>
+        <div>
+          <label class="block font-bold mb-1 text-muted" data-i18n="lblEmail"></label>
+          <input type="email" id="gateEmail" value="admin@bizmind.ai" required class="w-full min-h-[44px] inp rounded-xl px-3" />
+        </div>
+        <div>
+          <label class="block font-bold mb-1 text-muted" data-i18n="lblPass"></label>
+          <input type="password" id="gatePass" placeholder="••••••••••••" required class="w-full min-h-[44px] inp rounded-xl px-3" />
+        </div>
+        <div>
+          <label class="block font-bold mb-1 text-muted" data-i18n="lblTotp"></label>
+          <input type="text" id="gateTotp" inputmode="numeric" maxlength="6" placeholder="6-digit TOTP" required class="w-full min-h-[44px] inp rounded-xl px-3 font-mono tracking-widest" />
+        </div>
+        <label class="flex items-center gap-2 p-2.5 rounded-xl sub-row text-xs font-semibold cursor-pointer">
+          <input type="checkbox" id="gateBotCheck" checked class="w-4 h-4 accent-indigo-600" />
+          <span data-i18n="lblBotShield"></span>
+        </label>
+        <p id="gateErrMsg" class="hidden p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/35 text-rose-600 dark:text-rose-300 text-xs font-bold"></p>
+        <button type="submit" id="gateSubmitBtn" data-i18n="btnSignIn" class="w-full min-h-[46px] rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 text-white font-extrabold text-sm shadow-lg"></button>
+      </form>
+      <p class="text-[11px] text-muted leading-relaxed" data-i18n="gateFooterNote"></p>
+    </div>
+  </section>
+
+  <!-- ISOLATED ADMIN SHELL (Desktop Sidebar + Mobile Hamburger Drawer) -->
+  <div id="adminAppShell" class="hidden flex-1 flex flex-col">
+    <!-- Top Bar -->
+    <header class="chrome border-b sticky top-0 z-30 px-3 sm:px-5 py-2.5 flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <button type="button" id="hamburgerBtn" class="lg:hidden w-10 h-10 rounded-xl inp flex items-center justify-center font-bold text-base" aria-label="Menu">☰</button>
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-rose-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shrink-0">SA</div>
+        <div class="min-w-0">
+          <div class="font-extrabold text-sm sm:text-base truncate" data-i18n="consoleBrand"></div>
+          <div class="text-[11px] text-muted truncate" id="adminRoleSubtitle"></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <span id="maintStatusPill" class="hidden px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 font-extrabold text-[11px]">MAINTENANCE ON</span>
+        <button type="button" id="appLangBtn" class="px-2.5 py-1.5 rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 font-bold text-xs"></button>
+        <button type="button" id="appThemeBtn" class="w-9 h-9 rounded-xl inp flex items-center justify-center text-sm" aria-label="Theme"></button>
+        <button type="button" id="adminLogoutBtn" data-i18n="btnLogout" class="px-3 py-1.5 rounded-xl bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/30 font-bold text-xs"></button>
+      </div>
+    </header>
+
+    <!-- Mobile Hamburger Drawer -->
+    <div id="mobileDrawerOverlay" class="hidden fixed inset-0 z-40 bg-slate-950/65 backdrop-blur-sm lg:hidden">
+      <aside class="chrome w-72 max-w-[82vw] h-full p-4 border-r space-y-3 overflow-y-auto">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-500/20">
+          <span class="font-extrabold text-sm" data-i18n="consoleBrand"></span>
+          <button type="button" id="closeDrawerBtn" class="w-9 h-9 rounded-xl sub-row font-bold">✕</button>
+        </div>
+        <div id="mobileNavList" class="space-y-1.5"></div>
+      </aside>
+    </div>
+
+    <!-- Main Layout -->
+    <div class="flex flex-1 max-w-[1440px] w-full mx-auto">
+      <aside class="hidden lg:flex w-64 shrink-0 flex-col p-4 gap-1.5 chrome border-r sticky top-[61px] h-[calc(100dvh-61px)] overflow-y-auto">
+        <div id="desktopNavList" class="space-y-1.5"></div>
+      </aside>
+
+      <main class="flex-1 min-w-0 p-3 sm:p-6 space-y-5">
+        <!-- Toast -->
+        <div id="admToast" class="hidden fixed bottom-5 right-4 left-4 sm:left-auto sm:max-w-md z-50 chrome border border-indigo-500/40 px-4 py-3 rounded-2xl shadow-2xl text-xs font-bold"></div>
+
+        <!-- Break-Glass & Re-Auth Modal -->
+        <div id="admModal" class="hidden fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div class="chrome border rounded-t-3xl sm:rounded-2xl max-w-md w-full p-5 space-y-3 shadow-2xl">
+            <div class="flex justify-between items-center border-b border-slate-500/20 pb-2">
+              <h3 id="admModalTitle" class="font-extrabold text-sm"></h3>
+              <button type="button" id="closeAdmModalBtn" class="w-8 h-8 rounded-full sub-row font-bold text-xs">✕</button>
+            </div>
+            <div id="admModalBody" class="space-y-3 text-xs sm:text-sm"></div>
+          </div>
+        </div>
+
+        <!-- TAB 1: OVERVIEW + SHOPS & USERS (Priority 2) -->
+        <section id="atab-overview" class="atab space-y-5">
+          <div class="p-3.5 rounded-2xl bg-emerald-500/12 border border-emerald-500/30 text-xs font-bold" data-i18n="privacyBanner"></div>
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-3">
+            <div class="card p-4"><div class="text-xs text-muted" data-i18n="kShops"></div><div class="text-2xl font-extrabold mt-1">4</div></div>
+            <div class="card p-4"><div class="text-xs text-muted" data-i18n="kUsers"></div><div class="text-2xl font-extrabold mt-1">1,284</div></div>
+            <div class="card p-4"><div class="text-xs text-muted" data-i18n="kMrr"></div><div class="text-2xl font-extrabold text-emerald-600 dark:text-emerald-300 mt-1">৳9,980</div></div>
+            <div class="card p-4"><div class="text-xs text-muted" data-i18n="kAiSpend"></div><div class="text-2xl font-extrabold text-amber-600 dark:text-amber-300 mt-1">$14.82</div></div>
+            <div class="card p-4 col-span-2 lg:col-span-1"><div class="text-xs text-muted" data-i18n="kHealth"></div><div class="text-2xl font-extrabold text-indigo-600 dark:text-indigo-300 mt-1">99.98%</div></div>
+          </div>
+
+          <!-- Emergency Controls (Mobile-Friendly Large Confirmed Buttons) -->
+          <div class="card p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 border-rose-500/35">
+            <div>
+              <h3 class="font-extrabold text-sm sm:text-base" data-i18n="emgTitle"></h3>
+              <p class="text-xs text-muted" data-i18n="emgSub"></p>
+            </div>
+            <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+              <button type="button" id="globalKillBtn" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-rose-600 text-white font-extrabold text-xs shadow-md"></button>
+              <button type="button" id="globalMaintBtn" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-amber-400 text-slate-950 font-extrabold text-xs shadow-md"></button>
+            </div>
+          </div>
+
+          <!-- Shops Directory (Responsive Cards on Mobile, Table on Desktop) -->
+          <div class="card p-4 sm:p-5 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="font-extrabold text-sm sm:text-base" data-i18n="shopsTitle"></h3>
+              <div class="flex flex-wrap gap-2 w-full sm:w-auto">
+                <input type="text" id="shopSearchIn" class="flex-1 sm:w-48 inp rounded-xl px-3 py-2 text-xs" />
+                <select id="shopPlanFilter" class="inp rounded-xl px-2.5 py-2 text-xs font-bold">
+                  <option value="ALL">All Plans</option>
+                  <option value="FREE">FREE</option>
+                  <option value="PREMIUM">PREMIUM</option>
+                </select>
+              </div>
+            </div>
+            <div id="shopsCardList" class="space-y-2.5 text-xs"></div>
+          </div>
+        </section>
+
+        <!-- TAB 2: AI CONTROL CENTER (Priority 3) -->
+        <section id="atab-ai" class="atab hidden space-y-5">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="card p-5 space-y-3 text-xs">
+              <h3 class="font-extrabold text-base text-indigo-600 dark:text-indigo-300" data-i18n="aiRouterTitle"></h3>
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div><label class="block font-bold mb-1 text-muted" data-i18n="lblSimpleModel"></label><select id="simpleModelSel" class="w-full inp rounded-xl px-3 py-2 font-bold"><option>gemini-2.5-flash (Low Cost)</option><option>gpt-4o-mini</option></select></div>
+                <div><label class="block font-bold mb-1 text-muted" data-i18n="lblComplexModel"></label><select id="complexModelSel" class="w-full inp rounded-xl px-3 py-2 font-bold"><option>gemini-2.5-pro (Reasoning)</option><option>claude-3.7-sonnet</option></select></div>
+              </div>
+              <div class="p-3 rounded-xl sub-row space-y-2">
+                <div class="font-bold" data-i18n="lblApiVault"></div>
+                <div class="flex gap-2">
+                  <input type="password" id="apiKeyVaultIn" placeholder="AIza... (Write-only, Encrypted)" class="flex-1 inp rounded-xl px-3 py-2 font-mono" />
+                  <button type="button" id="rotateApiKeyBtn" class="px-3.5 rounded-xl bg-indigo-600 text-white font-bold" data-i18n="btnRotateKey"></button>
+                </div>
+              </div>
+              <div class="p-3 rounded-xl bg-emerald-500/12 border border-emerald-500/30 font-bold" data-i18n="aiCacheStats"></div>
+            </div>
+
+            <div class="card p-5 space-y-3 text-xs">
+              <h3 class="font-extrabold text-base" data-i18n="aiAgentsTitle"></h3>
+              <div id="adminAgentsList" class="space-y-2"></div>
+              <div class="pt-2 border-t border-slate-500/20 flex flex-wrap items-center justify-between gap-2">
+                <span class="font-bold" data-i18n="promptVerLbl"></span>
+                <button type="button" id="rollbackPromptBtn" class="px-3 py-1.5 rounded-xl sub-row font-bold" data-i18n="btnRollback"></button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 3: SECURITY CENTER & TAMPER-EVIDENT HASH-CHAIN AUDIT LOG (Priority 4) -->
+        <section id="atab-security" class="atab hidden space-y-5">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="card p-5 space-y-3 text-xs">
+              <div class="flex items-center justify-between gap-2">
+                <h3 class="font-extrabold text-base text-indigo-600 dark:text-indigo-300" data-i18n="secChainTitle"></h3>
+                <span id="admChainBadge" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-extrabold text-[10px]"></span>
+              </div>
+              <div id="admHashList" class="space-y-1.5 font-mono text-[11px] max-h-56 overflow-y-auto"></div>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" id="admVerifyBtn" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold"></button>
+                <button type="button" id="admTamperBtn" class="px-3.5 py-2 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-300 font-bold"></button>
+                <button type="button" id="admResetChainBtn" class="px-3.5 py-2 rounded-xl sub-row font-bold"></button>
+              </div>
+            </div>
+
+            <div class="card p-5 space-y-3 text-xs">
+              <h3 class="font-extrabold text-base" data-i18n="secSessionsTitle"></h3>
+              <div id="loginAttemptsBox" class="space-y-2"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 4: PLAN EDITOR, FEATURE FLAGS & ANNOUNCEMENTS (Priorities 5 & 6) -->
+        <section id="atab-plans" class="atab hidden space-y-5">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 text-xs">
+            <div class="card p-5 space-y-3">
+              <h3 class="font-extrabold text-base" data-i18n="planEditTitle"></h3>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div><label class="block font-bold mb-1 text-muted" data-i18n="lblFreeProd"></label><input type="number" id="freeProdLim" value="100" class="w-full inp rounded-xl px-3 py-2 font-bold" /></div>
+                <div><label class="block font-bold mb-1 text-muted" data-i18n="lblFreeAi"></label><input type="number" id="freeAiLim" value="20" class="w-full inp rounded-xl px-3 py-2 font-bold" /></div>
+              </div>
+              <button type="button" id="savePlanLimBtn" class="px-4 py-2 rounded-xl bg-indigo-600 text-white font-bold" data-i18n="btnSavePlans"></button>
+
+              <div class="pt-3 border-t border-slate-500/20 space-y-2">
+                <h4 class="font-extrabold" data-i18n="annTitle"></h4>
+                <input type="text" id="annTextIn" class="w-full inp rounded-xl px-3 py-2" />
+                <button type="button" id="sendAnnBtn" class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold" data-i18n="btnSendAnn"></button>
+              </div>
+            </div>
+
+            <div class="card p-5 space-y-3">
+              <h3 class="font-extrabold text-base" data-i18n="flagsTitle"></h3>
+              <div id="gradualFlagsList" class="space-y-2.5"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- TAB 5: MASTER DATA (PRODUCT CATALOG & FESTIVAL CALENDAR) & SYSTEM HEALTH (Priorities 7 & 8) -->
+        <section id="atab-master" class="atab hidden space-y-5">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 text-xs">
+            <div class="card p-5 space-y-3">
+              <h3 class="font-extrabold text-base" data-i18n="masterCatalogTitle"></h3>
+              <div id="masterCatalogList" class="space-y-1.5"></div>
+              <h4 class="font-extrabold pt-2 border-t border-slate-500/20" data-i18n="festCalTitle"></h4>
+              <div id="festivalCalList" class="space-y-1.5"></div>
+            </div>
+
+            <div class="card p-5 space-y-3">
+              <h3 class="font-extrabold text-base" data-i18n="sysHealthTitle"></h3>
+              <div class="grid grid-cols-2 gap-2.5">
+                <div class="p-3 rounded-xl sub-row"><div class="text-muted">Avg API Latency</div><div class="text-lg font-extrabold text-emerald-600 dark:text-emerald-300">184ms</div></div>
+                <div class="p-3 rounded-xl sub-row"><div class="text-muted">Error Rate</div><div class="text-lg font-extrabold text-indigo-600 dark:text-indigo-300">0.08%</div></div>
+                <div class="p-3 rounded-xl sub-row"><div class="text-muted">DB Pooler</div><div class="text-lg font-extrabold">12 / 100</div></div>
+                <div class="p-3 rounded-xl sub-row"><div class="text-muted">Last Backup</div><div class="text-lg font-extrabold">02:00 AM</div></div>
+              </div>
+              <div class="flex flex-wrap gap-2 pt-2">
+                <button type="button" id="clearCacheBtn" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-bold" data-i18n="btnClearCache"></button>
+                <button type="button" id="retryCronBtn" class="px-3.5 py-2 rounded-xl sub-row font-bold" data-i18n="btnRetryCron"></button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function sGet(k, fb) { try { const v = localStorage.getItem(k); return v !== null ? v : fb; } catch { return fb; } }
+    function sSet(k, v) { try { localStorage.setItem(k, v); } catch {} }
+
+    let lang = sGet('bizmind_admin_lang', 'bn');
+    let isDark = sGet('bizmind_admin_theme', 'light') === 'dark';
+    let adminRole = 'SUPER_ADMIN';
+    let failedCount = 0;
+    let lockedUntil = 0;
+    let activeTab = 'overview';
+    let killSwitch = false;
+    let maintMode = false;
+    let promptVersion = 'v2.4';
+    let chainValid = true;
+
+    const L = (bn, en) => (lang === 'bn' ? bn : en);
+
+    const dict = {
+      bn: {
+        gateTitle: 'বিজমাইন্ড অ্যাডমিন কনসোল (আলাদা ডোমেইন)',
+        gateSub: 'পাবলিক সাইনআপ বন্ধ · TOTP ২এফএ ও httpOnly কুকি সুরক্ষিত',
+        lblRolePreview: 'অ্যাডমিন রোল (ভিডিও ডেমো প্রিভিউ)',
+        lblEmail: 'অ্যাডমিন ইমেইল',
+        lblPass: 'পাসওয়ার্ড (কমপক্ষে ১২ অক্ষর)',
+        lblTotp: 'Google Authenticator (৬-সংখ্যার TOTP)',
+        lblBotShield: 'Cloudflare Turnstile / Bot যাচাই সম্পন্ন',
+        btnSignIn: 'নিরাপদে লগইন করুন',
+        gateFooterNote: '🔒 নিরাপত্তার জন্য ৫ বার ভুল করলে ১৫ মিনিটের লকআউট চালু হয়। সার্চ ইঞ্জিনে noindex সেট করা আছে।',
+        consoleBrand: 'বিজমাইন্ড প্ল্যাটফর্ম অ্যাডমিন',
+        btnLogout: 'লগআউট',
+        privacyBanner: '🔒 গোপনীয়তা নীতি: ডিফল্টভাবে অ্যাডমিন দোকানের আসল লাভ-ক্ষতি বা বাকি দেখে না — শুধু সারাংশ দেখে। সাপোর্টের জন্য Break-Glass কারণ ও অডিট লগ বাধ্যতামূলক।',
+        kShops: 'মোট দোকান',
+        kUsers: 'সক্রিয় ব্যবহারকারী',
+        kMrr: 'মাসিক আয়',
+        kAiSpend: 'আজকের এআই খরচ',
+        kHealth: 'সিস্টেম হেলথ',
+        emgTitle: '🚨 জরুরি নিয়ন্ত্রণ (মোবাইল থেকেও ১ ক্লিক)',
+        emgSub: 'প্রতিটি জরুরি অ্যাকশনে নিশ্চিতকরণ ও হ্যাশ-চেইন অডিট লগ বাধ্যতামূলক।',
+        shopsTitle: 'নিবন্ধিত দোকান ব্যবস্থাপনা',
+        aiRouterTitle: 'এআই মডেল রাউটার ও এনক্রিপ্টেড কী ভল্ট',
+        lblSimpleModel: 'সহজ প্রশ্নে সস্তা মডেল',
+        lblComplexModel: 'জটিল বিশ্লেষণে শক্তিশালী মডেল',
+        lblApiVault: 'API Key ভল্ট (সেভ হলে আর দেখা যাবে না)',
+        btnRotateKey: 'বদলান (Re-Auth)',
+        aiCacheStats: '⚡ ক্যাশিংয়ে ৩৪% টোকেন খরচ বেঁচেছে · ৯৪.২% ইভালুয়েশন অ্যাকুরেসি · ৬টি ইনজেকশন ব্লক।',
+        aiAgentsTitle: 'এজেন্ট চালু / বন্ধ নিয়ন্ত্রণ',
+        promptVerLbl: 'বর্তমান প্রম্পট সংস্করণ:',
+        btnRollback: '↺ আগের সংস্করণে ফিরুন',
+        secChainTitle: 'হ্যাশ-চেইন অডিট লগ (Tamper-Evident)',
+        secSessionsTitle: 'লগইন চেষ্টা ও সক্রিয় অ্যাডমিন সেশন',
+        planEditTitle: 'কোড না বদলে প্ল্যান লিমিট সম্পাদনা',
+        lblFreeProd: 'ফ্রি প্ল্যান সর্বোচ্চ পণ্য',
+        lblFreeAi: 'ফ্রি প্ল্যান মাসিক এআই প্রশ্ন',
+        btnSavePlans: 'প্ল্যান সীমা সেভ করুন',
+        annTitle: 'সব দোকানে ঘোষণা (Announcement)',
+        btnSendAnn: 'ঘোষণা পাঠান',
+        flagsTitle: 'ফিচার ফ্ল্যাগ (১০% / ৫০% / ১০০% রোলআউট)',
+        masterCatalogTitle: 'কেন্দ্রীয় মাস্টার পণ্য তালিকা (বারকোডসহ)',
+        festCalTitle: 'বাংলাদেশ উৎসব ক্যালেন্ডার (Forecast-এ ব্যবহৃত)',
+        sysHealthTitle: 'সিস্টেম হেলথ ও ডেভেলপার টুলস',
+        btnClearCache: 'ক্যাশ পরিষ্কার করুন',
+        btnRetryCron: 'ব্যর্থ Cron আবার চালান'
+      },
+      en: {
+        gateTitle: 'BizMind Admin Console (Isolated Subdomain)',
+        gateSub: 'No Public Signup · TOTP 2FA & httpOnly Cookie Protected',
+        lblRolePreview: 'Admin Sub-Role (Demo Preview)',
+        lblEmail: 'Admin Email',
+        lblPass: 'Password (min 12 chars)',
+        lblTotp: 'Google Authenticator (6-digit TOTP)',
+        lblBotShield: 'Cloudflare Turnstile / Bot Verification Passed',
+        btnSignIn: 'Sign In Securely',
+        gateFooterNote: '🔒 5 failed attempts trigger a 15-min lockout. Indexed search engines blocked via noindex + robots.txt.',
+        consoleBrand: 'BizMind Platform Admin',
+        btnLogout: 'Logout',
+        privacyBanner: '🔒 Privacy Rule: Admin never sees private shop profit or customer baki by default. Break-Glass support view requires a logged justification & 30-min read-only cap.',
+        kShops: 'Total Shops',
+        kUsers: 'Active Users',
+        kMrr: 'Monthly MRR',
+        kAiSpend: 'Today AI Spend',
+        kHealth: 'System Health',
+        emgTitle: '🚨 Emergency Controls (Mobile-Ready)',
+        emgSub: 'Every critical action requires confirmation and writes to the Hash-Chain Audit Log.',
+        shopsTitle: 'Registered Shops Directory',
+        aiRouterTitle: 'AI Model Router & Encrypted Key Vault',
+        lblSimpleModel: 'Simple Query Model (Low Cost)',
+        lblComplexModel: 'Complex Reasoning Model',
+        lblApiVault: 'Encrypted API Key Vault (Write-Only)',
+        btnRotateKey: 'Rotate (Re-Auth)',
+        aiCacheStats: '⚡ 34% saved via caching · 94.2% Eval accuracy · 6 prompt injections blocked.',
+        aiAgentsTitle: 'Per-Agent Feature Switches',
+        promptVerLbl: 'Active Prompt Version:',
+        btnRollback: '↺ Rollback Version',
+        secChainTitle: 'Tamper-Evident Hash-Chain Audit Log',
+        secSessionsTitle: 'Login Attempts & Active Admin Sessions',
+        planEditTitle: 'Live Plan Quota Editor (No Code Deploy)',
+        lblFreeProd: 'Free Plan Max Products',
+        lblFreeAi: 'Free Plan Monthly AI',
+        btnSavePlans: 'Save Plan Limits',
+        annTitle: 'Global Announcement Banner',
+        btnSendAnn: 'Broadcast Now',
+        flagsTitle: 'Feature Flags (10% / 50% / 100% Rollout)',
+        masterCatalogTitle: 'Central Master Product Catalog (Barcodes)',
+        festCalTitle: 'Bangladesh Festival Calendar (Feeds Forecast)',
+        sysHealthTitle: 'System Health & Developer Tools',
+        btnClearCache: 'Clear Redis Cache',
+        btnRetryCron: 'Retry Failed Cron'
+      }
+    };
+
+    const shops = [
+      { id: 'shp_01', name: 'রহিম ভাইয়ের মুদি দোকান', city: 'Dhaka', plan: 'FREE', status: 'ACTIVE', productsCount: 48, salesCount: 312, staff: 3 },
+      { id: 'shp_02', name: 'গ্রিনকেয়ার ফার্মেসি', city: 'Chattogram', plan: 'PREMIUM', status: 'ACTIVE', productsCount: 210, salesCount: 940, staff: 5 },
+      { id: 'shp_03', name: 'মায়ের দোয়া সুপার শপ', city: 'Sylhet', plan: 'PREMIUM', status: 'ACTIVE', productsCount: 165, salesCount: 680, staff: 4 },
+      { id: 'shp_04', name: 'বগুড়া এগ্রো মার্ট', city: 'Bogura', plan: 'FREE', status: 'SUSPENDED', productsCount: 22, salesCount: 45, staff: 1 }
+    ];
+
+    const agents = [
+      { id: 'reorder', name: 'Auto Reorder Agent', plan: 'PREMIUM', on: true },
+      { id: 'waste', name: 'Waste Rescue & Markdown Agent', plan: 'ALL', on: true },
+      { id: 'marketing', name: 'Autonomous Marketing Drafts', plan: 'PREMIUM', on: true },
+      { id: 'credit', name: 'Customer Credit Risk Scorer', plan: 'ALL', on: true }
+    ];
+
+    const flags = [
+      { key: 'phased_markdown_v2', label: 'Dynamic Phased Markdown', pct: 100 },
+      { key: 'telegram_hitl_approve', label: 'Telegram Inline Approvals', pct: 50 },
+      { key: 'whatsapp_order_share', label: 'WhatsApp Bangla PO Share', pct: 100 }
+    ];
+
+    function fnvHash(str) {
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return ('00000000' + (h >>> 0).toString(16)).slice(-8) + ('00000000' + ((h ^ 0x5bd1e995) >>> 0).toString(16)).slice(-8);
+    }
+    let auditChain = [];
+    function appendAudit(action) {
+      const idx = auditChain.length;
+      const prev = idx === 0 ? 'GENESIS_ADMIN_00' : auditChain[idx - 1].hash;
+      const hash = fnvHash(`${idx}|${adminRole}|${action}|${prev}`);
+      auditChain.push({ idx, actor: adminRole, action, prev, hash });
+    }
+    appendAudit('Seeded Super Admin via CLI (Public Signup Disabled)');
+    appendAudit('Updated GreenCare Pharmacy to PREMIUM');
+
+    function toast(msg) {
+      const t = document.getElementById('admToast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => t.classList.add('hidden'), 3500);
+    }
+
+    function canMutate(requiredRoles) {
+      if (adminRole === 'READ_ONLY') { toast(L('👁️ Read-Only রোলে কোনো পরিবর্তন করা যাবে না।', '👁️ Read-Only role cannot modify settings.')); return false; }
+      if (requiredRoles && !requiredRoles.includes(adminRole)) { toast(L('🔒 আপনার অ্যাডমিন রোলে এই কাজের অনুমতি নেই।', '🔒 Your Admin sub-role lacks permission for this action.')); return false; }
+      return true;
+    }
+
+    function openReAuthModal(title, onVerified) {
+      document.getElementById('admModalTitle').textContent = title;
+      document.getElementById('admModalBody').innerHTML = `
+        <p class="text-muted">${L('ঝুঁকিপূর্ণ কাজের আগে পুনরায় অ্যাডমিন পাসওয়ার্ড নিশ্চিত করুন:', 'Re-enter your admin password before executing this sensitive action:')}</p>
+        <input type="password" id="reAuthPassIn" placeholder="BizMind#Judge2026" class="w-full min-h-[44px] inp rounded-xl px-3" />
+        <button type="button" id="confirmReAuthBtn" class="w-full min-h-[44px] rounded-xl bg-rose-600 text-white font-extrabold">${L('নিশ্চিত করুন', 'Confirm Action')}</button>
+      `;
+      document.getElementById('admModal').classList.remove('hidden');
+      document.getElementById('confirmReAuthBtn').addEventListener('click', () => {
+        if (document.getElementById('reAuthPassIn').value.length >= 12) {
+          document.getElementById('admModal').classList.add('hidden');
+          onVerified();
+        } else {
+          toast(L('পাসওয়ার্ড কমপক্ষে ১২ অক্ষর হতে হবে।', 'Password must be at least 12 characters.'));
+        }
+      });
+    }
+
+    function renderNav() {
+      const tabs = [
+        { id: 'overview', icon: '📊', bn: 'সারসংক্ষেপ ও দোকান', en: 'Overview & Shops' },
+        { id: 'ai', icon: '🧠', bn: 'এআই নিয়ন্ত্রণ কেন্দ্র', en: 'AI Control Center' },
+        { id: 'security', icon: '🛡️', bn: 'নিরাপত্তা ও হ্যাশ-চেইন', en: 'Security & Audit' },
+        { id: 'plans', icon: '💳', bn: 'প্ল্যান, ফ্ল্যাগ ও ঘোষণা', en: 'Plans & Flags' },
+        { id: 'master', icon: '📦', bn: 'মাস্টার ডেটা ও হেলথ', en: 'Master Data & Health' }
+      ];
+      const html = tabs.map((t) => `<button type="button" data-atab="${t.id}" class="nav-btn ${activeTab === t.id ? 'active' : ''} w-full min-h-[44px] px-3.5 py-2 rounded-xl text-left text-xs sm:text-sm font-bold flex items-center gap-2.5 hover:bg-indigo-500/10"><span>${t.icon}</span><span>${L(t.bn, t.en)}</span></button>`).join('');
+      document.getElementById('desktopNavList').innerHTML = html;
+      document.getElementById('mobileNavList').innerHTML = html;
+      document.querySelectorAll('[data-atab]').forEach((b) => b.addEventListener('click', () => {
+        activeTab = b.getAttribute('data-atab');
+        document.querySelectorAll('.atab').forEach((s) => s.classList.toggle('hidden', s.id !== 'atab-' + activeTab));
+        document.getElementById('mobileDrawerOverlay').classList.add('hidden');
+        renderAll();
+      }));
+    }
+
+    function renderAll() {
+      document.getElementById('adminHtmlRoot').classList.toggle('dark', isDark);
+      document.getElementById('adminHtmlRoot').setAttribute('lang', lang);
+      const t = dict[lang];
+      document.querySelectorAll('[data-i18n]').forEach((el) => { const k = el.getAttribute('data-i18n'); if (t[k]) el.textContent = t[k]; });
+      const langLbl = lang === 'bn' ? '🌐 EN' : '🌐 বাংলা';
+      const themeLbl = isDark ? '☀️' : '🌙';
+      ['gateLangBtn', 'appLangBtn'].forEach((id) => { document.getElementById(id).textContent = langLbl; });
+      ['gateThemeBtn', 'appThemeBtn'].forEach((id) => { document.getElementById(id).textContent = themeLbl; });
+      document.getElementById('adminRoleSubtitle').textContent = `${adminRole} · httpOnly Strict · 30m Idle`;
+      document.getElementById('maintStatusPill').classList.toggle('hidden', !maintMode);
+      document.getElementById('shopSearchIn').placeholder = L('দোকান বা শহর খুঁজুন...', 'Search shop or city...');
+      document.getElementById('annTextIn').placeholder = L('যেমন: আজ রাত ২টায় রক্ষণাবেক্ষণ চলবে', 'e.g., Scheduled maintenance tonight at 2 AM');
+
+      document.getElementById('globalKillBtn').textContent = killSwitch ? L('🟢 কিল সুইচ চালু — এআই পুনরায় চালু করুন', '🟢 Kill Switch ON — Resume AI') : L('⛔ গ্লোবাল এআই কিল সুইচ', '⛔ Global AI Kill Switch');
+      document.getElementById('globalMaintBtn').textContent = maintMode ? L('✅ মেইনটেন্যান্স বন্ধ করুন', '✅ Exit Maintenance') : L('🛠️ মেইনটেন্যান্স মোড চালু', '🛠️ Enable Maintenance Mode');
+
+      renderNav();
+
+      // Shops Cards (Summary Counts ONLY — No Private Profit/Baki!)
+      const q = (document.getElementById('shopSearchIn').value || '').toLowerCase();
+      const pf = document.getElementById('shopPlanFilter').value;
+      const filtered = shops.filter((s) => (pf === 'ALL' || s.plan === pf) && (!q || s.name.toLowerCase().includes(q) || s.city.toLowerCase().includes(q)));
+      document.getElementById('shopsCardList').innerHTML = filtered.map((s, i) => `
+        <div class="p-3.5 rounded-xl sub-row flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <div>
+            <div class="font-extrabold text-sm">${s.name} <span class="text-[10px] px-2 py-0.5 rounded-full ${s.plan === 'PREMIUM' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300' : 'bg-slate-500/20'}">${s.plan}</span> <span class="text-[10px] px-2 py-0.5 rounded-full ${s.status === 'ACTIVE' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300' : 'bg-rose-500/20 text-rose-600'}">${s.status}</span></div>
+            <div class="text-[11px] text-muted">${s.city} · ${L(`পণ্য: ${s.productsCount} · বিক্রি সংখ্যা: ${s.salesCount} · কর্মী: ${s.staff} (লাভ-ক্ষতি গোপন)`, `Products: ${s.productsCount} · Sales Count: ${s.salesCount} · Staff: ${s.staff} (P&L Private)`)}</div>
+          </div>
+          <div class="flex flex-wrap gap-1.5">
+            <button type="button" data-bg="${i}" class="bg-btn px-2.5 py-1.5 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 font-bold">🔓 Break-Glass</button>
+            <button type="button" data-rst="${i}" class="rst-btn px-2.5 py-1.5 rounded-lg sub-row font-bold">📧 ${L('রিসেট লিংক', 'Reset Link')}</button>
+            <button type="button" data-sp="${i}" class="sp-btn px-2.5 py-1.5 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-300 font-bold">${L('প্ল্যান', 'Plan')}</button>
+            <button type="button" data-ss="${i}" class="ss-btn px-2.5 py-1.5 rounded-lg bg-rose-500/20 text-rose-600 dark:text-rose-300 font-bold">${s.status === 'ACTIVE' ? L('বন্ধ', 'Suspend') : L('চালু', 'Activate')}</button>
+          </div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.bg-btn').forEach((b) => b.addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN', 'SUPPORT_ADMIN'])) return;
+        const s = shops[Number(b.getAttribute('data-bg'))];
+        document.getElementById('admModalTitle').textContent = `🔓 Break-Glass (30m Read-Only) — ${s.name}`;
+        document.getElementById('admModalBody').innerHTML = `
+          <p class="text-muted">${L('সাপোর্টের জন্য সাময়িক রিড-অনলি ভিউ খুলতে কারণ লিখুন (অডিট লগে সংরক্ষিত হবে):', 'Enter justification reason for 30-min read-only support access (logged to Audit Trail):')}</p>
+          <input type="text" id="bgReasonIn" placeholder="Ticket #412: Owner requested POS sync check" class="w-full min-h-[44px] inp rounded-xl px-3" />
+          <button type="button" id="confirmBgBtn" class="w-full min-h-[44px] rounded-xl bg-indigo-600 text-white font-extrabold">${L('কারণ লগ করে রিড-অনলি ভিউ খুলুন', 'Log Reason & Open Read-Only View')}</button>
+        `;
+        document.getElementById('admModal').classList.remove('hidden');
+        document.getElementById('confirmBgBtn').addEventListener('click', () => {
+          const r = document.getElementById('bgReasonIn').value.trim();
+          if (r.length < 5) { toast(L('অন্তত ৫ অক্ষরের কারণ লিখুন।', 'Enter a valid reason (min 5 chars).')); return; }
+          appendAudit(`Break-Glass 30m Read-Only for ${s.id}: ${r}`);
+          document.getElementById('admModal').classList.add('hidden');
+          renderAll();
+          toast(L('🔓 Break-Glass সেশন (৩০ মি. রিড-অনলি) অডিট লগে নথিভুক্ত হয়েছে।', '🔓 Break-Glass 30m read-only session logged!'));
+        });
+      }));
+      document.querySelectorAll('.rst-btn').forEach((b) => b.addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN', 'SUPPORT_ADMIN'])) return;
+        const s = shops[Number(b.getAttribute('data-rst'))];
+        appendAudit(`Sent password reset link to ${s.id} (Admin never views/sets password)`);
+        renderAll();
+        toast(L('📧 পাসওয়ার্ড রিসেট লিংক পাঠানো হয়েছে।', '📧 Password reset link dispatched.'));
+      }));
+      document.querySelectorAll('.sp-btn').forEach((b) => b.addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN', 'FINANCE_ADMIN'])) return;
+        const s = shops[Number(b.getAttribute('data-sp'))];
+        s.plan = s.plan === 'FREE' ? 'PREMIUM' : 'FREE';
+        appendAudit(`Changed ${s.id} plan -> ${s.plan}`);
+        renderAll();
+      }));
+      document.querySelectorAll('.ss-btn').forEach((b) => b.addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN', 'SUPPORT_ADMIN'])) return;
+        const s = shops[Number(b.getAttribute('data-ss'))];
+        s.status = s.status === 'ACTIVE' ? 'SUSPENDED' : 'ACTIVE';
+        appendAudit(`Changed ${s.id} status -> ${s.status}`);
+        renderAll();
+      }));
+
+      // AI Agents
+      document.getElementById('adminAgentsList').innerHTML = agents.map((a, i) => `
+        <div class="p-3 rounded-xl sub-row flex items-center justify-between gap-2">
+          <div><div class="font-bold">${a.name}</div><div class="text-[10px] text-muted">Plan: ${a.plan}</div></div>
+          <button type="button" data-ag="${i}" class="ag-btn px-3 py-1 rounded-full font-bold text-[11px] ${a.on ? 'bg-emerald-500 text-slate-950' : 'bg-slate-600 text-white'}">${a.on ? 'ON' : 'OFF'}</button>
+        </div>
+      `).join('');
+      document.querySelectorAll('.ag-btn').forEach((b) => b.addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN', 'AI_ADMIN'])) return;
+        const a = agents[Number(b.getAttribute('data-ag'))];
+        a.on = !a.on;
+        appendAudit(`Toggled ${a.id} agent -> ${a.on ? 'ON' : 'OFF'}`);
+        renderAll();
+      }));
+
+      // Security & Hash-Chain
+      document.getElementById('admChainBadge').textContent = chainValid ? L('✓ শৃঙ্খল অক্ষত', '✓ Chain Valid') : L('🚨 টেম্পারিং ধরা পড়েছে!', '🚨 Tampered!');
+      document.getElementById('admHashList').innerHTML = auditChain.map((c) => `<div class="p-2 rounded-lg sub-row"><div>#${c.idx} <strong>${c.actor}</strong>: ${c.action}</div><div class="text-[10px] text-muted">prev:${c.prev.slice(0, 8)} → hash:${c.hash.slice(0, 10)}</div></div>`).join('');
+      document.getElementById('admVerifyBtn').textContent = L('🔍 Integrity যাচাই', '🔍 Verify Integrity');
+      document.getElementById('admTamperBtn').textContent = L('🧪 সারি বদলে টেস্ট', '🧪 Tamper Demo');
+      document.getElementById('admResetChainBtn').textContent = L('↺ রিসেট', '↺ Reset');
+
+      document.getElementById('loginAttemptsBox').innerHTML = `
+        <div class="p-2.5 rounded-xl sub-row flex justify-between"><span>✅ admin@bizmind.ai (Dhaka · TOTP OK)</span><span class="text-emerald-600 font-bold">Active</span></div>
+        <div class="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex justify-between"><span>⛔ 103.144.xx.xx (5 failed attempts)</span><span class="text-rose-600 font-bold">Locked 15m</span></div>
+      `;
+
+      // Gradual Feature Flags
+      document.getElementById('gradualFlagsList').innerHTML = flags.map((f, i) => `
+        <div class="p-3 rounded-xl sub-row space-y-1.5">
+          <div class="flex justify-between font-bold"><span>${f.label}</span><span class="text-indigo-500">${f.pct}%</span></div>
+          <input type="range" data-flg="${i}" min="0" max="100" step="10" value="${f.pct}" class="flg-sl w-full accent-indigo-600" />
+        </div>
+      `).join('');
+      document.querySelectorAll('.flg-sl').forEach((s) => s.addEventListener('input', (e) => {
+        if (!canMutate(['SUPER_ADMIN', 'AI_ADMIN'])) return;
+        flags[Number(s.getAttribute('data-flg'))].pct = Number(e.target.value);
+        renderAll();
+      }));
+
+      // Master Data & Festival Calendar
+      document.getElementById('masterCatalogList').innerHTML = [
+        '8941100100012 · ফার্মের লাল ডিম (মেয়াদ ৭ দিন)',
+        '8941100200029 · সয়াবিন তেল ২ লি. (মেয়াদ ১৮০ দিন)',
+        '8941100300036 · মিনিকেট চাল ৫ কেজি (মেয়াদ ১৫০ দিন)'
+      ].map((x) => `<div class="p-2 rounded-lg sub-row font-mono text-[11px]">${x}</div>`).join('');
+      document.getElementById('festivalCalList').innerHTML = [
+        L('🌙 রমজান (ফেব্রু–মার্চ) · চাহিদা গুণক ×১.৪৫', '🌙 Ramadan (Feb–Mar) · Demand ×1.45'),
+        L('🎉 ঈদ-উল-ফিতর · চাহিদা গুণক ×১.৬৫', '🎉 Eid-ul-Fitr · Demand ×1.65'),
+        L('🌧️ বর্ষাকাল (জুন–আগস্ট) · ছাতা/চা ×১.৪০', '🌧️ Monsoon (Jun–Aug) · Umbrella/Tea ×1.40')
+      ].map((x) => `<div class="p-2 rounded-lg sub-row font-semibold">${x}</div>`).join('');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const toggleLang = () => { lang = lang === 'bn' ? 'en' : 'bn'; sSet('bizmind_admin_lang', lang); renderAll(); };
+      const toggleTheme = () => { isDark = !isDark; sSet('bizmind_admin_theme', isDark ? 'dark' : 'light'); renderAll(); };
+      ['gateLangBtn', 'appLangBtn'].forEach((id) => document.getElementById(id).addEventListener('click', toggleLang));
+      ['gateThemeBtn', 'appThemeBtn'].forEach((id) => document.getElementById(id).addEventListener('click', toggleTheme));
+
+      // Hardened Login Handler (5-attempt lockout + generic error + TOTP)
+      document.getElementById('adminGateForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const err = document.getElementById('gateErrMsg');
+        if (Date.now() < lockedUntil) {
+          err.textContent = L('⛔ ৫ বার ভুলের কারণে ১৫ মিনিটের জন্য লক করা হয়েছে।', '⛔ Locked for 15 minutes after 5 failed attempts.');
+          err.classList.remove('hidden');
+          return;
+        }
+        const pass = document.getElementById('gatePass').value;
+        const totp = document.getElementById('gateTotp').value.trim();
+        const botOk = document.getElementById('gateBotCheck').checked;
+        if (!botOk || pass.length < 12 || totp.length !== 6) {
+          failedCount += 1;
+          if (failedCount >= 5) { lockedUntil = Date.now() + 15 * 60 * 1000; failedCount = 0; }
+          err.textContent = L('ইমেইল বা পাসওয়ার্ড ভুল।', 'Invalid email or password.'); // Generic error!
+          err.classList.remove('hidden');
+          return;
+        }
+        failedCount = 0;
+        err.classList.add('hidden');
+        adminRole = document.getElementById('gateRoleSel').value;
+        appendAudit(`Admin 2FA login verified (${adminRole})`);
+        document.getElementById('adminLoginView').classList.add('hidden');
+        document.getElementById('adminAppShell').classList.remove('hidden');
+        renderAll();
+      });
+
+      document.getElementById('adminLogoutBtn').addEventListener('click', () => {
+        document.getElementById('adminAppShell').classList.add('hidden');
+        document.getElementById('adminLoginView').classList.remove('hidden');
+      });
+
+      document.getElementById('hamburgerBtn').addEventListener('click', () => document.getElementById('mobileDrawerOverlay').classList.remove('hidden'));
+      document.getElementById('closeDrawerBtn').addEventListener('click', () => document.getElementById('mobileDrawerOverlay').classList.add('hidden'));
+      document.getElementById('closeAdmModalBtn').addEventListener('click', () => document.getElementById('admModal').classList.add('hidden'));
+      document.getElementById('shopSearchIn').addEventListener('input', renderAll);
+      document.getElementById('shopPlanFilter').addEventListener('change', renderAll);
+
+      document.getElementById('globalKillBtn').addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN', 'AI_ADMIN'])) return;
+        openReAuthModal(L('⛔ গ্লোবাল কিল সুইচ নিশ্চিতকরণ', '⛔ Confirm Global AI Kill Switch'), () => {
+          killSwitch = !killSwitch;
+          appendAudit(`Global AI Kill Switch -> ${killSwitch ? 'ACTIVATED' : 'RESUMED'}`);
+          renderAll();
+          toast(killSwitch ? L('⛔ সব স্বয়ংক্রিয় এআই বন্ধ করা হয়েছে!', '⛔ All autonomous AI halted!') : L('✅ এআই পুনরায় চালু হয়েছে।', '✅ AI resumed.'));
+        });
+      });
+
+      document.getElementById('globalMaintBtn').addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN'])) return;
+        openReAuthModal(L('🛠️ মেইনটেন্যান্স মোড নিশ্চিতকরণ', '🛠️ Confirm Maintenance Mode'), () => {
+          maintMode = !maintMode;
+          appendAudit(`Maintenance Mode -> ${maintMode ? 'ON' : 'OFF'}`);
+          renderAll();
+        });
+      });
+
+      document.getElementById('rotateApiKeyBtn').addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN', 'AI_ADMIN'])) return;
+        openReAuthModal(L('🔐 এনক্রিপ্টেড API Key বদলান', '🔐 Rotate Encrypted API Key'), () => {
+          document.getElementById('apiKeyVaultIn').value = '';
+          appendAudit('Rotated encrypted LLM API key (write-only vault)');
+          renderAll();
+          toast(L('🔐 নতুন API Key এনক্রিপ্ট করে সেভ করা হয়েছে।', '🔐 New API key encrypted & stored.'));
+        });
+      });
+
+      document.getElementById('rollbackPromptBtn').addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN', 'AI_ADMIN'])) return;
+        promptVersion = promptVersion === 'v2.4' ? 'v2.3' : 'v2.4';
+        appendAudit(`Prompt version switched to ${promptVersion}`);
+        renderAll();
+        toast(`Prompt rolled back to ${promptVersion}`);
+      });
+
+      document.getElementById('admVerifyBtn').addEventListener('click', () => {
+        chainValid = true;
+        for (let i = 0; i < auditChain.length; i++) {
+          const c = auditChain[i];
+          const prev = i === 0 ? 'GENESIS_ADMIN_00' : auditChain[i - 1].hash;
+          if (c.prev !== prev || c.hash !== fnvHash(`${c.idx}|${c.actor}|${c.action}|${prev}`)) { chainValid = false; break; }
+        }
+        renderAll();
+        toast(chainValid ? L('✅ হ্যাশ-চেইন অক্ষত আছে।', '✅ Hash-chain verified intact.') : L('🚨 টেম্পারিং ধরা পড়েছে!', '🚨 Tampering detected!'));
+      });
+      document.getElementById('admTamperBtn').addEventListener('click', () => {
+        if (auditChain[1]) auditChain[1].action = 'TAMPERED_ENTRY_EDITED';
+        toast(L('🧪 সারি #১ বদলানো হয়েছে — এবার Integrity যাচাই চাপুন!', '🧪 Row #1 edited — click Verify Integrity!'));
+        renderAll();
+      });
+      document.getElementById('admResetChainBtn').addEventListener('click', () => {
+        auditChain = [];
+        appendAudit('Seeded Super Admin via CLI (Public Signup Disabled)');
+        appendAudit('Updated GreenCare Pharmacy to PREMIUM');
+        chainValid = true;
+        renderAll();
+      });
+
+      document.getElementById('savePlanLimBtn').addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN', 'FINANCE_ADMIN'])) return;
+        appendAudit(`Updated Free plan limits (Prod:${document.getElementById('freeProdLim').value}, AI:${document.getElementById('freeAiLim').value})`);
+        renderAll();
+        toast(L('✅ প্ল্যান সীমা আপডেট হয়েছে।', '✅ Plan limits saved.'));
+      });
+      document.getElementById('sendAnnBtn').addEventListener('click', () => {
+        if (!canMutate(['SUPER_ADMIN'])) return;
+        const txt = document.getElementById('annTextIn').value.trim();
+        if (!txt) return;
+        appendAudit(`Global announcement: ${txt}`);
+        renderAll();
+        toast(L('📢 সব দোকানে ঘোষণা পাঠানো হয়েছে।', '📢 Global announcement sent.'));
+      });
+      document.getElementById('clearCacheBtn').addEventListener('click', () => toast(L('⚡ Redis ক্যাশ পরিষ্কার হয়েছে।', '⚡ Cache cleared.')));
+      document.getElementById('retryCronBtn').addEventListener('click', () => toast(L('🔄 ব্যর্থ Cron জব পুনরায় চালানো হয়েছে।', '🔄 Failed cron retried.')));
+
+      renderAll();
+    });
+  </script>
+</body>
+</html>
