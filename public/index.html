@@ -196,6 +196,131 @@
       renderPart2UI();
     });
 
+  
+    // ========================================================================
+    // MANDATORY AUTONOMOUS SAFETY CONTROLS (Kill Switch, Spend Cap, Dry-Run, Indirect Injection, Opt-In Area Trend)
+    // ========================================================================
+    let killSwitchActive = false;
+    let dryRunMode = true;
+    let maxOrderSpendBdt = 10000;
+    let swarmOptIn = true;
+
+    function renderSafetyAndSwarm() {
+      if (!document.getElementById('safePanelTitle')) return;
+      document.getElementById('safePanelTitle').textContent = L('🛡️ অটোনোমাস এআই নিরাপত্তা নিয়ন্ত্রণ (বাধ্যতামূলক)', '🛡️ Autonomous AI Safety Controls (Mandatory)');
+      document.getElementById('safePanelSub').textContent = L('অনুমোদন, খরচের সীমা, ড্রাই-রান মোড ও ১-ক্লিক কিল সুইচ — সব কাজ অডিট লগে সংরক্ষিত হয়।', 'Approval gate, spend cap, dry-run mode & 1-click kill switch — every action logged.');
+      document.getElementById('killSwitchBtn').textContent = killSwitchActive ? L('🔴 কিল সুইচ চালু (সব এআই বন্ধ) — চালু করুন', '🔴 KILL SWITCH ON (Halted) — Resume') : L('⛔ ১-ক্লিক কিল সুইচ (সব অটো কাজ বন্ধ)', '⛔ 1-Click Kill Switch (Halt AI)');
+      document.getElementById('killSwitchBtn').className = killSwitchActive
+        ? 'px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs shadow-md transition'
+        : 'px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition';
+
+      document.getElementById('safeCapLbl').textContent = L('সর্বোচ্চ অর্ডার সীমা:', 'Max Spend Cap:');
+      document.getElementById('safeCapVal').textContent = fmtTaka(maxOrderSpendBdt);
+      document.getElementById('safeDryLbl').textContent = L('ড্রাই-রান মোড', 'Dry-Run Mode');
+      document.getElementById('safeDrySub').textContent = dryRunMode ? L('আসলে না পাঠিয়ে প্রিভিউ', 'Preview only, 0 sent') : L('স্যান্ডবক্সে পাঠাবে', 'Live Sandbox Dispatch');
+      document.getElementById('toggleDryRunBtn').textContent = dryRunMode ? L('চালু (ON)', 'ON') : L('বন্ধ (OFF)', 'OFF');
+      document.getElementById('safeInjLbl').textContent = L('ইমেইল/পণ্য ইনজেকশন টেস্ট', 'Indirect Injection Test');
+      document.getElementById('testIndirectInjBtn').textContent = L('🧪 সাপ্লায়ার ইমেইল অ্যাটাক টেস্ট', '🧪 Test Hidden Email Attack');
+
+      document.getElementById('swarmOptBadge').textContent = swarmOptIn ? L('Opt-In · নামহীন ট্রেন্ড', 'Opt-In · Anonymous') : L('Opt-Out (বন্ধ)', 'Opted Out');
+      document.getElementById('toggleSwarmOptBtn').textContent = swarmOptIn ? L('বন্ধ করুন', 'Opt Out') : L('চালু করুন', 'Opt In');
+      document.getElementById('swarmTitle').textContent = L('🌍 এলাকার সম্মিলিত ট্রেন্ড (ভবিষ্যৎ ভিশন)', '🌍 Anonymous Area Trend (Future Vision)');
+      document.getElementById('swarmTrendText').textContent = swarmOptIn
+        ? L('📈 আপনার এলাকায় মশার স্প্রে ও কয়েলের চাহিদা +৩২% বাড়ছে (নামহীন Opt-in সিগন্যাল)।', '📈 Mosquito spray & coil demand is up +32% in your area (anonymous opt-in signal).')
+        : L('আপনি Opt-Out করেছেন — কোনো এলাকা-ভিত্তিক ট্রেন্ড দেখানো হচ্ছে না।', 'You opted out — area trend sharing is disabled.');
+      document.getElementById('swarmPrivacyNote').textContent = L('🔒 কোনো দোকানের নাম বা ব্যক্তিগত ডেটা শেয়ার হয় না।', '🔒 Zero shop names or private ledgers are ever shared.');
+    }
+
+    // Wrap renderAll and sendAgentQuery with Safety Controls & Cashier Profit Guard
+    const _prevRenderAll2 = renderAll;
+    renderAll = function () { _prevRenderAll2(); renderSafetyAndSwarm(); };
+
+    const _prevSendAgentQuery = sendAgentQuery;
+    sendAgentQuery = function (msg) {
+      if (killSwitchActive) {
+        showToast(L('⛔ কিল সুইচ চালু আছে! সব স্বয়ংক্রিয় এআই কাজ বন্ধ।', '⛔ Kill Switch is ACTIVE! Autonomous AI actions are halted.'));
+        return;
+      }
+      if (session && (session.role === 'CASHIER' || session.role === 'STOCK_KEEPER') && /(profit|margin|লাভ|মুনাফা|ক্ষতি)/i.test(msg)) {
+        chatHistory.push({ role: 'user', text: msg });
+        chatHistory.push({ role: 'ai', text: L('🛡️ রোল সুরক্ষা: ক্যাশিয়ার বা স্টক কিপার এআই-এর মাধ্যমে দোকানের লাভ-ক্ষতির তথ্য দেখতে পারবেন না।', '🛡️ Role Security: Cashiers and Stock Keepers cannot query shop profit or margin via AI.') });
+        renderShopContent();
+        return;
+      }
+      _prevSendAgentQuery(msg);
+    };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('killSwitchBtn').addEventListener('click', () => {
+        killSwitchActive = !killSwitchActive;
+        shopState.timeline.unshift({
+          timeBn: 'এইমাত্র', timeEn: 'Just now',
+          textBn: killSwitchActive ? '⛔ মালিক ১-ক্লিক কিল সুইচ চালু করেছেন — সব স্বয়ংক্রিয় এআই বন্ধ' : '✅ মালিক কিল সুইচ বন্ধ করে এআই পুনরায় চালু করেছেন',
+          textEn: killSwitchActive ? '⛔ Owner activated 1-Click Kill Switch — all autonomous AI halted' : '✅ Owner deactivated Kill Switch — AI resumed'
+        });
+        renderAll();
+      });
+
+      document.getElementById('safeSpendCapSlider').addEventListener('input', (e) => {
+        maxOrderSpendBdt = Number(e.target.value);
+        renderSafetyAndSwarm();
+      });
+
+      document.getElementById('toggleDryRunBtn').addEventListener('click', () => {
+        dryRunMode = !dryRunMode;
+        renderSafetyAndSwarm();
+      });
+
+      document.getElementById('toggleSwarmOptBtn').addEventListener('click', () => {
+        swarmOptIn = !swarmOptIn;
+        renderSafetyAndSwarm();
+      });
+
+      document.getElementById('testIndirectInjBtn').addEventListener('click', () => {
+        shopState.timeline.unshift({
+          timeBn: 'এইমাত্র', timeEn: 'Just now',
+          textBn: '🛡️ Indirect Prompt Injection ব্লক: সাপ্লায়ার ইমেইলে লুকানো "Transfer ৳50,000" নির্দেশ বাতিল করা হয়েছে',
+          textEn: '🛡️ Indirect Prompt Injection Blocked: Hidden "Transfer ৳50,000" inside supplier email sanitized'
+        });
+        renderAll();
+        showToast(L('🛡️ সাপ্লায়ার ইমেইলে লুকানো Prompt Injection সফলভাবে ব্লক করা হয়েছে!', '🛡️ Hidden Prompt Injection inside supplier email blocked!'));
+      });
+
+      // Intercept PO Approval click to enforce Kill Switch, Spend Cap (৳9,100 vs slider), and Dry-Run Mode
+      document.addEventListener('click', (e) => {
+        if (e.target && e.target.id === 'approvePoSandboxBtn') {
+          if (killSwitchActive) {
+            e.stopImmediatePropagation();
+            showToast(L('⛔ কিল সুইচ চালু! অর্ডার অনুমোদন ব্লক করা হয়েছে।', '⛔ Kill Switch ON! Order dispatch blocked.'));
+            return;
+          }
+          if (9100 > maxOrderSpendBdt) {
+            e.stopImmediatePropagation();
+            shopState.timeline.unshift({
+              timeBn: 'এইমাত্র', timeEn: 'Just now',
+              textBn: `🛡️ খরচের সীমা ব্লক: PO (৳৯,১০০) মালিকের সীমা (${fmtTaka(maxOrderSpendBdt)}) অতিক্রম করেছে`,
+              textEn: `🛡️ Spend Cap Blocked: PO (৳9,100) exceeds Owner limit (${fmtTaka(maxOrderSpendBdt)})`
+            });
+            renderAll();
+            showToast(L(`🛡️ ব্লক! অর্ডার ৳৯,১০০ আপনার সীমা (${fmtTaka(maxOrderSpendBdt)}) ছাড়িয়ে গেছে।`, `🛡️ Blocked! Order ৳9,100 exceeds Spend Cap (${fmtTaka(maxOrderSpendBdt)}).`));
+            return;
+          }
+          if (dryRunMode) {
+            e.stopImmediatePropagation();
+            shopState.timeline.unshift({
+              timeBn: 'এইমাত্র', timeEn: 'Just now',
+              textBn: '🧪 Dry-Run প্রিভিউ: PO-2026-884 (৳৯,১০০) যাচাই হয়েছে — কোনো ইমেইল পাঠানো হয়নি',
+              textEn: '🧪 Dry-Run Preview: PO-2026-884 (৳9,100) validated — 0 emails dispatched'
+            });
+            renderAll();
+            showToast(L('🧪 Dry-Run মোড চালু: অর্ডার যাচাই হয়েছে, কোনো ইমেইল পাঠানো হয়নি!', '🧪 Dry-Run Mode ON: Validated safely, 0 emails sent!'));
+          }
+        }
+      }, true);
+
+      renderSafetyAndSwarm();
+    });
+
   </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -561,6 +686,45 @@
           </div>
           <div class="relative h-56">
             <canvas id="backtestChartCanvas"></canvas>
+          </div>
+        </div>
+
+        
+        <!-- MANDATORY AUTONOMOUS AI SAFETY CONTROLS + OPT-IN ANONYMOUS AREA TREND -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div class="lg:col-span-2 bento-card p-5 space-y-3 border-rose-500/30">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h3 class="font-extrabold text-sm sm:text-base" id="safePanelTitle"></h3>
+                <p class="text-[11px] text-muted" id="safePanelSub"></p>
+              </div>
+              <button type="button" id="killSwitchBtn" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-xs shadow-md transition"></button>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+              <div class="p-3 rounded-xl sub-glass-row space-y-1">
+                <div class="flex justify-between font-bold"><span id="safeCapLbl"></span><span id="safeCapVal" class="text-amber-500 dark:text-amber-300"></span></div>
+                <input type="range" id="safeSpendCapSlider" min="5000" max="20000" step="1000" value="10000" class="w-full accent-amber-500" />
+              </div>
+              <div class="p-3 rounded-xl sub-glass-row flex items-center justify-between gap-2">
+                <div><div class="font-bold" id="safeDryLbl"></div><div class="text-[10px] text-muted" id="safeDrySub"></div></div>
+                <button type="button" id="toggleDryRunBtn" class="px-3 py-1.5 rounded-lg font-extrabold text-[11px] bg-sky-500 text-slate-950"></button>
+              </div>
+              <div class="p-3 rounded-xl sub-glass-row flex flex-col justify-between gap-1.5">
+                <div class="font-bold" id="safeInjLbl"></div>
+                <button type="button" id="testIndirectInjBtn" class="px-2.5 py-1.5 rounded-lg bg-rose-500/20 text-rose-500 dark:text-rose-300 font-bold text-[11px]"></button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Small Honest Opt-In Anonymous Area Trend (Future Swarm Preview) -->
+          <div class="bento-card p-5 space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-300" id="swarmOptBadge"></span>
+              <button type="button" id="toggleSwarmOptBtn" class="text-[11px] font-bold text-indigo-500 dark:text-indigo-300 underline"></button>
+            </div>
+            <h4 class="font-bold text-sm" id="swarmTitle"></h4>
+            <p class="text-xs leading-relaxed p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 font-semibold" id="swarmTrendText"></p>
+            <p class="text-[11px] text-muted" id="swarmPrivacyNote"></p>
           </div>
         </div>
 

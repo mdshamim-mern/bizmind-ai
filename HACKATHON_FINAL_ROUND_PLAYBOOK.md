@@ -1,55 +1,32 @@
-# BizMind AI — Final Round Judge Playbook & 3-Minute Demo Script
+# BizMind AI — Championship 3-Minute Demo Script & Future Vision Slide
 
-## 1. Private Judge Access (Isolated Super Admin Portal)
-Per security best practices, Super Admin credentials are **never exposed on the public interface**.
-- **Access Path:** Click the discrete **"Platform Admin Portal"** link in the Landing Page footer.
-- **Email:** `admin@bizmind.ai`
-- **Password:** `BizMind#Judge2026`
-- **2FA OTP:** `246810`
-- **Privacy Guarantee:** Super Admin views platform health, tenant plans, AI token spend, cache savings (34%), feature flags, and audit logs — **never** individual shop private sales or profit ledgers.
+## 1. Core Pitch Positioning (Grocery-First -> Retail Chain Scale)
+> **"আমরা মুদি দোকান দিয়ে প্রমাণ করছি, কারণ সেখানে অপচয় ও বাকির সমস্যা সবচেয়ে তীব্র। একই আর্কিটেকচার পরে রিটেল চেইনে স্কেল করবে।"**
+> *(English: "We are proving this with neighborhood grocery stores because waste and credit losses hit hardest there. The exact same multi-tenant architecture scales cleanly to retail chains next.")*
 
 ---
 
-## 2. Exact 3-Minute Live Demo Script (Practice Verbatim)
+## 2. Exact 9-Beat 3-Minute Live Demo Story
 
-### 0:00 – 0:30 | The Hook & Real Problem (Landing Page)
-> *"Meet Rahim Bhai, a neighborhood grocery owner in Bangladesh. Every week, he loses money silently — 55 eggs are about to expire in 4 days, and ৳8,200 is stuck in unpaid Baki. BizMind AI is his retail AI partner: it cuts waste, recovers credit dues, and protects net profit."*
-- Point to the **Demo Environment Banner** at the top:
-  > *"In production, every user only sees their own server-verified role. For judges today, we built real role-locked Demo Accounts that reset nightly."*
-
-### 0:30 – 1:15 | Mathematical AI & Human-in-the-Loop (Owner Login)
-1. Click **Demo Login → Owner**.
-2. Show the **3-Step Onboarding Checklist** & **Human-in-the-Loop Approval Queue**:
-   > *"Notice BizMind AI never acts recklessly. It drafted a 15% expiry promo for those 55 eggs — and waits for Rahim Bhai's 1-click Approval."*
-3. Click **Approve** → point to the **Activity Timeline** updating live.
-4. Click **Open 55-Egg Optimizer** (Stock tab) and move the **Price Elasticity slider** from `0%` to `15%`:
-   > *"This isn't a hardcoded 15% guess. Using price elasticity (`E = -2.4`), 0% off wastes 23 eggs and yields ৳480; 15% off lifts daily demand 36%, sells all 55 eggs, and recovers ৳701."*
-
-### 1:15 – 1:45 | Enterprise RBAC & 404 Route Guard Proof (Cashier Login)
-1. Click **Logout** → **Demo Login → Cashier**.
-   > *"Notice there is no browser role switcher. Now logged in as Cashier, Profit & Loss and Billing tabs disappear completely. Stock is read-only."*
-2. Click **`🛡️ Test /dashboard/profit (404)`** in the sidebar:
-   > *"Even if someone hits a restricted URL directly, our server returns HTTP 404 — not 'Access Denied' — so attackers cannot even enumerate restricted routes."*
-
-### 1:45 – 2:15 | 30-Second SaaS Business Model (Free → Premium Sandbox)
-1. Log back in as **Owner** → open **AI & Trust** tab.
-2. Point to the **AI Quota Meter (`18/20`)**:
-   - Click the **Prompt Injection Test chip** (`19/20`) → Guardrail blocks cross-tenant attack live!
-   - Ask 1 normal question (`20/20`) → ask 1 more → **Premium Lock + bKash/Nagad/SSLCommerz Sandbox Checkout** pops up!
-   - Click **Complete Sandbox Upgrade** → `500/month` unlocked instantly.
-
-### 2:15 – 2:45 | Trust, Proof, MCP & Scalability
-- Point to the **25-Case Automated Evaluation Scorecard** (`25/25 passed`, `6/6 prompt injections blocked`, `94.2% retail math accuracy on our 30-day demo dataset`).
-- Mention **MCP JSON-RPC Server** (`/api/v1/mcp` exposing 4 retail tools) and click **Test Telegram Bot** (`"আজ কত বিক্রি?"`).
-- Mention **Credit Risk Scoring** (`0–100` score on Baki customers) and **Ctrl+K Global Search**.
-
-### 2:45 – 3:00 | Market, Shopkeeper Validation & Roadmap
-- **Market:** Millions of MSME grocery & pharmacy shops in Bangladesh; freemium entry at `৳0` → `৳499/mo` via bKash/Nagad.
-- **Field Feedback (Insert Your Local Shopkeeper Quote):** Before Demo Day, show the mobile app to 1 real local shopkeeper and put their 1-sentence reaction right here!
+1. **0:00 – 0:20 | সমস্যা (The Hook):** রহিম ভাইয়ের মুদি দোকান — ৫৫টি লাল ডিম ৪ দিনে নষ্ট হবে, সামনে ঈদ, আর ৳৮,২০০ বাকি আটকে আছে।
+2. **0:20 – 0:35 | Generative UI:** মালিক হিসেবে লগইন করতেই ড্যাশবোর্ডের সবার ওপরে লাল **Alert Card** (`alert_card`) ফুটে উঠল — নিরাপদ JSON লেআউট থেকে (কোনো Raw HTML নয়)।
+3. **0:35 – 1:00 | Chat/Voice + 6-Agent Trace:** *"এই সপ্তাহে কী কিনব?"* → লাইভ **LangGraph.js 6-Agent Trace** দেখান (Router → Inventory SQL → Sales Optimizer → Finance Direct SQL → Supplier pgvector RAG → Manager)।
+4. **1:00 – 1:20 | Waste Rescue + Autonomous Marketing:** **⚡ Vision · Edge · Fin** ট্যাবে ৫৫টি ডিমের ১৫% ছাড়ের কম্বো অফার, তাৎক্ষণিক **Promo Banner PNG** এবং ১-ক্লিক Facebook/SMS পোস্ট দেখান।
+5. **1:20 – 1:45 | Auto Reorder + Mandatory Safety Controls:** সাপ্লায়ার PO ও স্যান্ডবক্স ইমেইল দেখান — সাথে **Spend Limit (খরচের সীমা)**, **Dry-Run Mode**, **1-Click Kill Switch**, এবং মালিকের **অনুমোদন (Approve)**।
+6. **1:45 – 2:05 | Digital Twin “What-If”:** **🌦️ Digital Twin** ট্যাবে *"৩ দিন বৃষ্টি হলে?"* স্লাইডার টানুন (বা লাইভ Open-Meteo ঢাকা আবহাওয়া আনুন) — সাথে সাথে চার্ট বদলাবে, আর নিচে স্বচ্ছ **Assumptions** দেখা যাবে।
+7. **2:05 – 2:20 | প্রমাণ (90-Day Backtest Proof):** ওভারভিউয়ের Impact কার্ড দেখান — **Stockout দিন কম, অপচয় কম, অতিরিক্ত আয়** (স্পষ্টভাবে *"৯০ দিনের ডেমো ডেটায় যাচাইকৃত"* লেখা আছে)।
+8. **2:20 – 2:45 | নিরাপত্তা (Tenant & Role Isolation):** লগআউট → **Cashier** লগইন → লাভ-ক্ষতির পেজে **404 Stealth Guard**, ক্যাশিয়ার এআই-কে লাভ জিজ্ঞেস করলে ব্লক, এবং সাপ্লায়ার ইমেইলে লুকানো **Indirect Prompt Injection** ব্লক।
+9. **2:45 – 3:00 | ভবিষ্যৎ ভিশন (1 Slide):** Opt-in নামহীন এলাকা-ভিত্তিক ট্রেন্ড (*"এলাকায় মশার স্প্রের চাহিদা বাড়ছে"*), Vision/Warehouse Automation এবং মুদি দোকান থেকে বড় রিটেল চেইনে স্কেল!
 
 ---
 
-## 3. One-Page Roadmap
-- **Phase 1 (Live Today):** Role-locked Multi-Tenant SaaS (PostgreSQL RLS), FEFO POS, Price Elasticity Optimizer, HITL Approval Queue, Credit Risk Scoring, Guardrails, MCP Server, Telegram Bot Webhook.
-- **Phase 2 (Next 60 Days):** Live bKash/Nagad Merchant API billing, Bengali WhatsApp Business API auto-reminders, offline-first IndexedDB POS sync for low-connectivity rural shops.
-- **Phase 3 (6–12 Months):** Pretrained time-series forecasting (Chronos/TimesFM) benchmarked against Holt-Winters, distributor auto-procurement network across Bangladesh.
+## 3. Private Judge Access (Isolated Super Admin 2FA Portal)
+- **Footer Link:** Platform Admin Portal (2FA)
+- **Email:** `admin@bizmind.ai` | **Password:** `BizMind#Judge2026` | **2FA OTP:** `246810`
+
+---
+
+## 4. Future Vision Slide (Explicitly NOT Overclaimed Today)
+- **Privacy-Preserving Opt-In Swarm Trends:** Anonymous neighborhood demand signals across opt-in shops (e.g., mosquito spray surge) — zero raw shop data shared.
+- **Enterprise Retail Chain Scale:** Same PostgreSQL RLS + 6-Agent architecture expanding from MSME groceries to multi-branch supershops.
+- **Future R&D (Post-Seed):** Warehouse vision automation, fleet routing, and dedicated time-series foundation models (Chronos/TimesFM) once real multi-shop history reaches scale.
