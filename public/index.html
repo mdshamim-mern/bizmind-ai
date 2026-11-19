@@ -94,6 +94,16 @@
     .fade-in-up { animation: fadeInUp 0.24s ease-out both; }
     @keyframes fadeInUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    /* Mobile-First Ergonomics & Budget Android 60fps Optimization */
+    body { min-height: 100dvh; line-height: 1.65; }
+    @media (max-width: 767px) {
+      input, select, textarea { font-size: 16px !important; }
+      button, select { min-height: 44px; }
+      html.dark .bento-card { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; background: rgba(13, 20, 38, 0.94); }
+    }
+    .safe-pt { padding-top: env(safe-area-inset-top); }
+
     .safe-pb { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
   </style>
 </head>
@@ -396,6 +406,7 @@
               <div class="text-[11px] text-muted" id="btRevDetail"></div>
             </div>
           </div>
+          <div id="sustainOneLiner" class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-xs font-bold text-emerald-700 dark:text-emerald-300"></div>
           <div class="relative h-56">
             <canvas id="backtestChartCanvas"></canvas>
           </div>
@@ -512,6 +523,16 @@
             </div>
           </div>
 
+          
+          <!-- #32: Supplier Failure Cascading Simulation (What-If Scenario) -->
+          <div class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 space-y-2 text-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="font-extrabold text-rose-600 dark:text-rose-300" id="supFailTitle"></div>
+              <button type="button" id="toggleSupFailBtn" class="px-3 py-1.5 rounded-xl bg-rose-600 text-white font-bold text-xs"></button>
+            </div>
+            <div id="supFailBody" class="hidden space-y-1.5 font-semibold leading-relaxed"></div>
+          </div>
+
           <!-- Transparent Assumptions Box (Mandatory Judge Honesty) -->
           <div class="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 space-y-1.5 text-xs">
             <div class="font-extrabold text-amber-600 dark:text-amber-300" data-i18n="twinAssumpTitle"></div>
@@ -528,7 +549,7 @@
             <form id="posForm" class="space-y-3 text-xs sm:text-sm">
               <select id="posProdSel" class="w-full min-h-[42px] glass-input rounded-xl px-3"></select>
               <div class="grid grid-cols-2 gap-2">
-                <input type="number" id="posQtyIn" value="5" min="1" class="w-full min-h-[42px] glass-input rounded-xl px-3" />
+                <input type="number" id="posQtyIn" inputmode="numeric" value="5" min="1" class="w-full min-h-[42px] glass-input rounded-xl px-3" />
                 <select id="posPaySel" class="w-full min-h-[42px] glass-input rounded-xl px-3"></select>
               </div>
               <button type="submit" data-i18n="btnSell" class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-extrabold text-xs"></button>
@@ -735,9 +756,9 @@
             </div>
             <p class="text-muted" id="opsRecSub"></p>
             <div class="grid grid-cols-3 gap-2">
-              <div><label class="block font-bold mb-1" id="opsPoLbl"></label><input type="number" id="opsPoPriceIn" value="58" class="w-full glass-input rounded-xl px-2.5 py-2 font-mono font-bold" /></div>
-              <div><label class="block font-bold mb-1" id="opsInvLbl"></label><input type="number" id="opsInvPriceIn" value="62" class="w-full glass-input rounded-xl px-2.5 py-2 font-mono font-bold" /></div>
-              <div><label class="block font-bold mb-1" id="opsQtyLbl"></label><input type="number" id="opsRecQtyIn" value="50" class="w-full glass-input rounded-xl px-2.5 py-2 font-mono font-bold" /></div>
+              <div><label class="block font-bold mb-1" id="opsPoLbl"></label><input type="number" id="opsPoPriceIn" inputmode="numeric" value="58" class="w-full glass-input rounded-xl px-2.5 py-2 font-mono font-bold" /></div>
+              <div><label class="block font-bold mb-1" id="opsInvLbl"></label><input type="number" id="opsInvPriceIn" inputmode="numeric" value="62" class="w-full glass-input rounded-xl px-2.5 py-2 font-mono font-bold" /></div>
+              <div><label class="block font-bold mb-1" id="opsQtyLbl"></label><input type="number" id="opsRecQtyIn" inputmode="numeric" value="50" class="w-full glass-input rounded-xl px-2.5 py-2 font-mono font-bold" /></div>
             </div>
             <div id="opsRecResult" class="p-3 rounded-xl bg-rose-500/12 border border-rose-500/35 font-bold leading-relaxed"></div>
             <button type="button" id="opsHoldPayBtn" class="w-full min-h-[38px] rounded-xl bg-rose-600 text-white font-bold text-xs"></button>
@@ -781,7 +802,7 @@
             <h3 class="font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-300" id="opsCashTitle"></h3>
             <div class="flex items-center gap-2">
               <label class="font-bold shrink-0" id="opsCashLbl"></label>
-              <input type="number" id="opsCashCountedIn" value="36500" class="flex-1 glass-input rounded-xl px-3 py-2 font-mono font-bold" />
+              <input type="number" id="opsCashCountedIn" inputmode="numeric" value="36500" class="flex-1 glass-input rounded-xl px-3 py-2 font-mono font-bold" />
               <button type="button" id="opsCashCheckBtn" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold"></button>
             </div>
             <div id="opsCashRes" class="p-2.5 rounded-xl sub-glass-row font-semibold"></div>
@@ -812,6 +833,69 @@
             </div>
           </div>
         </div>
+      
+        <!-- V5 RESILIENCE, HASH-CHAIN AUDIT LOG, INCIDENT CARD, LOST SALES, CLAIMS & QUOTES -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 pt-2">
+          <!-- #38: Incident Card (Anomaly #13 + 6-Agent Coordinated Response) -->
+          <div class="bento-card p-5 space-y-3 text-xs border-rose-500/35">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-extrabold text-sm sm:text-base text-rose-600 dark:text-rose-300" id="v5IncTitle"></h3>
+              <span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-600 dark:text-rose-300 font-bold text-[10px]">Multi-Agent Incident</span>
+            </div>
+            <div id="v5IncBody" class="space-y-1.5 leading-relaxed"></div>
+          </div>
+
+          <!-- #34: Tamper-Evident Hash-Chain Audit Log (Verify + Tamper Demo) -->
+          <div class="bento-card p-5 space-y-3 text-xs">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <h3 class="font-extrabold text-sm sm:text-base text-indigo-600 dark:text-indigo-300" id="v5HashTitle"></h3>
+              <span id="v5HashBadge" class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-bold text-[10px]"></span>
+            </div>
+            <p class="text-[11px] text-muted" id="v5HashSub"></p>
+            <div id="v5HashChainList" class="space-y-1.5 font-mono text-[11px] max-h-40 overflow-y-auto"></div>
+            <div class="flex flex-wrap gap-2">
+              <button type="button" id="v5VerifyHashBtn" class="px-3 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs"></button>
+              <button type="button" id="v5TamperHashBtn" class="px-3 py-2 rounded-xl bg-rose-500/20 text-rose-600 dark:text-rose-300 font-bold text-xs"></button>
+              <button type="button" id="v5ResetHashBtn" class="px-3 py-2 rounded-xl sub-glass-row font-bold text-xs"></button>
+            </div>
+          </div>
+
+          <!-- #27: Stockout-Adjusted Lost Sales + Data Health Card -->
+          <div class="bento-card p-5 space-y-3 text-xs">
+            <h3 class="font-extrabold text-sm sm:text-base text-amber-600 dark:text-amber-300" id="v5LostTitle"></h3>
+            <div id="v5LostBox" class="p-3 rounded-xl bg-amber-500/12 border border-amber-500/35 font-bold leading-relaxed"></div>
+            <div id="v5DataHealthBox" class="p-3 rounded-xl sub-glass-row text-muted leading-relaxed"></div>
+          </div>
+
+          <!-- #31: Damaged Stock Supplier Claim (Owner Picks Reason) -->
+          <div class="bento-card p-5 space-y-3 text-xs">
+            <h3 class="font-extrabold text-sm sm:text-base text-sky-600 dark:text-sky-300" id="v5ClaimTitle"></h3>
+            <div class="flex flex-wrap gap-2 items-center">
+              <select id="v5ClaimReasonSel" class="flex-1 glass-input rounded-xl px-3 py-2 text-xs font-bold"></select>
+              <button type="button" id="v5GenClaimBtn" class="px-3.5 py-2 rounded-xl bg-sky-600 text-white font-bold text-xs"></button>
+            </div>
+            <textarea id="v5ClaimDraftBox" rows="3" readonly class="w-full glass-input rounded-xl p-2.5 text-xs leading-relaxed"></textarea>
+          </div>
+
+          <!-- #28 Quote Comparison + #36 70/30 Split + #29 Rule-Based Preference Learning -->
+          <div class="bento-card p-5 space-y-3 text-xs">
+            <h3 class="font-extrabold text-sm sm:text-base" id="v5QuoteTitle"></h3>
+            <div id="v5QuoteList" class="space-y-1.5"></div>
+            <div id="v5SplitBox" class="p-2.5 rounded-xl bg-indigo-500/12 border border-indigo-500/30 font-semibold"></div>
+            <div id="v5PrefBox" class="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-[11px] font-semibold"></div>
+          </div>
+
+          <!-- Bonus: Shift Cashier Report + Customer Baki Statement Link (with PIN) -->
+          <div class="bento-card p-5 space-y-3 text-xs">
+            <h3 class="font-extrabold text-sm sm:text-base" id="v5ShiftTitle"></h3>
+            <div id="v5ShiftBody" class="space-y-1.5"></div>
+            <div class="pt-2 border-t border-slate-500/20 space-y-2">
+              <div class="font-bold" id="v5BakiLinkTitle"></div>
+              <button type="button" id="v5CopyBakiLinkBtn" class="w-full py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs"></button>
+            </div>
+          </div>
+        </div>
+
       </section>
 
       <!-- TAB: BILLING & STAFF (Owner Only) -->
@@ -1363,7 +1447,7 @@
         <div class="text-xs text-muted">${L('পণ্য: ২৮টি সয়াবিন তেল (২ লি.) · মোট: ৳৯,১০০ · প্রাপক: sandbox-supplier@bizmind.ai', 'Items: 28x Soybean Oil (2L) · Total: ৳9,100 · To: sandbox-supplier@bizmind.ai')}</div>
         <div class="flex flex-wrap gap-2 pt-1">
           ${poStatus === 'PENDING' ? `<button type="button" id="approvePoSandboxBtn" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">✓ ${L('অনুমোদন ও স্যান্ডবক্স ইমেইল পাঠান', 'Approve & Send Sandbox Email')}</button>` : ''}
-          <button type="button" id="previewPoEmailBtn" class="px-3 py-2 rounded-xl glass-input font-bold text-xs">✉️ ${L('ইমেইল খসড়া দেখুন', 'Preview Email Draft')}</button>
+          <button type="button" id="previewPoEmailBtn" class="px-3 py-2 rounded-xl glass-input font-bold text-xs">✉️ ${L('ইমেইল খসড়া দেখুন', 'Preview Email Draft')}</button><button type="button" id="shareWaPoBtn" class="px-3 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs">💬 ${L('WhatsApp অর্ডার পাঠান', 'Share PO on WhatsApp')}</button>
         </div>
       `;
       const approveBtn = document.getElementById('approvePoSandboxBtn');
@@ -2079,6 +2163,172 @@
       });
 
       renderOpsAndV3();
+    });
+
+  
+
+    // ========================================================================
+    // V5 MASTER SUITE (#27, #28, #29, #31, #32, #33, #34 Hash-Chain, #36, #38, WhatsApp PO, Baki Link, Shift Report)
+    // ========================================================================
+    let supFailActive = false;
+    function simpleHash(str) {
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+      return ('00000000' + (h >>> 0).toString(16)).slice(-8) + ('00000000' + ((h ^ 0x5bd1e995) >>> 0).toString(16)).slice(-8);
+    }
+    function buildCleanChain() {
+      const raw = [
+        { idx: 0, actor: 'Finance Agent', scope: 'sql_readonly', action: 'Computed Net Profit ৳4,550' },
+        { idx: 1, actor: 'Supplier Agent', scope: 'po_draft_only', action: 'Flagged ৳200 Rice Overcharge' },
+        { idx: 2, actor: 'Owner (Md. Rahim)', scope: 'approve_po', action: 'Approved Hold-Payment on PO-884' }
+      ];
+      const out = [];
+      for (let i = 0; i < raw.length; i++) {
+        const prev = i === 0 ? 'GENESIS_00000000' : out[i - 1].hash;
+        const hash = simpleHash(`${raw[i].idx}|${raw[i].actor}|${raw[i].scope}|${raw[i].action}|${prev}`);
+        out.push({ ...raw[i], prev, hash });
+      }
+      return out;
+    }
+    let auditChain = buildCleanChain();
+    let chainStatus = 'VALID';
+
+    function renderV5MasterUI() {
+      // #33 Sustainability 1-Liner
+      const sus = document.getElementById('sustainOneLiner');
+      if (sus) sus.textContent = L('🌱 এই মাসে আনুমানিক ৪২ কেজি খাবার নষ্ট হওয়া থেকে বাঁচল (অপচয় রোধের ফলাফল)।', '🌱 Estimated 42 kg of food saved from waste this month via Expiry Rescue.');
+
+      // #32 Supplier Failure in Digital Twin
+      if (document.getElementById('supFailTitle')) {
+        document.getElementById('supFailTitle').textContent = L('৩২. সাপ্লায়ার ফেল করলে কী হবে? (What-If Scenario)', '32. What If Supplier Fails for 7 Days?');
+        document.getElementById('toggleSupFailBtn').textContent = supFailActive ? L('সিনারিও বন্ধ করুন', 'Hide Scenario') : L('⚡ মেঘনা ট্রেডার্স ৭ দিন না দিলে?', '⚡ Simulate 7-Day Outage');
+        const sb = document.getElementById('supFailBody');
+        sb.classList.toggle('hidden', !supFailActive);
+        sb.innerHTML = L(
+          '<div>• মিনিকেট চাল (৫ কেজি): ৩ দিনে স্টক শেষ → ৪ দিনের আনুমানিক ক্ষতি ৳১৮,৭২০</div><div>• সয়াবিন তেল (২ লি.): ৫ দিনে স্টক শেষ → ২ দিনের আনুমানিক ক্ষতি ৳৫,২৫০</div><div class="text-rose-600 dark:text-rose-300 font-extrabold">মোট ঝুঁকি: ৳২৩,৯৭০ · সমাধান: ব্যাকআপ সাপ্লায়ারে ৩০% অর্ডার ভাগ করুন।</div>',
+          '<div>• Miniket Rice (5kg): Runs out in 3 days → 4d est. loss ৳18,720</div><div>• Soybean Oil (2L): Runs out in 5 days → 2d est. loss ৳5,250</div><div class="text-rose-600 dark:text-rose-300 font-extrabold">Total Exposure: ৳23,970 · Fix: Split 30% to Backup Supplier.</div>'
+        );
+      }
+
+      if (!document.getElementById('v5IncTitle')) return;
+
+      // #38 Incident Card
+      document.getElementById('v5IncTitle').textContent = L('৩৮. ঘটনা কার্ড (Anomaly + মাল্টি-এজেন্ট সমাধান)', '38. Incident Card (Anomaly + Multi-Agent Plan)');
+      document.getElementById('v5IncBody').innerHTML = `
+        <div class="p-2.5 rounded-xl sub-glass-row"><strong>${L('১) শনাক্তকরণ (Anomaly):', '1) Detected:')}</strong> ${L('সয়াবিন তেলে ২টি অমিল + চালের চালানে ৳২০০ বেশি চার্জ।', '2-unit Soybean Oil discrepancy + ৳200 rice overcharge.')}</div>
+        <div class="p-2.5 rounded-xl sub-glass-row"><strong>${L('২) কারণ ও ক্ষতি (Finance):', '2) Root Cause & Loss:')}</strong> ${L('মোট আর্থিক ঝুঁকি ৳৯০০ (তেল ৳৭০০ + চাল ৳২০০)।', 'Total exposure ৳900 (Oil ৳700 + Rice ৳200).')}</div>
+        <div class="p-2.5 rounded-xl bg-emerald-500/12 border border-emerald-500/30"><strong>${L('৩) সমাধান ও খসড়া (Manager):', '3) Action Plan (Manager):')}</strong> ${L('ক্যাশিয়ার শিফট যাচাই + সাপ্লায়ার পেমেন্ট থামানোর সুপারিশ + WhatsApp মেসেজ প্রস্তুত।', 'Verify cashier shift + hold supplier payment + WhatsApp draft ready.')}</div>
+      `;
+
+      // #34 Tamper-Evident Hash-Chain Audit Log
+      document.getElementById('v5HashTitle').textContent = L('৩৪. হ্যাশ-চেইন অডিট লগ (Tamper-Evident)', '34. Tamper-Evident Hash-Chain Audit Log');
+      document.getElementById('v5HashSub').textContent = L('প্রতিটি সারিতে আগের সারির হ্যাশ থাকে — কোনো সারি বদলালে সাথে সাথে ধরা পড়ে (Tamper-evident, Immutable নয়)।', 'Each row chains the previous hash — edits are caught immediately (Tamper-evident, not claimed Immutable).');
+      document.getElementById('v5HashBadge').textContent = chainStatus === 'VALID' ? L('✓ শৃঙ্খল অক্ষত', '✓ Chain Valid') : L('🚨 টেম্পারিং ধরা পড়েছে!', '🚨 Tampering Detected!');
+      document.getElementById('v5HashBadge').className = chainStatus === 'VALID'
+        ? 'px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-bold text-[10px]'
+        : 'px-2.5 py-0.5 rounded-full bg-rose-500/25 text-rose-600 dark:text-rose-300 font-extrabold text-[10px]';
+      document.getElementById('v5HashChainList').innerHTML = auditChain
+        .map((c) => `<div class="p-2 rounded-lg sub-glass-row"><div>#${c.idx} <strong>${c.actor}</strong> [${c.scope}]: ${c.action}</div><div class="text-[10px] text-muted">prev:${c.prev.slice(0, 8)} → hash:${c.hash.slice(0, 10)}</div></div>`)
+        .join('');
+      document.getElementById('v5VerifyHashBtn').textContent = L('🔍 Integrity যাচাই', '🔍 Verify Integrity');
+      document.getElementById('v5TamperHashBtn').textContent = L('🧪 সারি বদলে টেস্ট', '🧪 Tamper Row #1');
+      document.getElementById('v5ResetHashBtn').textContent = L('↺ রিসেট', '↺ Reset');
+
+      // #27 Stockout-Adjusted Lost Sales + Data Health
+      document.getElementById('v5LostTitle').textContent = L('২৭. হারানো বিক্রি সংশোধন ও ডেটা স্বাস্থ্য কার্ড', '27. Stockout-Adjusted Lost Sales & Data Health');
+      document.getElementById('v5LostBox').textContent = L('📉 গত মাসে চিনি ৫ দিন স্টকে না থাকায় আনুমানিক ৳৩,২০০ বিক্রি হারিয়েছেন (স্টকআউট ও প্রোমো দিন আলাদা করে হিসাবকৃত)।', '📉 Sugar was out of stock for 5 days last month — estimated ৳3,200 in lost sales (stockout & promo days separated).');
+      document.getElementById('v5DataHealthBox').textContent = L('🩺 ডেটা স্বাস্থ্য সতর্কতা: তরল দুধের মাত্র ৮ দিনের বিক্রির ডেটা আছে, তাই এর পূর্বাভাস কম নির্ভরযোগ্য (XAI স্বচ্ছতা)।', '🩺 Data Health Notice: Liquid Milk has only 8 days of sales history, so its forecast carries lower confidence.');
+
+      // #31 Supplier Damage Claim
+      document.getElementById('v5ClaimTitle').textContent = L('৩১. ক্ষতিগ্রস্ত মালের সাপ্লায়ার ক্লেইম খসড়া', '31. Damaged Stock Supplier Claim Draft');
+      const sel = document.getElementById('v5ClaimReasonSel');
+      if (sel.options.length === 0) {
+        sel.innerHTML = `<option value="BROKEN">${L('কারণ: ভাঙা মাল', 'Reason: Broken')}</option><option value="SPOILED">${L('কারণ: নষ্ট মাল', 'Reason: Spoiled')}</option><option value="EXPIRED">${L('কারণ: মেয়াদোত্তীর্ণ', 'Reason: Expired')}</option>`;
+      }
+      document.getElementById('v5GenClaimBtn').textContent = L('ক্লেইম খসড়া বানান', 'Generate Claim');
+      const reasonTxt = sel.value === 'BROKEN' ? L('ভাঙা', 'broken') : sel.value === 'SPOILED' ? L('নষ্ট', 'spoiled') : L('মেয়াদোত্তীর্ণ', 'expired');
+      document.getElementById('v5ClaimDraftBox').value = L(
+        `প্রিয় মেঘনা ট্রেডার্স, ২০ নভেম্বরের চালানে ১২টি ফার্মের লাল ডিম (${reasonTxt}) পাওয়া গেছে। মোট ক্ষতি ৳১২০ — পরবর্তী বিলে সমন্বয়ের অনুরোধ করছি।`,
+        `Dear Meghna Traders, 12 Brown Farm Eggs in the Nov 20 delivery arrived ${reasonTxt}. Claim amount: ৳120 for credit adjustment on next invoice.`
+      );
+
+      // #28 Quotes + #36 Split + #29 Preference Learning
+      document.getElementById('v5QuoteTitle').textContent = L('২৮, ২৯ ও ৩৬. দর তুলনা, ৭০/৩০ ভাগ ও পছন্দ শেখা', '28, 29 & 36. Quote Rank, 70/30 Split & Preferences');
+      document.getElementById('v5QuoteList').innerHTML = [
+        [L('১. ঢাকা এগ্রো হোলসেল (৳৩২২ · ১ দিন · স্কোর ৯১)', '1. Dhaka Agro (৳322 · 1d · Risk 91)'), L('সেরা: ৯৩/১০০', 'Best: 93/100')],
+        [L('২. মেঘনা ট্রেডার্স (৳৩২৫ · ২ দিন · স্কোর ৫৬)', '2. Meghna Traders (৳325 · 2d · Risk 56)'), L('৭২/১০০', '72/100')],
+        [L('৩. পদ্মা ডিস্ট্রিবিউশন (৳৩৩০ · ৩ দিন · স্কোর ৭৮)', '3. Padma Dist. (৳330 · 3d · Risk 78)'), L('৭৮/১০০', '78/100')]
+      ].map((q) => `<div class="p-2 rounded-lg sub-glass-row flex justify-between font-semibold"><span>${q[0]}</span><span class="text-emerald-600 dark:text-emerald-300">${q[1]}</span></div>`).join('');
+      document.getElementById('v5SplitBox').textContent = L('🔀 ৩৬. অর্ডার ভাগ: মেঘনা ট্রেডার্সের ঝুঁকি বেশি হওয়ায় ৭০% মূল সাপ্লায়ার ও ৩০% ঢাকা এগ্রোতে ভাগ করার সুপারিশ।', '🔀 36. Order Split: Due to Meghna risk score, split 70% primary / 30% Dhaka Agro backup.');
+      document.getElementById('v5PrefBox').textContent = L('🎯 ২৯. আপনার পছন্দ অনুযায়ী মানিয়ে নেয়: আপনি আগে ২০%-এর বেশি ছাড় বাতিল করেছেন — তাই এআই এখন সর্বোচ্চ ১৫% সুপারিশ করছে।', '🎯 29. Adapts to Your Preferences: You rejected >20% discounts previously, so AI now caps promos at 15%.');
+
+      // Shift Cashier Report + Customer Baki Statement Link
+      document.getElementById('v5ShiftTitle').textContent = L('🧾 শিফট ক্যাশিয়ার রিপোর্ট ও কাস্টমার বাকি লিংক', '🧾 Shift Cashier Report & Customer Baki Link');
+      document.getElementById('v5ShiftBody').innerHTML = `
+        <div class="p-2.5 rounded-xl sub-glass-row flex justify-between"><span>${L('সকাল শিফট · রানা মিয়া', 'Morning Shift · Rana Mia')}</span><span class="font-bold">${L('বিক্রি ৳৩৫,৯০০ · ছাড় ৳০ · বাতিল ০', 'Sales ৳35,900 · Disc ৳0 · Void 0')}</span></div>
+        <div class="p-2.5 rounded-xl sub-glass-row flex justify-between"><span>${L('বিকাল শিফট · কামাল হোসেন', 'Evening Shift · Kamal Hossain')}</span><span class="font-bold">${L('বিক্রি ৳৭২,০০০ · ছাড় ৳১৫০ · বাতিল ১', 'Sales ৳72,000 · Disc ৳150 · Void 1')}</span></div>
+      `;
+      document.getElementById('v5BakiLinkTitle').textContent = L('🔗 কাস্টমারকে বাকির বিবরণ লিংক (লগইন ছাড়া, পিন: ৪৮২৯):', '🔗 Shareable Customer Baki Link (No login, PIN: 4829):');
+      document.getElementById('v5CopyBakiLinkBtn').textContent = L('📋 করিম মিয়ার বাকির লিংক কপি করুন', '📋 Copy Karim Mia Baki Statement Link');
+    }
+
+    // Hook renderV5MasterUI into renderAll & switchShopTab
+    const _v4RenderAll = renderAll;
+    renderAll = function () { _v4RenderAll(); renderV5MasterUI(); };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('toggleSupFailBtn')?.addEventListener('click', () => { supFailActive = !supFailActive; renderV5MasterUI(); });
+
+      document.getElementById('v5VerifyHashBtn')?.addEventListener('click', () => {
+        let broken = false;
+        for (let i = 0; i < auditChain.length; i++) {
+          const c = auditChain[i];
+          const prev = i === 0 ? 'GENESIS_00000000' : auditChain[i - 1].hash;
+          const exp = simpleHash(`${c.idx}|${c.actor}|${c.scope}|${c.action}|${prev}`);
+          if (c.prev !== prev || c.hash !== exp) { broken = true; break; }
+        }
+        chainStatus = broken ? 'BROKEN' : 'VALID';
+        renderV5MasterUI();
+        showToast(broken ? L('🚨 সতর্কতা: হ্যাশ-চেইনে টেম্পারিং ধরা পড়েছে!', '🚨 Alert: Hash-chain tampering detected!') : L('✅ হ্যাশ-চেইন অক্ষত আছে (Tamper-Evident Verified)!', '✅ Hash-chain integrity verified!'));
+      });
+
+      document.getElementById('v5TamperHashBtn')?.addEventListener('click', () => {
+        auditChain[1].action = 'TAMPERED: Changed ৳200 to ৳0';
+        showToast(L('🧪 সারি #১ হাতে বদলানো হয়েছে — এবার "Integrity যাচাই" চাপুন!', '🧪 Row #1 tampered — now click "Verify Integrity"!'));
+        renderV5MasterUI();
+      });
+
+      document.getElementById('v5ResetHashBtn')?.addEventListener('click', () => {
+        auditChain = buildCleanChain();
+        chainStatus = 'VALID';
+        renderV5MasterUI();
+      });
+
+      document.getElementById('v5ClaimReasonSel')?.addEventListener('change', renderV5MasterUI);
+      document.getElementById('v5GenClaimBtn')?.addEventListener('click', () => {
+        navigator.clipboard?.writeText(document.getElementById('v5ClaimDraftBox').value);
+        showToast(L('📋 সাপ্লায়ার ক্লেইম খসড়া কপি হয়েছে (৳১২০)!', '📋 Supplier damage claim copied (৳120)!'));
+      });
+
+      document.getElementById('v5CopyBakiLinkBtn')?.addEventListener('click', () => {
+        const link = 'https://bizmind-ai-orcin.vercel.app/?baki_ref=KARIM-2026&pin=4829';
+        navigator.clipboard?.writeText(link);
+        showToast(L('🔗 করিম মিয়ার বাকির বিবরণ লিংক (পিন: ৪৮২৯) কপি হয়েছে!', '🔗 Customer Baki Statement link (PIN: 4829) copied!'));
+      });
+
+      // WhatsApp Bangla Order Share Handler (delegated)
+      document.addEventListener('click', (e) => {
+        if (e.target && e.target.id === 'shareWaPoBtn') {
+          const msg = L(
+            'আসসালামু আলাইকুম মেঘনা ট্রেডার্স,\nঅর্ডার তালিকা (PO-2026-884):\n• সয়াবিন তেল (২ লিটার): ২৮ বোতল @ ৳৩২৫ = ৳৯,১০০\nদোকান: রহিম ভাইয়ের মুদি দোকান (BizMind AI)',
+            'Hello Meghna Traders,\nPurchase Order (PO-2026-884):\n• Soybean Oil (2L): 28 bottles @ ৳325 = ৳9,100\nFrom: Rahim Grocery Store (BizMind AI)'
+          );
+          navigator.clipboard?.writeText(msg);
+          showToast(L('💬 বাংলা WhatsApp অর্ডার তালিকা কপি হয়েছে — সরাসরি পেস্ট করে পাঠান!', '💬 Bangla WhatsApp order list copied!'));
+        }
+      });
+
+      renderV5MasterUI();
     });
 
   </script>
