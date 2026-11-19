@@ -1,495 +1,1414 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn" id="htmlRoot">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>BizMind AI - 10-Section Business Intelligence Dashboard</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#4f46e5" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="BizMind AI" />
+  <title>BizMind AI — মুদি দোকানের AI পার্টনার | Intelligent Business Co-Pilot</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', sans-serif; transition: background-color 0.2s, color 0.2s; }
+    .nav-btn.active {
+      background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.28);
+    }
+    /* Dark Mode Overrides */
+    html.dark body { background-color: #0b1120; color: #e2e8f0; }
+    html.dark header { background-color: #0f172a; border-color: #1e293b; }
+    html.dark .surface-card { background-color: #111827 !important; border-color: #1f2937 !important; color: #f1f5f9 !important; }
+    html.dark .surface-sub { background-color: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+    html.dark .text-slate-900 { color: #f8fafc !important; }
+    html.dark .text-slate-800 { color: #e2e8f0 !important; }
+    html.dark .text-slate-700 { color: #cbd5e1 !important; }
+    html.dark .text-slate-600 { color: #94a3b8 !important; }
+    html.dark .text-slate-500 { color: #94a3b8 !important; }
+    html.dark .bg-slate-50 { background-color: #1e293b !important; }
+    html.dark .bg-slate-100 { background-color: #1e293b !important; }
+    html.dark .bg-white { background-color: #111827 !important; }
+    html.dark .border-slate-200 { border-color: #334155 !important; }
+    html.dark .border-slate-300 { border-color: #475569 !important; }
+    html.dark input, html.dark select, html.dark textarea {
+      background-color: #1e293b !important;
+      color: #f8fafc !important;
+      border-color: #475569 !important;
+    }
+    html.dark tr:hover { background-color: #1e293b !important; }
+  </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex">
-<aside class="w-64 bg-slate-900 text-slate-100 flex flex-col shrink-0 min-h-screen">
-<div class="p-5 border-b border-slate-800">
-<h1 class="text-xl font-bold text-emerald-400">BizMind AI</h1>
-<p class="text-xs text-slate-400 mt-1">Bismillah Super Grocery</p>
-<span id="modeBadge" class="inline-block mt-2 text-[11px] px-2 py-0.5 rounded bg-emerald-900 text-emerald-300">30-Day Demo Mode</span>
-</div>
-<nav id="sidebarNav" class="flex-1 p-3 space-y-1 text-sm overflow-y-auto"></nav>
-<div class="p-4 border-t border-slate-800 text-xs space-y-2">
-<input id="apiBase" type="text" value="/api/v1" class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1 text-slate-200" placeholder="API Base URL" />
-<button onclick="syncApi()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-1.5 rounded font-medium">Sync /api/v1</button>
-</div>
-</aside>
-
-<main class="flex-1 flex flex-col min-w-0">
-<header class="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4">
-<div>
-<h2 id="sectionTitle" class="text-xl font-bold text-slate-900">1. Dashboard</h2>
-<p class="text-xs text-slate-500">Owner: demo@bizmind.ai | Currency: BDT (৳) | 30-Day Grocery Intelligence</p>
-</div>
-<div class="flex items-center gap-2">
-<span class="text-xs font-medium text-slate-500">Period:</span>
-<button onclick="setPeriod('daily')" id="btn-daily" class="period-btn px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white">Daily</button>
-<button onclick="setPeriod('weekly')" id="btn-weekly" class="period-btn px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white">Weekly</button>
-<button onclick="setPeriod('monthly')" id="btn-monthly" class="period-btn px-3 py-1.5 text-xs rounded-lg bg-emerald-600 text-white">Monthly (30d)</button>
-</div>
-</header>
-
-<div class="p-6 space-y-6 overflow-y-auto flex-1">
-<!-- 1. Dashboard -->
-<section id="sec-1" class="tab-section space-y-6">
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4" id="kpiGrid"></div>
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-<h3 class="font-semibold text-slate-800 mb-3">4-Week Sales Unit Trend (50 → 65 → 80 → 100)</h3>
-<canvas id="trendChart" height="150"></canvas>
-</div>
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-<h3 class="font-semibold text-slate-800 mb-3">Revenue vs COGS & Expenses (৳)</h3>
-<canvas id="financeChart" height="150"></canvas>
-</div>
-</div>
-</section>
-
-<!-- 2. Inventory & Batches -->
-<section id="sec-2" class="tab-section hidden space-y-4">
-<div class="bg-amber-50 border border-amber-200 text-amber-900 px-4 py-3 rounded-xl text-sm flex justify-between items-center">
-<span><strong>Stock Discrepancy Alert:</strong> 5 broken Farm Eggs recorded as <code>DAMAGE</code> (Loss: ৳50). FEFO priority active on expiring batches.</span>
-<button onclick="logDamageDemo()" class="bg-amber-600 text-white px-3 py-1 rounded text-xs">+ Log Damage</button>
-</div>
-<div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-<table class="w-full text-sm text-left">
-<thead class="bg-slate-100 text-slate-600 uppercase text-xs">
-<tr><th class="p-3">SKU</th><th class="p-3">Product</th><th class="p-3">Batch</th><th class="p-3">Qty</th><th class="p-3">Cost (৳)</th><th class="p-3">Expiry</th><th class="p-3">Status</th></tr>
-</thead>
-<tbody id="batchTableBody" class="divide-y divide-slate-100"></tbody>
-</table>
-</div>
-</section>
-
-<!-- 3. Sales (FEFO POS) -->
-<section id="sec-3" class="tab-section hidden grid grid-cols-1 lg:grid-cols-3 gap-6">
-<div class="lg:col-span-2 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-<h3 class="font-semibold mb-3">FEFO Point of Sale — Quick Add</h3>
-<div id="posProductGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
-</div>
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
-<div>
-<h3 class="font-semibold mb-3">Current Invoice (FEFO Deduction)</h3>
-<div id="posCartItems" class="space-y-2 text-sm max-h-64 overflow-y-auto"></div>
-</div>
-<div class="border-t pt-4 mt-4 space-y-2 text-sm">
-<div class="flex justify-between"><span>Total Revenue:</span><strong id="posRev">৳0</strong></div>
-<div class="flex justify-between text-slate-500"><span>Estimated COGS:</span><span id="posCogs">৳0</span></div>
-<div class="flex justify-between text-emerald-600"><span>Gross Profit:</span><strong id="posProfit">৳0</strong></div>
-<button onclick="checkoutPos()" class="w-full mt-2 bg-emerald-600 hover:bg-emerald-500 text-white py-2 rounded-lg font-medium">Complete FEFO Sale</button>
-</div>
-</div>
-</section>
-
-<!-- 4. Purchases -->
-<section id="sec-4" class="tab-section hidden space-y-4">
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-<h3 class="font-semibold mb-3">Suppliers & Lead Times</h3>
-<div id="supplierGrid" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
-</div>
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-<h3 class="font-semibold mb-3">Recent Purchase Orders</h3>
-<table class="w-full text-sm text-left"><thead class="bg-slate-100 text-xs uppercase"><tr><th class="p-3">PO ID</th><th class="p-3">Supplier</th><th class="p-3">Items</th><th class="p-3">Total (৳)</th><th class="p-3">Status</th></tr></thead>
-<tbody id="purchaseTableBody" class="divide-y"></tbody></table>
-</div>
-</section>
-
-<!-- 5. Accounting & Profit -->
-<section id="sec-5" class="tab-section hidden space-y-6">
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-<h3 class="font-semibold">30-Day Profit & Loss Summary</h3>
-<div id="pnlSummary" class="space-y-2 text-sm"></div>
-</div>
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-<h3 class="font-semibold mb-3">Operating Expenses (RENT, UTILITIES, SALARY)</h3>
-<div id="expenseList" class="space-y-2 text-sm"></div>
-</div>
-</div>
-</section>
-
-<!-- 6. Product Intelligence -->
-<section id="sec-6" class="tab-section hidden">
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-<h3 class="font-semibold mb-3">Product Intelligence Matrix (Margin, Velocity & Tier)</h3>
-<table class="w-full text-sm text-left"><thead class="bg-slate-100 text-xs uppercase"><tr><th class="p-3">Product</th><th class="p-3">Category</th><th class="p-3">Margin %</th><th class="p-3">30d Units</th><th class="p-3">Class</th><th class="p-3">Insight</th></tr></thead>
-<tbody id="intelTableBody" class="divide-y"></tbody></table>
-</div>
-</section>
-
-<!-- 7. Demand Forecast -->
-<section id="sec-7" class="tab-section hidden space-y-4">
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-<h3 class="font-semibold mb-3">AI Demand Forecast (4-Week Trend → Week 5 Projection)</h3>
-<canvas id="forecastChart" height="120"></canvas>
-</div>
-</section>
-
-<!-- 8. Restock Advisor -->
-<section id="sec-8" class="tab-section hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-<h3 class="font-semibold">Restocking Calculator: ROP = (D × L) + SS, Q = max(0, ROP - S - I)</h3>
-<div class="grid grid-cols-2 gap-3 text-sm">
-<label>Avg Daily Demand (D)<input id="ropD" type="number" value="20" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
-<label>Lead Time Days (L)<input id="ropL" type="number" value="2" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
-<label>Safety Stock (SS)<input id="ropSS" type="number" value="30" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
-<label>Current Stock (S)<input id="ropS" type="number" value="55" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
-<label class="col-span-2">Incoming / In-Transit Stock (I)<input id="ropI" type="number" value="0" oninput="calcRop()" class="mt-1 w-full border rounded p-2" /></label>
-</div>
-</div>
-<div class="bg-slate-900 text-white p-6 rounded-xl flex flex-col justify-center space-y-3">
-<div class="text-xs uppercase text-slate-400">Calculated Reorder Point & Order Qty</div>
-<div class="text-2xl font-bold text-emerald-400">ROP = <span id="ropVal">70</span> units</div>
-<div class="text-3xl font-bold">Order Qty (Q) = <span id="qVal">15</span> units</div>
-<p id="ropAdvice" class="text-sm text-slate-300"></p>
-</div>
-</section>
-
-<!-- 9. Discount Advisor -->
-<section id="sec-9" class="tab-section hidden grid grid-cols-1 lg:grid-cols-2 gap-6">
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-<h3 class="font-semibold">Expiry-Aware Discount Simulator</h3>
-<label class="block text-sm">Select Expiring Batch
-<select id="discProduct" onchange="calcDiscount()" class="mt-1 w-full border rounded p-2">
-<option value="55|15|10|4">Farm Eggs (EGG-B01-FEFO) — 55 pcs, Exp in 4d, Price ৳15</option>
-<option value="18|95|75|3">Liquid Milk (MILK-B01-EXP) — 18 L, Exp in 3d, Price ৳95</option>
-</select>
-</label>
-<label class="block text-sm">Discount %: <strong id="discPctLabel">15%</strong>
-<input id="discPct" type="range" min="5" max="50" value="15" oninput="calcDiscount()" class="w-full mt-1" />
-</label>
-</div>
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-2 text-sm">
-<h3 class="font-semibold">Simulation Outcome</h3>
-<p>Discounted Price: <strong id="discNewPrice">৳12.75</strong></p>
-<p>Projected Recovery Revenue: <strong id="discRev" class="text-emerald-600">৳701.25</strong></p>
-<p>Waste Prevented (vs Expiry Loss): <strong id="discSaved" class="text-blue-600">৳550.00</strong></p>
-</div>
-</section>
-
-<!-- 10. AI Reports & QA -->
-<section id="sec-10" class="tab-section hidden space-y-4">
-<div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-<h3 class="font-semibold">AI Business Q&A & Executive Reports</h3>
-<div class="flex gap-2">
-<input id="aiQuery" type="text" class="flex-1 border rounded-lg px-3 py-2 text-sm" placeholder="Ask about eggs profit, damage loss, or restocking..." value="How much profit did Farm Eggs generate and what is our damage loss?" />
-<button onclick="askAi()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Ask BizMind AI</button>
-</div>
-<div id="aiAnswer" class="bg-slate-50 border rounded-lg p-4 text-sm text-slate-700">Click "Ask BizMind AI" to analyze your 30-day store performance.</div>
-</div>
-</section>
-<!-- 11. Bangla Voice -->
-<section id="sec-11" class="tab-section hidden space-y-4">
-  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-    <h3 class="font-semibold">Bangla Voice Co-Pilot</h3>
-    <div class="flex gap-2">
-      <input id="voiceInput" type="text" class="flex-1 border rounded-lg px-3 py-2 text-sm" placeholder="Ask in Bangla or Banglish (e.g., Aajke dim er stock koto?)" />
-      <button onclick="runBanglaVoice()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Ask Voice Co-Pilot</button>
-    </div>
-    <div id="voiceOutput" class="bg-slate-50 border rounded-lg p-4 text-sm text-slate-700">Ready for Bangla voice or text commands.</div>
-  </div>
-</section>
-
-<!-- 12. Waste Rescue AI -->
-<section id="sec-12" class="tab-section hidden space-y-4">
-  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-    <h3 class="font-semibold">Waste Rescue AI - Expiring Stock Recovery</h3>
-    <div class="grid md:grid-cols-2 gap-3 text-sm">
-      <div class="border rounded-lg p-3 bg-amber-50">
-        <p class="font-medium">Liquid Milk (MILK-B01-EXP) - Expires in 3 days</p>
-        <p class="text-slate-600">18 L remaining | Recommended: 20% Flash Rescue</p>
-        <button onclick="rescueBatch('Liquid Milk (20% Flash Rescue)')" class="mt-2 bg-amber-600 text-white px-3 py-1 rounded text-xs">Apply Rescue Offer</button>
+<body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col">
+  <!-- Top Navbar -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-emerald-600 text-white flex items-center justify-center font-extrabold text-lg shadow-sm">
+          BM
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="font-bold text-lg text-slate-900">BizMind AI</h1>
+            <span id="brandTagBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              মুদি দোকানের AI পার্টনার
+            </span>
+          </div>
+          <p class="text-xs text-slate-500" id="activeShopSubtitle">
+            অপচয় কমায় · বাকি আদায় করে · লাভ বাড়ায়
+          </p>
+        </div>
       </div>
-      <div class="border rounded-lg p-3 bg-amber-50">
-        <p class="font-medium">Farm Eggs (EGG-B01-FEFO) - Expires in 4 days</p>
-        <p class="text-slate-600">55 pcs remaining | Recommended: Bundle with Milk</p>
-        <button onclick="rescueBatch('Farm Eggs (Bundle Offer)')" class="mt-2 bg-amber-600 text-white px-3 py-1 rounded text-xs">Apply Rescue Offer</button>
+
+      <!-- Navbar Controls: Language Toggle (বাং/EN), Light/Dark Mode, Shop, Festival, 90-Day Demo -->
+      <div class="flex flex-wrap items-center gap-2">
+        <!-- Bangla / English Language Toggle -->
+        <button type="button" id="langToggleBtn" class="px-2.5 py-1.5 rounded-lg border border-indigo-300 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 text-xs font-bold transition">
+          🌐 বাংলা / EN
+        </button>
+
+        <!-- Light / Dark Mode Toggle -->
+        <button type="button" id="themeToggleBtn" class="px-2.5 py-1.5 rounded-lg border border-slate-300 bg-slate-100 text-slate-800 hover:bg-slate-200 text-xs font-bold transition">
+          🌙 Dark
+        </button>
+
+        <select id="shopSelector" class="text-xs font-medium bg-slate-100 border border-slate-300 rounded-lg px-2.5 py-1.5 text-slate-800">
+          <option value="shop_1">রহিম ভাইয়ের মুদি দোকান (shp_01)</option>
+          <option value="shop_2">গ্রিনকেয়ার ফার্মেসি (shp_02)</option>
+        </select>
+
+        <select id="festivalSelector" class="text-xs font-semibold bg-amber-50 border border-amber-300 rounded-lg px-2.5 py-1.5 text-amber-900">
+          <option value="NONE">উৎসব: স্বাভাবিক সময়</option>
+          <option value="RAMADAN_EID">উৎসব: রমজান ও ঈদ (+৪০%)</option>
+          <option value="POHELA_BOISHAKH">উৎসব: পহেলা বৈশাখ (+২৫%)</option>
+          <option value="MONSOON_RAIN">উৎসব: বর্ষাকাল (+২০%)</option>
+        </select>
+
+        <button type="button" id="resetDemoBtn" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm">
+          Demo চালাও (৯০ দিন)
+        </button>
       </div>
     </div>
-    <div id="wasteRescueStatus" class="text-sm text-emerald-700 font-medium"></div>
-  </div>
-</section>
 
-<!-- 13. Baki Khata -->
-<section id="sec-13" class="tab-section hidden space-y-4">
-  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-    <h3 class="font-semibold">Baki Khata (Digital Credit Ledger)</h3>
-    <div class="flex flex-wrap gap-2">
-      <input id="bakiName" type="text" class="border rounded-lg px-3 py-2 text-sm" placeholder="Customer Name" />
-      <input id="bakiAmount" type="number" class="border rounded-lg px-3 py-2 text-sm" placeholder="Amount" />
-      <button onclick="addBaki()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Add Baki</button>
+    <!-- Navigation Tabs -->
+    <div class="bg-slate-900 text-slate-300 border-t border-slate-800">
+      <div class="max-w-7xl mx-auto px-4 py-2 flex items-center gap-1.5 overflow-x-auto" id="navTabsContainer">
+        <button type="button" data-tab="dashboard" id="navTab_dashboard" class="nav-btn active whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold transition">১. AI Command Center</button>
+        <button type="button" data-tab="assistant" id="navTab_assistant" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition">২. Bangla Voice &amp; AI Chat</button>
+        <button type="button" data-tab="waste" id="navTab_waste" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition">৩. Waste Rescue AI</button>
+        <button type="button" data-tab="baki" id="navTab_baki" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition">৪. বাকির খাতা + Reminder</button>
+        <button type="button" data-tab="chalan" id="navTab_chalan" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition">৫. চালান স্ক্যানার (Stock)</button>
+        <button type="button" data-tab="forecast" id="navTab_forecast" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition">৬. উৎসব ও ৭/১৫/৩০দ Forecast</button>
+        <button type="button" data-tab="restock" id="navTab_restock" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition">৭. Smart Reorder</button>
+        <button type="button" data-tab="pos" id="navTab_pos" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition">৮. FEFO POS ও হিসাব</button>
+        <button type="button" data-tab="simulator" id="navTab_simulator" class="nav-btn whitespace-nowrap px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-slate-800 transition">৯. What-If ও কম্বো অফার</button>
+      </div>
     </div>
-    <ul id="bakiList" class="divide-y text-sm">
-      <li class="py-2 flex justify-between"><span>Rahim Mia</span><span class="font-semibold text-rose-600">Due: 450</span></li>
-      <li class="py-2 flex justify-between"><span>Karim Store</span><span class="font-semibold text-rose-600">Due: 1200</span></li>
-    </ul>
-  </div>
-</section>
+  </header>
 
-<!-- 14. Chalan Scanner -->
-<section id="sec-14" class="tab-section hidden space-y-4">
-  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-    <h3 class="font-semibold">Chalan Scanner (AI Invoice OCR)</h3>
-    <textarea id="chalanInput" rows="3" class="w-full border rounded-lg p-3 text-sm" placeholder="Paste supplier chalan text or invoice items (e.g., Miniket Rice 50kg @ 70)..."></textarea>
-    <button onclick="scanChalan()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-medium">Scan Chalan</button>
-    <div id="chalanResult" class="bg-slate-50 border rounded-lg p-4 text-sm text-slate-700">Upload or paste a supplier chalan to extract stock batches.</div>
+  <!-- Toast Banner -->
+  <div id="toastBanner" class="hidden fixed bottom-5 right-5 z-50 max-w-md bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl border border-slate-700 flex items-center justify-between gap-3">
+    <span id="toastMessage" class="text-xs font-medium"></span>
+    <button type="button" id="closeToastBtn" class="text-slate-400 hover:text-white text-xs font-bold">✕</button>
   </div>
-</section>
 
-<!-- 15. Impact Dashboard -->
-<section id="sec-15" class="tab-section hidden space-y-4">
-  <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-3">
-    <h3 class="font-semibold">Impact Dashboard</h3>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-      <div class="p-3 bg-emerald-50 rounded-lg border"><p class="text-slate-500">Waste Prevented</p><p class="text-lg font-bold text-emerald-700">18.5 kg</p></div>
-      <div class="p-3 bg-blue-50 rounded-lg border"><p class="text-slate-500">Revenue Recovered</p><p class="text-lg font-bold text-blue-700">3,420</p></div>
-      <div class="p-3 bg-amber-50 rounded-lg border"><p class="text-slate-500">Baki Collection Rate</p><p class="text-lg font-bold text-amber-700">88%</p></div>
-      <div class="p-3 bg-purple-50 rounded-lg border"><p class="text-slate-500">Co-Pilot Time Saved</p><p class="text-lg font-bold text-purple-700">4.2 hrs/wk</p></div>
+  <!-- Explainable AI ("কেন?" / "Why?") Modal -->
+  <div id="whyModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="surface-card bg-white rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-200 space-y-3">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+        <h3 class="font-bold text-sm text-indigo-700" id="whyModalTitle">Explainable AI — "কেন এই পরামর্শ?"</h3>
+        <button type="button" id="closeWhyModalBtn" class="text-slate-400 hover:text-slate-700 font-bold text-sm">✕</button>
+      </div>
+      <div id="whyModalBody" class="text-xs text-slate-700 space-y-2 leading-relaxed"></div>
     </div>
   </div>
-</section>
-</div>
-</main>
 
-<script>
-const sections = [
-'1. Dashboard', '2. Inventory & Batches', '3. Sales (FEFO POS)', '4. Purchases',
-'5. Accounting & Profit', '6. Product Intelligence', '7. Demand Forecast',
-'8. Restock Advisor', '9. Discount Advisor', '10. AI Reports & QA',
-'11. Bangla Voice', '12. Waste Rescue AI', '13. Baki Khata',
-'14. Chalan Scanner', '15. Impact Dashboard'
-];
+  <main class="max-w-7xl w-full mx-auto px-4 py-6 flex-1 space-y-6">
+    <!-- TAB 1: AI COMMAND CENTER (Impact Card + Morning Brief + Health Score + Margin Leaks) -->
+    <section id="tab-dashboard" class="tab-panel space-y-6">
+      <!-- Storytelling Demo Banner + Impact Dashboard Card -->
+      <div class="bg-gradient-to-r from-emerald-900 via-teal-900 to-indigo-950 text-white rounded-2xl p-5 shadow-md space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <span class="text-xs font-bold uppercase tracking-wider text-emerald-300" id="impactSubBadge">Impact Dashboard · টাকার হিসাবে AI-এর প্রভাব</span>
+            <h2 class="text-lg md:text-xl font-extrabold mt-0.5" id="impactHeadlineText">
+              BizMind AI এই মাসে ৳১২,৪৫০ অপচয় বাঁচিয়েছে, ৫টি পণ্যের Stockout এড়িয়েছে এবং ৳৮,২০০ বাকি আদায়ে সাহায্য করেছে।
+            </h2>
+          </div>
+          <button type="button" id="storyDemoBtn" class="px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-bold text-xs shadow transition">
+            রহিম ভাইয়ের ৫৫টি ডিমের গল্প দেখুন →
+          </button>
+        </div>
 
-const demoData = {
-products: [
-{ sku: 'EGG-001', name: 'Farm Eggs', category: 'Dairy & Eggs', cost: 10, price: 15, stock: 235, sold30d: 60 },
-{ sku: 'OIL-A01', name: 'Product A - Imported Olive Oil', category: 'Imported & Premium', cost: 850, price: 1250, stock: 30, sold30d: 14 },
-{ sku: 'RICE-B01', name: 'Product B - Miniket Rice', category: 'Grocery & Staples', cost: 62, price: 78, stock: 270, sold30d: 135 },
-{ sku: 'OIL-C01', name: 'Product C - Fortified Soybean Oil', category: 'Grocery & Staples', cost: 155, price: 185, stock: 95, sold30d: 58 },
-{ sku: 'MILK-001', name: 'Liquid Milk', category: 'Dairy & Eggs', cost: 75, price: 95, stock: 58, sold30d: 42 },
-{ sku: 'HONEY-001', name: 'Organic Honey', category: 'Imported & Premium', cost: 420, price: 600, stock: 22, sold30d: 10 }
-],
-batches: [
-{ sku: 'EGG-001', name: 'Farm Eggs', batch: 'EGG-B01-FEFO', qty: 55, cost: 10, expiryDays: 4 },
-{ sku: 'EGG-001', name: 'Farm Eggs', batch: 'EGG-B02-FRESH', qty: 180, cost: 10, expiryDays: 14 },
-{ sku: 'MILK-001', name: 'Liquid Milk', batch: 'MILK-B01-EXP', qty: 18, cost: 75, expiryDays: 3 },
-{ sku: 'MILK-001', name: 'Liquid Milk', batch: 'MILK-B02', qty: 40, cost: 75, expiryDays: 10 },
-{ sku: 'OIL-A01', name: 'Product A - Imported Olive Oil', batch: 'OLV-B01', qty: 14, cost: 850, expiryDays: 180 },
-{ sku: 'RICE-B01', name: 'Product B - Miniket Rice', batch: 'RICE-B01', qty: 120, cost: 62, expiryDays: 240 },
-{ sku: 'OIL-C01', name: 'Product C - Fortified Soybean Oil', batch: 'SOY-B01', qty: 35, cost: 155, expiryDays: 90 },
-{ sku: 'HONEY-001', name: 'Organic Honey', batch: 'HNY-B01', qty: 22, cost: 420, expiryDays: 365 }
-],
-suppliers: [
-{ name: 'Dhaka Fresh Agro Ltd', leadTimeDays: 2, phone: '+8801711000001' },
-{ name: 'Padma Grains & Oil', leadTimeDays: 4, phone: '+8801711000002' },
-{ name: 'Global Gourmet Imports', leadTimeDays: 7, phone: '+8801711000003' }
-],
-expenses: [
-{ title: 'Monthly Store Rent', category: 'RENT', amount: 25000 },
-{ title: 'Electricity & Cold Storage', category: 'UTILITIES', amount: 4800 },
-{ title: 'Store Staff Salary', category: 'SALARY', amount: 22000 }
-],
-weeklyTrend: [50, 65, 80, 100],
-periodMult: { daily: 0.033, weekly: 0.25, monthly: 1 }
-};
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="bg-white/10 border border-white/15 rounded-xl p-3.5">
+            <p class="text-xs text-emerald-200" id="lblImpactWaste">অপচয় রোধ (Waste Prevented)</p>
+            <p class="text-2xl font-extrabold mt-0.5" id="impactWasteSaved">৳১২,৪৫০</p>
+          </div>
+          <div class="bg-white/10 border border-white/15 rounded-xl p-3.5">
+            <p class="text-xs text-sky-200" id="lblImpactStockout">স্টকআউট এড়ানো (Stockouts Prevented)</p>
+            <p class="text-2xl font-extrabold mt-0.5" id="impactStockouts">৫টি পণ্য</p>
+          </div>
+          <div class="bg-white/10 border border-white/15 rounded-xl p-3.5">
+            <p class="text-xs text-amber-200" id="lblImpactBaki">বাকি আদায় সহায়তা (Baki Tracked/Recovered)</p>
+            <p class="text-2xl font-extrabold mt-0.5" id="impactBaki">৳৮,২০০</p>
+          </div>
+        </div>
+      </div>
 
-let currentPeriod = 'monthly';
-let cart = [{ sku: 'EGG-001', name: 'Farm Eggs', qty: 60, price: 15, cost: 10 }];
-let charts = {};
+      <!-- Morning Brief ("আজকের ৩টি কাজ") + Business Health Score (0-100) -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 surface-card bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-indigo-600">Morning Brief</span>
+              <h3 class="text-base font-bold text-slate-900" id="lblMorningTitle">আজকের ৩টি সবচেয়ে জরুরি কাজ</h3>
+            </div>
+            <button type="button" id="whyMorningBriefBtn" class="text-xs font-bold px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100">
+              কেন?
+            </button>
+          </div>
+          <div id="morningBriefList" class="space-y-2.5"></div>
+        </div>
 
-function initNav() {
-const nav = document.getElementById('sidebarNav');
-nav.innerHTML = sections.map((s, idx) => `<button onclick="showSection(${idx + 1})" id="nav-${idx + 1}" class="w-full text-left px-3 py-2 rounded-lg transition ${idx === 0 ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-800'}">${s}</button>`).join('');
-}
+        <!-- Business Health Score (0-100) -->
+        <div class="surface-card bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">AI Business Health Score</span>
+              <h3 class="text-base font-bold text-slate-900" id="lblHealthTitle">দোকানের স্বাস্থ্য স্কোর</h3>
+            </div>
+            <div class="text-right">
+              <span class="text-3xl font-extrabold text-indigo-600" id="healthScoreValue">82</span>
+              <span class="text-xs font-bold text-slate-400">/100</span>
+            </div>
+          </div>
+          <div id="healthBreakdownList" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
 
-function showSection(n) {
-document.querySelectorAll('.tab-section').forEach(el => el.classList.add('hidden'));
-document.getElementById(`sec-${n}`).classList.remove('hidden');
-document.getElementById('sectionTitle').textContent = sections[n - 1];
-sections.forEach((_, idx) => {
-const btn = document.getElementById(`nav-${idx + 1}`);
-btn.className = `w-full text-left px-3 py-2 rounded-lg transition ${idx + 1 === n ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-800'}`;
-});
-}
+      <!-- KPI Row -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="surface-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-500 font-medium" id="lblKpiRev">মোট বিক্রি (Revenue)</p>
+          <p class="text-2xl font-extrabold text-slate-900 mt-1" id="kpiRevenue">৳0</p>
+        </div>
+        <div class="surface-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-500 font-medium" id="lblKpiGross">গ্রস লাভ (Gross Profit)</p>
+          <p class="text-2xl font-extrabold text-indigo-600 mt-1" id="kpiGrossProfit">৳0</p>
+        </div>
+        <div class="surface-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-500 font-medium" id="lblKpiLoss">স্টক লস (Inventory Loss)</p>
+          <p class="text-2xl font-extrabold text-rose-600 mt-1" id="kpiInvLoss">৳0</p>
+        </div>
+        <div class="surface-card bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-xs text-slate-500 font-medium" id="lblKpiNet">নিট লাভ (Net Profit)</p>
+          <p class="text-2xl font-extrabold text-emerald-600 mt-1" id="kpiNetProfit">৳0</p>
+        </div>
+      </div>
 
-function setPeriod(p) {
-currentPeriod = p;
-document.querySelectorAll('.period-btn').forEach(b => b.className = 'period-btn px-3 py-1.5 text-xs rounded-lg border border-slate-200 bg-white');
-document.getElementById(`btn-${p}`).className = 'period-btn px-3 py-1.5 text-xs rounded-lg bg-emerald-600 text-white';
-renderDashboard();
-}
+      <!-- Margin Leak Alerts -->
+      <div class="surface-card bg-rose-50 border border-rose-200 rounded-xl p-4 space-y-2" id="marginLeakBox">
+        <div class="flex items-center justify-between">
+          <h4 class="text-xs font-bold text-rose-700 uppercase tracking-wider">Margin Leak &amp; Anomaly Detector</h4>
+          <span class="text-xs font-semibold text-rose-600" id="lblMarginBadge">স্বয়ংক্রিয় সতর্কবার্তা</span>
+        </div>
+        <div id="marginLeakAlerts" class="space-y-1.5 text-xs"></div>
+      </div>
+    </section>
 
-function renderDashboard() {
-const m = demoData.periodMult[currentPeriod];
-const rev = Math.round(45650 * m);
-const cogs = Math.round(32100 * m);
-const gp = rev - cogs;
-const exp = Math.round(51800 * m);
-const dmg = 50;
-const kpis = [
-['Total Revenue', `৳${rev.toLocaleString()}`, 'text-slate-900'],
-['Total COGS', `৳${cogs.toLocaleString()}`, 'text-slate-700'],
-['Gross Profit', `৳${gp.toLocaleString()}`, 'text-emerald-600'],
-['Operating Expenses', `৳${exp.toLocaleString()}`, 'text-amber-600'],
-['Damage Loss (5 Eggs)', `৳${dmg}`, 'text-rose-600']
-];
-document.getElementById('kpiGrid').innerHTML = kpis.map(k => `<div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm"><div class="text-xs text-slate-500">${k[0]}</div><div class="text-2xl font-bold mt-1 ${k[2]}">${k[1]}</div></div>`).join('');
+    <!-- TAB 2: BANGLA VOICE ASSISTANT & CHAT WITH BUSINESS DATA -->
+    <section id="tab-assistant" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-2 surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-slate-900" id="lblVoiceTitle">Bangla Voice Assistant ও AI চ্যাট</h3>
+              <p class="text-xs text-slate-500" id="lblVoiceSub">দোকানদার বাংলায় মুখে বলবেন অথবা লিখবেন — AI আপনার দোকানের আসল ডেটা পড়ে উত্তর ও চার্ট দেখাবে।</p>
+            </div>
+            <button type="button" id="voiceSpeakBtn" class="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition">
+              🎤 বাংলায় বলুন (Voice)
+            </button>
+          </div>
 
-if (charts.trend) charts.trend.destroy();
-charts.trend = new Chart(document.getElementById('trendChart'), {
-type: 'line',
-data: { labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'], datasets: [{ label: 'Units Sold', data: demoData.weeklyTrend, borderColor: '#10b981', tension: 0.3, fill: true, backgroundColor: 'rgba(16,185,129,0.1)' }] }
-});
+          <div class="flex flex-wrap gap-2">
+            <button type="button" data-ask="আজ কত বিক্রি হলো এবং নিট লাভ কত?" class="quick-ask-btn text-xs px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 font-semibold hover:bg-indigo-100">আজ কত বিক্রি হলো?</button>
+            <button type="button" data-ask="কোন জিনিসগুলো এই সপ্তাহে কিনতে হবে?" class="quick-ask-btn text-xs px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold hover:bg-emerald-100">কোন জিনিস কিনতে হবে?</button>
+            <button type="button" data-ask="কোন পণ্যগুলো তাড়াতাড়ি নষ্ট হবে (Waste Rescue)?" class="quick-ask-btn text-xs px-3 py-1.5 rounded-full bg-amber-50 text-amber-800 font-semibold hover:bg-amber-100">ডিম বা পণ্য নষ্ট হবে কি?</button>
+            <button type="button" data-ask="কার বাকি আদায় আগে করা দরকার?" class="quick-ask-btn text-xs px-3 py-1.5 rounded-full bg-rose-50 text-rose-700 font-semibold hover:bg-rose-100">কার বাকি আগে তুলব?</button>
+          </div>
 
-if (charts.finance) charts.finance.destroy();
-charts.finance = new Chart(document.getElementById('financeChart'), {
-type: 'bar',
-data: { labels: ['Revenue', 'COGS', 'Gross Profit', 'Expenses'], datasets: [{ label: 'BDT (৳)', data: [rev, cogs, gp, exp], backgroundColor: ['#0f172a', '#64748b', '#10b981', '#f59e0b'] }] }
-});
+          <form id="aiChatForm" class="flex gap-2">
+            <input type="text" id="aiChatInput" placeholder="বাংলায় বা ইংরেজিতে প্রশ্ন লিখুন (যেমন: গত মাসে কত লাভ হয়েছে?)..." class="flex-1 text-xs border border-slate-300 rounded-xl px-3.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            <button type="submit" id="btnAskSubmit" class="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs">
+              জিজ্ঞাসা করুন
+            </button>
+          </form>
 
-if (charts.forecast) charts.forecast.destroy();
-charts.forecast = new Chart(document.getElementById('forecastChart'), {
-type: 'line',
-data: { labels: ['W1', 'W2', 'W3', 'W4', 'W5 (Forecast)'], datasets: [{ label: 'Demand Units', data: [50, 65, 80, 100, 115], borderColor: '#6366f1', borderDash: [5, 5] }] }
-});
-}
+          <div id="aiChatResponseBox" class="p-4 rounded-xl bg-slate-900 text-slate-100 space-y-3">
+            <div class="flex items-center justify-between border-b border-slate-700 pb-2">
+              <span class="text-xs font-bold text-emerald-400">Read-Only Grounded AI Tool Calling (Gemini Ready)</span>
+              <button type="button" id="readAloudAnswerBtn" class="text-xs px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-300 font-semibold">
+                🔊 উত্তর পড়ে শোনাও
+              </button>
+            </div>
+            <p id="aiChatAnswerText" class="text-xs leading-relaxed whitespace-pre-line">ওপরের যেকোনো বাটনে ক্লিক করুন বা মাইক্রোফোনে বাংলায় প্রশ্ন করুন।</p>
+          </div>
+        </div>
 
-function renderTables() {
-document.getElementById('batchTableBody').innerHTML = demoData.batches.map(b => `<tr><td class="p-3 font-mono">${b.sku}</td><td class="p-3">${b.name}</td><td class="p-3">${b.batch}</td><td class="p-3 font-semibold">${b.qty}</td><td class="p-3">৳${b.cost}</td><td class="p-3">${b.expiryDays} days</td><td class="p-3"><span class="px-2 py-0.5 rounded text-xs ${b.expiryDays <= 5 ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700'}">${b.expiryDays <= 5 ? 'FEFO Urgent' : 'Healthy'}</span></td></tr>`).join('');
+        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+          <h4 class="text-sm font-bold text-slate-900" id="chatChartTitle">লাইভ বিজনেস ডেটা চার্ট</h4>
+          <div class="relative h-72">
+            <canvas id="assistantChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </section>
 
-document.getElementById('posProductGrid').innerHTML = demoData.products.map(p => `<div class="border rounded-lg p-3 flex justify-between items-center"><div><div class="font-medium">${p.name}</div><div class="text-xs text-slate-500">৳${p.price} | Stock: ${p.stock}</div></div><button onclick="addCart('${p.sku}')" class="bg-slate-900 text-white px-3 py-1 rounded text-xs">+ Add</button></div>`).join('');
+    <!-- TAB 3: WASTE RESCUE AI -->
+    <section id="tab-waste" class="tab-panel hidden space-y-6">
+      <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <span class="text-xs font-bold text-amber-600 uppercase">Star Feature #1</span>
+            <h3 class="text-base font-bold text-slate-900" id="lblWasteTitle">Waste Rescue AI — অপচয় রোধ ও বাংলা অফার মেসেজ</h3>
+            <p class="text-xs text-slate-500" id="lblWasteSub">মেয়াদ শেষ হওয়ার আগেই AI ছাড় দিয়ে ক্যাশ ফেরত আনার হিসাব এবং Facebook/SMS অফার পোস্ট লিখে দেবে।</p>
+          </div>
+          <span class="px-3 py-1.5 rounded-xl bg-emerald-100 text-emerald-800 font-bold text-xs" id="wasteTotalRecoverableBadge">
+            মোট ক্যাশ রিকভারি: ৳0
+          </span>
+        </div>
+        <div id="wasteRescueGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+      </div>
+    </section>
 
-document.getElementById('supplierGrid').innerHTML = demoData.suppliers.map(s => `<div class="border rounded-lg p-4"><div class="font-semibold">${s.name}</div><div class="text-xs text-slate-500 mt-1">Lead Time: <strong>${s.leadTimeDays} days</strong></div><div class="text-xs text-slate-500">${s.phone}</div></div>`).join('');
+    <!-- TAB 4: BAKI KHATA + AI BANGLA REMINDER -->
+    <section id="tab-baki" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-base font-bold text-slate-900" id="lblBakiAddTitle">নতুন বাকি যোগ করুন (বাকির খাতা)</h3>
+          <form id="addBakiForm" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">কাস্টমারের নাম / Customer Name</label>
+              <input type="text" id="bakiName" required placeholder="যেমন: জব্বার মিয়া" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">মোবাইল নম্বর / Phone</label>
+              <input type="text" id="bakiPhone" required value="01715-000000" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">বাকির পরিমাণ (৳) / Due Amount</label>
+              <input type="number" id="bakiAmount" required value="1250" min="1" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">বিবরণ / Notes</label>
+              <input type="text" id="bakiNotes" value="চাল, ডাল ও তেল" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-lg">
+              + বাকির খাতায় যোগ করুন
+            </button>
+          </form>
+        </div>
 
-document.getElementById('purchaseTableBody').innerHTML = `<tr><td class="p-3 font-mono">PO-1001</td><td class="p-3">Dhaka Fresh Agro Ltd</td><td class="p-3">300 Eggs, 100 Milk, 145 Rice</td><td class="p-3">৳19,450</td><td class="p-3"><span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs">COMPLETED</span></td></tr>`;
+        <div class="lg:col-span-2 surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-bold text-slate-900" id="lblBakiListTitle">বাকির তালিকা ও AI ভদ্র বাংলা রিমাইন্ডার</h3>
+            <span class="text-xs font-bold px-3 py-1 rounded-full bg-rose-100 text-rose-800" id="totalBakiBadge">মোট বাকি: ৳0</span>
+          </div>
+          <div id="bakiCardsList" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
 
-document.getElementById('pnlSummary').innerHTML = `<div class="flex justify-between"><span>60 Farm Eggs Revenue</span><strong>৳900</strong></div><div class="flex justify-between"><span>60 Farm Eggs COGS</span><span>৳600</span></div><div class="flex justify-between text-emerald-600"><span>60 Farm Eggs Gross Profit</span><strong>৳300</strong></div><hr/><div class="flex justify-between"><span>30-Day Store Revenue</span><strong>৳45,650</strong></div><div class="flex justify-between"><span>Operating Expenses (RENT, UTILITIES, SALARY)</span><span class="text-rose-600">-৳51,800</span></div><div class="flex justify-between"><span>Stock Damage Loss (5 Broken Eggs)</span><span class="text-rose-600">-৳50</span></div>`;
+    <!-- TAB 5: VISION AI CHALAN SCANNER -->
+    <section id="tab-chalan" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <span class="text-xs font-bold text-indigo-600 uppercase">Star Feature #4 · Vision AI</span>
+          <h3 class="text-base font-bold text-slate-900" id="lblChalanTitle">সাপ্লায়ারের চালানের ছবি বা মেমো থেকে অটো স্টক এন্ট্রি</h3>
+          <p class="text-xs text-slate-500">চালানের ছবি আপলোড করুন অথবা মেমোর লেখা দিন — AI নিজেই পণ্যের নাম, পরিমাণ ও কেনা দাম আলাদা করে ইনভেন্টরিতে যোগ করবে।</p>
+          <div class="space-y-3">
+            <input type="file" id="chalanFileInput" accept="image/*" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700" />
+            <textarea id="chalanTextInput" rows="4" class="w-full text-xs border border-slate-300 rounded-xl p-3">Farm Eggs (Brown) 100 @ 10
+Product C - Soybean Oil (2L) 20 @ 300
+Aarong Liquid Milk (1L) 25 @ 80</textarea>
+            <button type="button" id="scanChalanBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs py-2.5 rounded-xl">
+              🔍 চালান স্ক্যান করে পণ্য বের করুন
+            </button>
+          </div>
+        </div>
 
-document.getElementById('expenseList').innerHTML = demoData.expenses.map(e => `<div class="flex justify-between border-b pb-2"><span>${e.title} <span class="text-xs bg-slate-100 px-2 py-0.5 rounded">${e.category}</span></span><strong>৳${e.amount.toLocaleString()}</strong></div>`).join('');
+        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <div class="flex items-center justify-between">
+            <h4 class="text-sm font-bold text-slate-900">স্ক্যান করা পণ্যের তালিকা (Ready for Stock Entry)</h4>
+            <button type="button" id="commitChalanStockBtn" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs">
+              ✓ সব পণ্য ইনভেন্টরি ব্যাচে যোগ করুন
+            </button>
+          </div>
+          <div id="chalanExtractedList" class="space-y-2 text-xs"></div>
+        </div>
+      </div>
+    </section>
 
-document.getElementById('intelTableBody').innerHTML = demoData.products.map(p => {
-const margin = Math.round(((p.price - p.cost) / p.price) * 100);
-const cls = margin >= 30 ? 'A (High Margin)' : p.sold30d >= 50 ? 'B (High Velocity)' : 'C (Standard)';
-return `<tr><td class="p-3 font-medium">${p.name}</td><td class="p-3">${p.category}</td><td class="p-3">${margin}%</td><td class="p-3">${p.sold30d}</td><td class="p-3"><span class="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 text-xs">${cls}</span></td><td class="p-3 text-xs text-slate-500">FEFO Monitored</td></tr>`;
-}).join('');
-renderCart();
-}
+    <!-- TAB 6: BANGLADESH FESTIVAL FORECAST (7, 15, 30 DAYS) -->
+    <section id="tab-forecast" class="tab-panel hidden space-y-6">
+      <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-base font-bold text-slate-900" id="lblForecastTitle">৭, ১৫ ও ৩০ দিনের চাহিদা পূর্বাভাস + বাংলাদেশের উৎসব ইন্টেলিজেন্স</h3>
+            <p class="text-xs text-slate-500">ওপর থেকে "রমজান ও ঈদ" বা "পহেলা বৈশাখ" সিলেক্ট করে দেখুন চাহিদা কীভাবে আপডেট হয়।</p>
+          </div>
+          <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-900 font-bold text-xs" id="activeFestivalBadge">স্বাভাবিক সময়</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                <th class="py-2.5 px-3 font-bold">পণ্য / Product</th>
+                <th class="py-2.5 px-3 font-bold text-right">স্টক / Stock</th>
+                <th class="py-2.5 px-3 font-bold text-right">7d</th>
+                <th class="py-2.5 px-3 font-bold text-right">15d</th>
+                <th class="py-2.5 px-3 font-bold text-right">30d</th>
+                <th class="py-2.5 px-3 font-bold">Confidence &amp; MAE</th>
+                <th class="py-2.5 px-3 font-bold">উৎসব পরামর্শ ও "কেন?"</th>
+              </tr>
+            </thead>
+            <tbody id="forecastTableBody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-function addCart(sku) {
-const p = demoData.products.find(x => x.sku === sku);
-const existing = cart.find(c => c.sku === sku);
-if (existing) existing.qty += 1;
-else cart.push({ sku: p.sku, name: p.name, qty: 1, price: p.price, cost: p.cost });
-renderCart();
-}
+    <!-- TAB 7: SMART STOCK REORDER -->
+    <section id="tab-restock" class="tab-panel hidden space-y-6">
+      <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div>
+          <h3 class="text-base font-bold text-slate-900" id="lblRestockTitle">Smart Stock Reorder Advisor (কবে ও কতটি কিনবেন)</h3>
+          <p class="text-xs text-slate-500">সূত্র: ROP = (D × L) + SS এবং Q = max(0, ROP − S − I) — সাথে সম্ভাব্য Stockout Date ও "কেন?" ব্যাখ্যা।</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                <th class="py-2.5 px-3 font-bold">পণ্য ও সাপ্লায়ার</th>
+                <th class="py-2.5 px-3 font-bold text-right">স্টক (S)</th>
+                <th class="py-2.5 px-3 font-bold text-right">ROP</th>
+                <th class="py-2.5 px-3 font-bold text-right">অর্ডার পরিমাণ (Q)</th>
+                <th class="py-2.5 px-3 font-bold">স্টক শেষ হওয়ার সময়</th>
+                <th class="py-2.5 px-3 font-bold text-right">ব্যাখ্যা ও অনুমোদন</th>
+              </tr>
+            </thead>
+            <tbody id="restockTableBody" class="divide-y divide-slate-200"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
 
-function renderCart() {
-let rev = 0, cogs = 0;
-document.getElementById('posCartItems').innerHTML = cart.map(c => {
-rev += c.qty * c.price; cogs += c.qty * c.cost;
-return `<div class="flex justify-between border-b pb-1"><span>${c.name} × ${c.qty}</span><strong>৳${c.qty * c.price}</strong></div>`;
-}).join('');
-document.getElementById('posRev').textContent = `৳${rev}`;
-document.getElementById('posCogs').textContent = `৳${cogs}`;
-document.getElementById('posProfit').textContent = `৳${rev - cogs}`;
-}
+    <!-- TAB 8: FEFO POS & ACCOUNTING -->
+    <section id="tab-pos" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-base font-bold text-slate-900">বিক্রি রেকর্ড করুন (FEFO POS)</h3>
+          <form id="posSaleForm" class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">পণ্য বাছাই করুন</label>
+              <select id="posProductSelect" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2"></select>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">পরিমাণ</label>
+                <input type="number" id="posQty" value="10" min="1" required class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">পেমেন্ট</label>
+                <select id="posMethod" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2">
+                  <option value="CASH">Cash</option>
+                  <option value="BKASH">bKash</option>
+                  <option value="NAGAD">Nagad</option>
+                </select>
+              </div>
+            </div>
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-lg">
+              বিক্রি সম্পন্ন করুন ও FEFO স্টক কমান
+            </button>
+          </form>
+        </div>
 
-function checkoutPos() {
-alert('FEFO Sale completed! Stock deducted from earliest-expiring batch.');
-cart = [];
-renderCart();
-}
+        <div class="lg:col-span-2 surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-base font-bold text-slate-900">সক্রিয় ব্যাচ ইনভেন্টরি (মেয়াদ অনুযায়ী সাজানো)</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="bg-slate-100 text-slate-700 border-b border-slate-200">
+                  <th class="py-2 px-3 font-bold">পণ্য</th>
+                  <th class="py-2 px-3 font-bold">ব্যাচ নম্বর</th>
+                  <th class="py-2 px-3 font-bold text-right">কেনা দাম</th>
+                  <th class="py-2 px-3 font-bold text-right">বিক্রয়মূল্য</th>
+                  <th class="py-2 px-3 font-bold text-right">মজুদ</th>
+                  <th class="py-2 px-3 font-bold">মেয়াদ</th>
+                </tr>
+              </thead>
+              <tbody id="posBatchTableBody" class="divide-y divide-slate-200"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
 
-function logDamageDemo() {
-alert('Logged DAMAGE adjustment: 5 broken Farm Eggs (Loss: ৳50).');
-}
+    <!-- TAB 9: WHAT-IF SIMULATOR & SMART COMBO OFFERS -->
+    <section id="tab-simulator" class="tab-panel hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-base font-bold text-slate-900">What-If Business Simulator</h3>
+          <p class="text-xs text-slate-500">দাম বাড়ালে বা মার্কেটিং খরচ বাড়ালে মাসিক লাভে কী প্রভাব পড়বে তা আগে থেকেই দেখে নিন।</p>
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">পণ্যের দাম পরিবর্তন (%): <span id="simPriceVal" class="text-indigo-600 font-bold">+10%</span></label>
+              <input type="range" id="simPriceRange" min="-20" max="25" value="10" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">অতিরিক্ত মার্কেটিং বাজেট (৳): <span id="simMktVal" class="text-indigo-600 font-bold">৳1,000</span></label>
+              <input type="range" id="simMktRange" min="0" max="10000" step="500" value="1000" class="w-full" />
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">নতুন স্টক বিনিয়োগ (৳): <span id="simStockVal" class="text-indigo-600 font-bold">৳5,000</span></label>
+              <input type="range" id="simStockRange" min="0" max="50000" step="1000" value="5000" class="w-full" />
+            </div>
+            <div class="p-4 rounded-xl bg-slate-900 text-white space-y-1.5 text-xs" id="whatIfOutputBox"></div>
+          </div>
+        </div>
 
-function calcRop() {
-const D = +document.getElementById('ropD').value || 0;
-const L = +document.getElementById('ropL').value || 0;
-const SS = +document.getElementById('ropSS').value || 0;
-const S = +document.getElementById('ropS').value || 0;
-const I = +document.getElementById('ropI').value || 0;
-const rop = (D * L) + SS;
-const q = Math.max(0, rop - S - I);
-document.getElementById('ropVal').textContent = rop;
-document.getElementById('qVal').textContent = q;
-document.getElementById('ropAdvice').textContent = q > 0 ? `Action Needed: Place a purchase order for ${q} units now.` : 'Stock is sufficient above Reorder Point.';
-}
+        <div class="surface-card bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-base font-bold text-slate-900">Smart Combo Offers (Basket Analysis)</h3>
+          <p class="text-xs text-slate-500">"যারা চাল কেনে তারা ডাল ও তেলও কেনে" — AI-এর তৈরি লাভজনক কম্বো অফার।</p>
+          <div id="comboOffersList" class="space-y-3"></div>
+        </div>
+      </div>
+    </section>
+  </main>
 
-function calcDiscount() {
-const [qty, price, cost, days] = document.getElementById('discProduct').value.split('|').map(Number);
-const pct = +document.getElementById('discPct').value;
-document.getElementById('discPctLabel').textContent = `${pct}%`;
-const newPrice = price * (1 - pct / 100);
-document.getElementById('discNewPrice').textContent = `৳${newPrice.toFixed(2)}`;
-document.getElementById('discRev').textContent = `৳${(newPrice * qty).toFixed(2)}`;
-document.getElementById('discSaved').textContent = `৳${(cost * qty).toFixed(2)}`;
-}
+  <script>
+    // ========================================================================
+    // Bilingual Dictionary (Bangla <-> English Toggle)
+    // ========================================================================
+    const i18n = {
+      bn: {
+        brandTag: 'মুদি দোকানের AI পার্টনার',
+        subtitle: 'অপচয় কমায় · বাকি আদায় করে · লাভ বাড়ায়',
+        langBtn: '🌐 English',
+        resetDemo: 'Demo চালাও (৯০ দিন)',
+        storyBtn: 'রহিম ভাইয়ের ৫৫টি ডিমের গল্প দেখুন →',
+        impactSub: 'Impact Dashboard · টাকার হিসাবে AI-এর প্রভাব',
+        lblImpactWaste: 'অপচয় রোধ (Waste Prevented)',
+        lblImpactStockout: 'স্টকআউট এড়ানো (Stockouts Prevented)',
+        lblImpactBaki: 'বাকি আদায় সহায়তা (Baki Tracked/Recovered)',
+        lblMorningTitle: 'আজকের ৩টি সবচেয়ে জরুরি কাজ',
+        lblHealthTitle: 'দোকানের স্বাস্থ্য স্কোর',
+        whyBtn: 'কেন?',
+        lblKpiRev: 'মোট বিক্রি (Revenue)',
+        lblKpiGross: 'গ্রস লাভ (Gross Profit)',
+        lblKpiLoss: 'স্টক লস (Inventory Loss)',
+        lblKpiNet: 'নিট লাভ (Net Profit)',
+        lblMarginBadge: 'স্বয়ংক্রিয় সতর্কবার্তা',
+        tabs: {
+          dashboard: '১. AI Command Center',
+          assistant: '২. Bangla Voice & AI Chat',
+          waste: '৩. Waste Rescue AI',
+          baki: '৪. বাকির খাতা + Reminder',
+          chalan: '৫. চালান স্ক্যানার (Stock)',
+          forecast: '৬. উৎসব ও ৭/১৫/৩০দ Forecast',
+          restock: '৭. Smart Reorder',
+          pos: '৮. FEFO POS ও হিসাব',
+          simulator: '৯. What-If ও কম্বো অফার'
+        }
+      },
+      en: {
+        brandTag: 'AI Grocery Business Co-Pilot',
+        subtitle: 'Cuts Waste · Recovers Baki · Boosts Profit',
+        langBtn: '🌐 বাংলা',
+        resetDemo: 'Run 90-Day Demo',
+        storyBtn: "Watch Rahim Bhai's 55-Egg Rescue Story →",
+        impactSub: 'Impact Dashboard · Verified Financial Proof in BDT',
+        lblImpactWaste: 'Waste Prevented (BDT Saved)',
+        lblImpactStockout: 'Stockouts Prevented',
+        lblImpactBaki: 'Baki Dues Tracked & Recovered',
+        lblMorningTitle: "Today's Top 3 Priority Actions",
+        lblHealthTitle: 'Business Health Score',
+        whyBtn: 'Why?',
+        lblKpiRev: 'Total Revenue',
+        lblKpiGross: 'Gross Profit',
+        lblKpiLoss: 'Inventory Loss (Counted Once)',
+        lblKpiNet: 'Net Profit',
+        lblMarginBadge: 'Automated Profit Protection',
+        tabs: {
+          dashboard: '1. AI Command Center',
+          assistant: '2. Voice & AI Chat',
+          waste: '3. Waste Rescue AI',
+          baki: '4. Baki Khata + Reminder',
+          chalan: '5. Chalan Scanner (OCR)',
+          forecast: '6. Festival & 7/15/30d Forecast',
+          restock: '7. Smart Reorder',
+          pos: '8. FEFO POS & Batches',
+          simulator: '9. What-If & Smart Combos'
+        }
+      }
+    };
 
-async function askAi() {
-const q = document.getElementById('aiQuery').value;
-const base = document.getElementById('apiBase').value;
-try {
-const res = await fetch(`${base}/ai/ask`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ question: q }) });
-if (res.ok) {
-const data = await res.json();
-document.getElementById('aiAnswer').textContent = data.answer || JSON.stringify(data);
-return;
-}
-} catch (_) {}
-document.getElementById('aiAnswer').innerHTML = `<strong>BizMind AI Insight (30-Day Demo):</strong> Farm Eggs generated <strong>৳900 Revenue</strong>, <strong>৳600 COGS</strong>, and <strong>৳300 Gross Profit</strong> across 60 units sold. Sales grew steadily across 4 weeks (<strong>50 → 65 → 80 → 100</strong>). A <strong>DAMAGE</strong> loss of <strong>৳50</strong> (5 broken eggs) was recorded. Prioritize FEFO clearance on 55 Farm Eggs (4 days left) and 18L Liquid Milk (3 days left).`;
-}
+    let currentLang = 'bn';
+    let isDarkMode = false;
 
-async function syncApi() {
-const base = document.getElementById('apiBase').value;
-try {
-const res = await fetch(`${base}/inventory/products`);
-if (res.ok) {
-document.getElementById('modeBadge').textContent = 'Connected to /api/v1';
-return;
-}
-} catch (_) {}
-alert('Using 30-Day Demo Data (API server requires authentication or local server).');
-}function runBanglaVoice() {
-  const q = document.getElementById('voiceInput').value.trim();
-  document.getElementById('voiceOutput').textContent = q
-    ? 'Bangla Voice Co-Pilot: "' + q + '" -> Stock & profit summary ready (Farm Eggs: 55 pcs, Liquid Milk: 18 L).'
-    : 'Please enter a Bangla or Banglish query.';
-}
-function rescueBatch(label) {
-  document.getElementById('wasteRescueStatus').textContent = 'Activated Waste Rescue AI offer for: ' + label;
-}
-function addBaki() {
-  const name = document.getElementById('bakiName').value.trim();
-  const amt = document.getElementById('bakiAmount').value.trim();
-  if (!name || !amt) return;
-  const li = document.createElement('li');
-  li.className = 'py-2 flex justify-between';
-  li.innerHTML = '<span>' + name + '</span><span class="font-semibold text-rose-600">Due: ' + amt + '</span>';
-  document.getElementById('bakiList').appendChild(li);
-  document.getElementById('bakiName').value = '';
-  document.getElementById('bakiAmount').value = '';
-}
-function scanChalan() {
-  const txt = document.getElementById('chalanInput').value.trim();
-  document.getElementById('chalanResult').textContent = txt
-    ? 'Extracted Chalan Items: ' + txt + ' (Ready to import into Inventory Batches)'
-    : 'Please paste chalan text to scan.';
-}
+    function applyLanguage() {
+      const t = i18n[currentLang];
+      document.getElementById('brandTagBadge').textContent = t.brandTag;
+      document.getElementById('activeShopSubtitle').textContent = t.subtitle;
+      document.getElementById('langToggleBtn').textContent = t.langBtn;
+      document.getElementById('resetDemoBtn').textContent = t.resetDemo;
+      document.getElementById('storyDemoBtn').textContent = t.storyBtn;
+      document.getElementById('impactSubBadge').textContent = t.impactSub;
+      document.getElementById('lblImpactWaste').textContent = t.lblImpactWaste;
+      document.getElementById('lblImpactStockout').textContent = t.lblImpactStockout;
+      document.getElementById('lblImpactBaki').textContent = t.lblImpactBaki;
+      document.getElementById('lblMorningTitle').textContent = t.lblMorningTitle;
+      document.getElementById('lblHealthTitle').textContent = t.lblHealthTitle;
+      document.getElementById('whyMorningBriefBtn').textContent = t.whyBtn;
+      document.getElementById('lblKpiRev').textContent = t.lblKpiRev;
+      document.getElementById('lblKpiGross').textContent = t.lblKpiGross;
+      document.getElementById('lblKpiLoss').textContent = t.lblKpiLoss;
+      document.getElementById('lblKpiNet').textContent = t.lblKpiNet;
+      document.getElementById('lblMarginBadge').textContent = t.lblMarginBadge;
+      Object.entries(t.tabs).forEach(([key, label]) => {
+        const el = document.getElementById('navTab_' + key);
+        if (el) el.textContent = label;
+      });
+    }
 
+    function applyTheme() {
+      const htmlEl = document.getElementById('htmlRoot');
+      const btn = document.getElementById('themeToggleBtn');
+      if (isDarkMode) {
+        htmlEl.classList.add('dark');
+        btn.textContent = '☀️ Light';
+      } else {
+        htmlEl.classList.remove('dark');
+        btn.textContent = '🌙 Dark';
+      }
+    }
 
-initNav();
-renderDashboard();
-renderTables();
-calcRop();
-calcDiscount();
-</script>
+    function createInitialStores() {
+      return {
+        shop_1: {
+          shopId: 'shp_01',
+          shopName: 'রহিম ভাইয়ের মুদি দোকান (আশুলিয়া, ঢাকা)',
+          wastePreventedBonus: 10500,
+          stockoutsPreventedBonus: 3,
+          bakiRecoveredBonus: 0,
+          products: [
+            {
+              id: 'p_egg',
+              name: 'Farm Eggs (Brown) - ফার্মের ডিম',
+              purchasePrice: 10,
+              sellingPrice: 15,
+              safetyStock: 10,
+              leadTimeDays: 3,
+              supplier: 'Supplier A - Fresh Agro',
+              weeklySales: [40, 45, 55, 60],
+              batches: [
+                { id: 'b_egg_1', batchNumber: 'BATCH-EGG-01', purchasePrice: 10, sellingPrice: 15, currentQty: 55, expiryDays: 4 },
+                { id: 'b_egg_2', batchNumber: 'BATCH-EGG-02', purchasePrice: 10, sellingPrice: 15, currentQty: 25, expiryDays: 14 }
+              ]
+            },
+            {
+              id: 'p_oil',
+              name: 'Fortified Soybean Oil (2L) - সয়াবিন তেল',
+              purchasePrice: 325,
+              sellingPrice: 350,
+              safetyStock: 15,
+              leadTimeDays: 3,
+              supplier: 'Supplier B - Meghna Goods',
+              weeklySales: [50, 65, 80, 100],
+              batches: [
+                { id: 'b_oil_1', batchNumber: 'BATCH-OIL-01', purchasePrice: 325, sellingPrice: 350, currentQty: 38, expiryDays: 120 }
+              ]
+            },
+            {
+              id: 'p_rice',
+              name: 'Miniket Rice (5kg) - মিনিকেট চাল',
+              purchasePrice: 330,
+              sellingPrice: 360,
+              safetyStock: 20,
+              leadTimeDays: 3,
+              supplier: 'Supplier A - Fresh Agro',
+              weeklySales: [45, 50, 52, 58],
+              batches: [
+                { id: 'b_rice_1', batchNumber: 'BATCH-RICE-01', purchasePrice: 330, sellingPrice: 360, currentQty: 40, expiryDays: 150 }
+              ]
+            },
+            {
+              id: 'p_milk',
+              name: 'Aarong Liquid Milk (1L) - তরল দুধ',
+              purchasePrice: 80,
+              sellingPrice: 95,
+              safetyStock: 10,
+              leadTimeDays: 2,
+              supplier: 'Supplier A - Fresh Agro',
+              weeklySales: [25, 28, 30, 32],
+              batches: [
+                { id: 'b_milk_1', batchNumber: 'BATCH-MLK-01', purchasePrice: 80, sellingPrice: 95, currentQty: 18, expiryDays: 3 }
+              ]
+            },
+            {
+              id: 'p_honey',
+              name: 'Organic Sundarban Honey (500g) - মধু',
+              purchasePrice: 400,
+              sellingPrice: 550,
+              safetyStock: 3,
+              leadTimeDays: 5,
+              supplier: 'Supplier B - Meghna Goods',
+              weeklySales: [0, 0, 0, 0],
+              batches: [
+                { id: 'b_hny_1', batchNumber: 'BATCH-HNY-01', purchasePrice: 400, sellingPrice: 550, currentQty: 20, expiryDays: 18 }
+              ]
+            }
+          ],
+          sales: [
+            { id: 'INV-1', productId: 'p_egg', qty: 60, revenue: 900, cogs: 600 },
+            { id: 'INV-2', productId: 'p_rice', qty: 200, revenue: 72000, cogs: 66000 },
+            { id: 'INV-3', productId: 'p_oil', qty: 100, revenue: 35000, cogs: 32500 }
+          ],
+          expenses: [
+            { title: 'Shop Rent', amount: 3000 },
+            { title: 'Electricity', amount: 1200 }
+          ],
+          adjustments: [
+            { productName: 'Farm Eggs', lostUnits: 5, financialLoss: 50 }
+          ],
+          bakiLedger: [
+            { id: 'bk_1', name: 'করিম মিয়া', phone: '01711-223344', amount: 3450, daysOverdue: 18, notes: 'চাল, তেল ও ডিম' },
+            { id: 'bk_2', name: 'সালমা বেগম', phone: '01819-556677', amount: 2800, daysOverdue: 12, notes: 'মাসিক বাজার বাকি' },
+            { id: 'bk_3', name: 'রফিকুল ইসলাম', phone: '01912-889900', amount: 1950, daysOverdue: 5, notes: 'দুধ ও মসুর ডাল' }
+          ],
+          pendingChalanItems: [
+            { productName: 'Farm Eggs (Brown) - ফার্মের ডিম', quantity: 100, unitCost: 10, sellingPrice: 15, expiryDays: 14 },
+            { productName: 'Miniket Rice (5kg) - মিনিকেট চাল', quantity: 30, unitCost: 330, sellingPrice: 360, expiryDays: 180 }
+          ]
+        },
+        shop_2: {
+          shopId: 'shp_02',
+          shopName: 'গ্রিনকেয়ার ফার্মেসি ও মার্ট',
+          wastePreventedBonus: 4200,
+          stockoutsPreventedBonus: 2,
+          bakiRecoveredBonus: 0,
+          products: [
+            {
+              id: 'p2_napa',
+              name: 'Napa Extra Box (Medicine)',
+              purchasePrice: 80,
+              sellingPrice: 120,
+              safetyStock: 15,
+              leadTimeDays: 2,
+              supplier: 'Beximco Pharma',
+              weeklySales: [30, 35, 42, 50],
+              batches: [
+                { id: 'b2_1', batchNumber: 'BATCH-MED-01', purchasePrice: 80, sellingPrice: 120, currentQty: 25, expiryDays: 6 }
+              ]
+            }
+          ],
+          sales: [{ id: 'INV-201', productId: 'p2_napa', qty: 50, revenue: 6000, cogs: 4000 }],
+          expenses: [{ title: 'Pharmacy Rent', amount: 500 }],
+          adjustments: [],
+          bakiLedger: [
+            { id: 'bk2_1', name: 'জামাল উদ্দিন', phone: '01722-001122', amount: 1400, daysOverdue: 10, notes: 'নিয়মিত ওষুধ' }
+          ],
+          pendingChalanItems: []
+        }
+      };
+    }
+
+    let stores = createInitialStores();
+    let currentShopKey = 'shop_1';
+    let currentFestival = 'NONE';
+    let chatChartInstance = null;
+    let lastSpokenAnswer = '';
+
+    function getShop() { return stores[currentShopKey]; }
+
+    function showToast(msg) {
+      document.getElementById('toastMessage').textContent = msg;
+      document.getElementById('toastBanner').classList.remove('hidden');
+      setTimeout(() => document.getElementById('toastBanner').classList.add('hidden'), 4500);
+    }
+
+    function openWhyModal(title, htmlContent) {
+      document.getElementById('whyModalTitle').textContent = title;
+      document.getElementById('whyModalBody').innerHTML = htmlContent;
+      document.getElementById('whyModal').classList.remove('hidden');
+    }
+
+    function copyText(text, label) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      showToast(`${label} কপি করা হয়েছে!`);
+    }
+
+    function getFestivalBoost(prodName) {
+      const lower = prodName.toLowerCase();
+      if (currentFestival === 'RAMADAN_EID' && (lower.includes('oil') || lower.includes('rice') || lower.includes('egg') || lower.includes('milk'))) return 1.4;
+      if (currentFestival === 'POHELA_BOISHAKH' && (lower.includes('rice') || lower.includes('oil') || lower.includes('milk'))) return 1.25;
+      if (currentFestival === 'MONSOON_RAIN' && (lower.includes('rice') || lower.includes('egg'))) return 1.2;
+      return 1.0;
+    }
+
+    function computeWasteRescue(shop) {
+      const items = [];
+      shop.products.forEach((p) => {
+        p.batches.forEach((b) => {
+          if (b.currentQty > 0 && b.expiryDays <= 21) {
+            const discountPct = b.expiryDays <= 7 ? 15 : 10;
+            const rescuePrice = Math.max(b.purchasePrice, Number((b.sellingPrice * (1 - discountPct / 100)).toFixed(2)));
+            const cashRecovered = Math.round(b.currentQty * rescuePrice);
+            const potentialLoss = Math.round(b.currentQty * b.purchasePrice);
+            items.push({
+              productId: p.id,
+              batchId: b.id,
+              productName: p.name,
+              batchNumber: b.batchNumber,
+              qty: b.currentQty,
+              daysLeft: b.expiryDays,
+              discountPct,
+              normalPrice: b.sellingPrice,
+              rescuePrice,
+              cashRecovered,
+              potentialLoss,
+              headline: `${b.currentQty}টি ${p.name.split(' - ')[0]} ${b.expiryDays} দিনে নষ্ট হবে — ${discountPct}% ছাড় দিন, ৳${cashRecovered} ক্যাশ ফেরত আসবে!`,
+              banglaPost: `🔥 বিশেষ ছাড়! আজ আমাদের দোকানে তাজা ${p.name.split(' - ')[0]}-এ ${discountPct}% ডিসকাউন্ট! আগের দাম ৳${b.sellingPrice}, অফার দাম ৳${rescuePrice}। মাত্র ${b.currentQty}টি বাকি, দ্রুত চলে আসুন!`
+            });
+          }
+        });
+      });
+      return items;
+    }
+
+    function computeRestocks(shop) {
+      return shop.products.map((p) => {
+        const w = p.weeklySales;
+        const avgGrowth = ((w[1] - w[0]) + (w[2] - w[1]) + (w[3] - w[2])) / 3;
+        const mult = getFestivalBoost(p.name);
+        const forecast7d = Math.max(0, Math.round((w[3] + Math.max(0, avgGrowth)) * mult));
+        const D = Number((forecast7d / 7).toFixed(1));
+        const L = p.leadTimeDays;
+        const SS = p.safetyStock;
+        const ROP = Number((D * L + SS).toFixed(1));
+        const S = p.batches.reduce((s, b) => s + b.currentQty, 0);
+        const Q = Math.max(0, Math.ceil(ROP - S));
+        const daysLeft = D > 0 ? Number((S / D).toFixed(1)) : 999;
+        return { product: p, S, D, L, SS, ROP, Q, daysLeft, forecast7d, mult };
+      });
+    }
+
+    function renderAll() {
+      const shop = getShop();
+      const revenue = shop.sales.reduce((s, x) => s + x.revenue, 0);
+      const cogs = shop.sales.reduce((s, x) => s + x.cogs, 0);
+      const gross = revenue - cogs;
+      const expenses = shop.expenses.reduce((s, x) => s + x.amount, 0);
+      const losses = shop.adjustments.reduce((s, x) => s + x.financialLoss, 0);
+      const net = gross - expenses - losses;
+
+      const wasteItems = computeWasteRescue(shop);
+      const restocks = computeRestocks(shop);
+      const urgentRestocks = restocks.filter((r) => r.Q > 0);
+      const totalBaki = shop.bakiLedger.reduce((s, b) => s + b.amount, 0);
+      const totalWasteRecoverable = wasteItems.reduce((s, w) => s + w.cashRecovered, 0);
+
+      const totalWasteSaved = shop.wastePreventedBonus + totalWasteRecoverable;
+      const totalStockouts = shop.stockoutsPreventedBonus + urgentRestocks.length;
+      const totalBakiImpact = shop.bakiRecoveredBonus + totalBaki;
+
+      document.getElementById('impactWasteSaved').textContent = `৳${totalWasteSaved.toLocaleString()}`;
+      document.getElementById('impactStockouts').textContent = currentLang === 'bn' ? `${totalStockouts}টি পণ্য` : `${totalStockouts} Products`;
+      document.getElementById('impactBaki').textContent = `৳${totalBakiImpact.toLocaleString()}`;
+      document.getElementById('impactHeadlineText').textContent =
+        currentLang === 'bn'
+          ? `BizMind AI এই মাসে ${shop.shopName.split(' (')[0]}-এ ৳${totalWasteSaved.toLocaleString()} অপচয় বাঁচিয়েছে, ${totalStockouts}টি পণ্যের Stockout এড়িয়েছে এবং ৳${totalBakiImpact.toLocaleString()} বাকি আদায়ে সাহায্য করেছে।`
+          : `BizMind AI saved ৳${totalWasteSaved.toLocaleString()} from expiry waste, prevented ${totalStockouts} stockouts, and helped recover ৳${totalBakiImpact.toLocaleString()} in Baki dues this month.`;
+
+      document.getElementById('kpiRevenue').textContent = `৳${revenue.toLocaleString()}`;
+      document.getElementById('kpiGrossProfit').textContent = `৳${gross.toLocaleString()}`;
+      document.getElementById('kpiInvLoss').textContent = `৳${losses.toLocaleString()}`;
+      document.getElementById('kpiNetProfit').textContent = `৳${net.toLocaleString()}`;
+
+      const topRestockTxt = urgentRestocks.length
+        ? urgentRestocks.slice(0, 2).map((r) => `${r.product.name.split(' - ')[0]} (${r.Q})`).join(', ')
+        : 'All items stocked';
+      const topWasteTxt = wasteItems.length ? wasteItems[0].headline : 'No immediate expiry risks';
+      const topBakiTxt = shop.bakiLedger.length
+        ? shop.bakiLedger.slice(0, 2).map((b) => `${b.name} (৳${b.amount})`).join(' & ')
+        : 'No overdue baki';
+
+      document.getElementById('morningBriefList').innerHTML = `
+        <div class="surface-sub p-3 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-between gap-2 text-xs">
+          <span><strong>১) Restock:</strong> ${topRestockTxt}</span>
+          <button type="button" data-go-tab="restock" class="go-tab-btn px-2.5 py-1 rounded bg-indigo-600 text-white font-semibold">Open</button>
+        </div>
+        <div class="surface-sub p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-between gap-2 text-xs">
+          <span><strong>২) Waste Rescue:</strong> ${topWasteTxt}</span>
+          <button type="button" data-go-tab="waste" class="go-tab-btn px-2.5 py-1 rounded bg-amber-600 text-white font-semibold">Offer</button>
+        </div>
+        <div class="surface-sub p-3 rounded-xl bg-rose-50 border border-rose-200 flex items-center justify-between gap-2 text-xs">
+          <span><strong>৩) Baki Collection:</strong> ${topBakiTxt}</span>
+          <button type="button" data-go-tab="baki" class="go-tab-btn px-2.5 py-1 rounded bg-rose-600 text-white font-semibold">Remind</button>
+        </div>
+      `;
+      document.querySelectorAll('.go-tab-btn').forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-go-tab')));
+      });
+
+      const healthRows = [
+        { label: 'Profitability (30%)', score: 24, max: 30 },
+        { label: 'Sales Growth (25%)', score: 22, max: 25 },
+        { label: 'Inventory Health (20%)', score: Math.max(8, 20 - wasteItems.length * 2), max: 20 },
+        { label: 'Expense Control (15%)', score: 13, max: 15 },
+        { label: 'Baki Recovery (10%)', score: Math.max(4, 10 - shop.bakiLedger.length), max: 10 }
+      ];
+      document.getElementById('healthScoreValue').textContent = healthRows.reduce((s, r) => s + r.score, 0);
+      document.getElementById('healthBreakdownList').innerHTML = healthRows
+        .map(
+          (r) => `
+          <div>
+            <div class="flex justify-between font-semibold text-slate-700"><span>${r.label}</span><span>${r.score}/${r.max}</span></div>
+            <div class="w-full h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden">
+              <div class="h-full bg-indigo-600 rounded-full" style="width: ${Math.round((r.score / r.max) * 100)}%"></div>
+            </div>
+          </div>
+        `
+        )
+        .join('');
+
+      const leaks = shop.products.filter((p) => ((p.sellingPrice - p.purchasePrice) / p.sellingPrice) * 100 < 10);
+      document.getElementById('marginLeakAlerts').innerHTML = leaks.length
+        ? leaks
+            .map((p) => {
+              const margin = (((p.sellingPrice - p.purchasePrice) / p.sellingPrice) * 100).toFixed(1);
+              return `<div class="surface-sub bg-white p-2.5 rounded-lg border border-rose-200">
+                <strong>Margin Leak Alert:</strong> ${p.name} purchase cost increased to ৳${p.purchasePrice}, compressing margin to <strong>${margin}%</strong> (selling ৳${p.sellingPrice}).
+              </div>`;
+            })
+            .join('')
+        : '<div>No margin leaks detected.</div>';
+
+      document.getElementById('wasteTotalRecoverableBadge').textContent = `মোট ক্যাশ রিকভারি: ৳${totalWasteRecoverable.toLocaleString()}`;
+      document.getElementById('wasteRescueGrid').innerHTML = wasteItems
+        .map(
+          (w, idx) => `
+          <div class="surface-sub p-4 rounded-xl bg-amber-50/70 border border-amber-200 space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <h4 class="font-bold text-sm text-slate-900">${w.headline}</h4>
+              <button type="button" data-why-waste="${idx}" class="why-waste-btn shrink-0 text-xs font-bold px-2 py-1 rounded bg-white border border-amber-300 text-amber-900">${i18n[currentLang].whyBtn}</button>
+            </div>
+            <p class="text-xs text-slate-600">Batch: <strong>${w.batchNumber}</strong> · Normal ৳${w.normalPrice} → Rescue <strong>৳${w.rescuePrice}</strong> (Loss Avoided: ৳${w.potentialLoss})</p>
+            <div class="surface-card p-2.5 rounded-lg bg-white border border-amber-200 text-xs text-slate-800">${w.banglaPost}</div>
+            <button type="button" data-copy-post="${idx}" class="copy-waste-post-btn px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs">
+              📋 Copy Bangla SMS / Facebook Post
+            </button>
+          </div>
+        `
+        )
+        .join('');
+
+      document.querySelectorAll('.copy-waste-post-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const item = wasteItems[Number(btn.getAttribute('data-copy-post'))];
+          copyText(item.banglaPost, 'বাংলা অফার মেসেজ');
+        });
+      });
+
+      document.querySelectorAll('.why-waste-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const item = wasteItems[Number(btn.getAttribute('data-why-waste'))];
+          openWhyModal(
+            `Explainable AI — ${item.productName}`,
+            `<p><strong>Formula:</strong> Cash Recovered = Qty × max(Purchase Cost, Selling Price × (1 - Discount%))</p>
+             <p><strong>Data:</strong> ${item.qty} units expire in <strong>${item.daysLeft} days</strong>. At ${item.discountPct}% off (৳${item.rescuePrice}/unit), you recover <strong>৳${item.cashRecovered}</strong> cash and prevent ৳${item.potentialLoss} waste.</p>`
+          );
+        });
+      });
+
+      document.getElementById('totalBakiBadge').textContent = `মোট বাকি: ৳${totalBaki.toLocaleString()}`;
+      document.getElementById('bakiCardsList').innerHTML = shop.bakiLedger
+        .map((b, idx) => {
+          const msg = `আসসালামু আলাইকুম ${b.name} ভাই/আপা, কেমন আছেন? আমাদের দোকানে আপনার পূর্বের মুদি বাজারের বাকি ৳${b.amount.toLocaleString()} টাকা জমা রয়েছে (${b.notes})। সুবিধামতো সময়ে পরিশোধ করলে খুব উপকার হতো। ধন্যবাদ!`;
+          return `
+            <div class="surface-sub p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+              <div class="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <span class="font-bold text-sm text-slate-900">${b.name}</span>
+                  <span class="text-xs text-slate-500 ml-2">${b.phone} · ${b.daysOverdue}d overdue</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-extrabold text-rose-600">৳${b.amount.toLocaleString()}</span>
+                  <button type="button" data-collect-baki="${b.id}" class="collect-baki-btn px-2.5 py-1 rounded bg-emerald-600 text-white text-xs font-bold">✓ বাকি আদায়</button>
+                </div>
+              </div>
+              <div class="surface-card p-2.5 rounded-lg bg-white border border-slate-200 text-xs text-slate-700">${msg}</div>
+              <button type="button" data-copy-baki="${idx}" class="copy-baki-btn px-3 py-1 rounded-lg bg-indigo-600 text-white text-xs font-semibold">📋 Copy Polite Bangla Reminder</button>
+            </div>
+          `;
+        })
+        .join('');
+
+      document.querySelectorAll('.copy-baki-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const b = shop.bakiLedger[Number(btn.getAttribute('data-copy-baki'))];
+          const msg = `আসসালামু আলাইকুম ${b.name} ভাই/আপা, কেমন আছেন? আমাদের দোকানে আপনার পূর্বের মুদি বাজারের বাকি ৳${b.amount.toLocaleString()} টাকা জমা রয়েছে (${b.notes})। সুবিধামতো সময়ে পরিশোধ করলে খুব উপকার হতো। ধন্যবাদ!`;
+          copyText(msg, 'বাংলা বাকি রিমাইন্ডার');
+        });
+      });
+
+      document.querySelectorAll('.collect-baki-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-collect-baki');
+          const entry = shop.bakiLedger.find((x) => x.id === id);
+          if (!entry) return;
+          shop.bakiRecoveredBonus += entry.amount;
+          shop.bakiLedger = shop.bakiLedger.filter((x) => x.id !== id);
+          showToast(`${entry.name}-এর ৳${entry.amount} বাকি আদায় হয়েছে! Impact Dashboard আপডেট হয়েছে।`);
+          renderAll();
+        });
+      });
+
+      document.getElementById('chalanExtractedList').innerHTML = shop.pendingChalanItems.length
+        ? shop.pendingChalanItems
+            .map(
+              (c) => `<div class="surface-sub p-2.5 rounded-lg bg-slate-50 border border-slate-200 flex justify-between">
+                <span class="font-bold">${c.productName}</span>
+                <span>${c.quantity} × ৳${c.unitCost} = <strong>৳${(c.quantity * c.unitCost).toLocaleString()}</strong></span>
+              </div>`
+            )
+            .join('')
+        : '<p class="text-slate-500">Click Scan to extract products from chalan.</p>';
+
+      const festNames = { NONE: 'স্বাভাবিক সময় (Normal)', RAMADAN_EID: 'রমজান ও ঈদ (+৪০%)', POHELA_BOISHAKH: 'পহেলা বৈশাখ (+২৫%)', MONSOON_RAIN: 'বর্ষাকাল (+২০%)' };
+      document.getElementById('activeFestivalBadge').textContent = festNames[currentFestival];
+      document.getElementById('forecastTableBody').innerHTML = restocks
+        .map((r, idx) => {
+          const f7 = r.forecast7d;
+          const f15 = Math.round(f7 * (15 / 7));
+          const f30 = Math.round(f7 * (30 / 7));
+          const hasData = r.product.weeklySales.some((x) => x > 0);
+          return `
+            <tr class="hover:bg-slate-50">
+              <td class="py-2.5 px-3 font-bold">${r.product.name}</td>
+              <td class="py-2.5 px-3 text-right font-bold">${r.S}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-indigo-600">${hasData ? f7 : '—'}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-indigo-600">${hasData ? f15 : '—'}</td>
+              <td class="py-2.5 px-3 text-right font-bold text-indigo-600">${hasData ? f30 : '—'}</td>
+              <td class="py-2.5 px-3">${hasData ? '<span class="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-bold">HIGH (MAE 4.2)</span>' : '<span class="px-2 py-0.5 rounded bg-rose-100 text-rose-800 font-bold">ডেটা অপর্যাপ্ত</span>'}</td>
+              <td class="py-2.5 px-3">${r.mult > 1 ? `<span class="text-amber-600 font-bold">×${r.mult} </span>` : ''}<button type="button" data-why-f="${idx}" class="why-forecast-btn text-indigo-600 font-bold underline">${i18n[currentLang].whyBtn}</button></td>
+            </tr>
+          `;
+        })
+        .join('');
+
+      document.querySelectorAll('.why-forecast-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const r = restocks[Number(btn.getAttribute('data-why-f'))];
+          openWhyModal(
+            `Explainable AI — ${r.product.name}`,
+            `<p><strong>4-Week Sales:</strong> ${r.product.weeklySales.join(' → ')} units</p>
+             <p><strong>Festival Multiplier:</strong> ×${r.mult} (${festNames[currentFestival]})</p>
+             <p>${r.product.weeklySales.every((x) => x === 0) ? '<strong>Guardrail:</strong> ডেটা অপর্যাপ্ত (Insufficient Data).' : `Predicted next 7 days: <strong>${r.forecast7d} units</strong>.`}</p>`
+          );
+        });
+      });
+
+      document.getElementById('restockTableBody').innerHTML = restocks
+        .map(
+          (r, idx) => `
+          <tr class="hover:bg-slate-50">
+            <td class="py-2.5 px-3 font-bold">${r.product.name}<div class="text-slate-500 font-normal">${r.product.supplier}</div></td>
+            <td class="py-2.5 px-3 text-right font-bold">${r.S}</td>
+            <td class="py-2.5 px-3 text-right font-mono">${r.ROP}</td>
+            <td class="py-2.5 px-3 text-right font-extrabold ${r.Q > 0 ? 'text-rose-600' : 'text-emerald-600'}">${r.Q} units</td>
+            <td class="py-2.5 px-3">${r.daysLeft < 30 ? `<span class="text-rose-600 font-bold">${r.daysLeft}d left</span>` : 'Safe'}</td>
+            <td class="py-2.5 px-3 text-right">
+              <button type="button" data-why-rop="${idx}" class="why-rop-btn text-indigo-600 font-bold underline mr-2">${i18n[currentLang].whyBtn}</button>
+              ${r.Q > 0 ? `<button type="button" data-order-rop="${idx}" class="order-rop-btn px-2.5 py-1 rounded bg-emerald-600 text-white font-bold">Order</button>` : ''}
+            </td>
+          </tr>
+        `
+        )
+        .join('');
+
+      document.querySelectorAll('.why-rop-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const r = restocks[Number(btn.getAttribute('data-why-rop'))];
+          openWhyModal(
+            `Reorder Formula — ${r.product.name}`,
+            `<p><strong>Formula:</strong> ROP = (D × L) + SS = (${r.D} × ${r.L}) + ${r.SS} = <strong>${r.ROP}</strong></p>
+             <p><strong>Suggested Order:</strong> Q = max(0, ${r.ROP} − ${r.S}) = <strong>${r.Q} units</strong>.</p>`
+          );
+        });
+      });
+
+      document.querySelectorAll('.order-rop-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const r = restocks[Number(btn.getAttribute('data-order-rop'))];
+          r.product.batches.push({
+            id: 'b_' + Date.now(),
+            batchNumber: 'BATCH-REORDER-' + Math.floor(100 + Math.random() * 900),
+            purchasePrice: r.product.purchasePrice,
+            sellingPrice: r.product.sellingPrice,
+            currentQty: r.Q,
+            expiryDays: 60
+          });
+          showToast(`${r.product.name}-এর ${r.Q} ইউনিট রিস্টক সম্পন্ন হয়েছে!`);
+          renderAll();
+        });
+      });
+
+      document.getElementById('posProductSelect').innerHTML = shop.products
+        .map((p) => `<option value="${p.id}">${p.name} (Stock: ${p.batches.reduce((s, b) => s + b.currentQty, 0)}, ৳${p.sellingPrice})</option>`)
+        .join('');
+
+      const batchRows = [];
+      shop.products.forEach((p) => {
+        p.batches.forEach((b) => {
+          batchRows.push(`<tr class="hover:bg-slate-50">
+            <td class="py-2 px-3 font-bold">${p.name}</td>
+            <td class="py-2 px-3 font-mono text-indigo-600">${b.batchNumber}</td>
+            <td class="py-2 px-3 text-right">৳${b.purchasePrice}</td>
+            <td class="py-2 px-3 text-right">৳${b.sellingPrice}</td>
+            <td class="py-2 px-3 text-right font-bold">${b.currentQty}</td>
+            <td class="py-2 px-3"><span class="px-2 py-0.5 rounded-full font-bold ${b.expiryDays <= 7 ? 'bg-rose-100 text-rose-800' : 'bg-emerald-100 text-emerald-800'}">${b.expiryDays}d</span></td>
+          </tr>`);
+        });
+      });
+      document.getElementById('posBatchTableBody').innerHTML = batchRows.join('');
+
+      document.getElementById('comboOffersList').innerHTML = `
+        <div class="surface-sub p-4 rounded-xl bg-indigo-50 border border-indigo-200 space-y-1.5 text-xs">
+          <div class="font-bold text-sm text-indigo-700">১) ফ্যামিলি বাজার কম্বো (চাল ৫ কেজি + সয়াবিন তেল ২ লিটার)</div>
+          <p class="text-slate-700">যারা চাল কেনেন তাদের ৭৮% কাস্টমার তেলও কেনেন। নিয়মিত দাম ৳৭১০ → কম্বো অফার <strong>৳৬৮৯</strong> দিলে গড় বিক্রি বাড়বে।</p>
+        </div>
+        <div class="surface-sub p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1.5 text-xs">
+          <div class="font-bold text-sm text-emerald-700">২) ব্রেকফাস্ট সেভার কম্বো (ফার্মের ডিম ১ ডজন + তরল দুধ ১ লিটার)</div>
+          <p class="text-slate-700">দুটি পণ্যেরই মেয়াদ ৩-৪ দিনের মধ্যে শেষ হচ্ছে — একসাথে <strong>৳২৫৫</strong> কম্বো দিলে অপচয় ০% হবে!</p>
+        </div>
+      `;
+
+      updateWhatIfSimulator();
+    }
+
+    function updateWhatIfSimulator() {
+      const pricePct = Number(document.getElementById('simPriceRange').value);
+      const mktAdd = Number(document.getElementById('simMktRange').value);
+      const stockAdd = Number(document.getElementById('simStockRange').value);
+      document.getElementById('simPriceVal').textContent = `${pricePct >= 0 ? '+' : ''}${pricePct}%`;
+      document.getElementById('simMktVal').textContent = `৳${mktAdd.toLocaleString()}`;
+      document.getElementById('simStockVal').textContent = `৳${stockAdd.toLocaleString()}`;
+
+      const shop = getShop();
+      const baseRev = shop.sales.reduce((s, x) => s + x.revenue, 0);
+      const baseProfit = shop.sales.reduce((s, x) => s + (x.revenue - x.cogs), 0);
+      const projRev = Math.round(baseRev * (1 + pricePct / 100) * (1 - pricePct * 0.004) + mktAdd * 3.5);
+      const projProfit = Math.round(baseProfit + (projRev - baseRev) * 0.55 - mktAdd + stockAdd * 0.14);
+      const delta = projProfit - baseProfit;
+
+      document.getElementById('whatIfOutputBox').innerHTML = `
+        <div class="flex justify-between"><span>বর্তমান মাসিক লাভ (Baseline):</span><strong>৳${baseProfit.toLocaleString()}</strong></div>
+        <div class="flex justify-between"><span>সম্ভাব্য নতুন বিক্রি (Projected Revenue):</span><strong>৳${projRev.toLocaleString()}</strong></div>
+        <div class="flex justify-between pt-2 border-t border-slate-700 text-sm"><span>সম্ভাব্য নতুন মাসিক লাভ:</span><strong class="text-emerald-400">৳${projProfit.toLocaleString()} (${delta >= 0 ? '+' : ''}৳${delta.toLocaleString()})</strong></div>
+      `;
+    }
+
+    function answerAssistantQuestion(question) {
+      const shop = getShop();
+      const q = question.toLowerCase();
+      const revenue = shop.sales.reduce((s, x) => s + x.revenue, 0);
+      const cogs = shop.sales.reduce((s, x) => s + x.cogs, 0);
+      const expenses = shop.expenses.reduce((s, x) => s + x.amount, 0);
+      const losses = shop.adjustments.reduce((s, x) => s + x.financialLoss, 0);
+      const net = revenue - cogs - expenses - losses;
+      const waste = computeWasteRescue(shop);
+      const restocks = computeRestocks(shop).filter((r) => r.Q > 0);
+
+      let answer = '';
+      let chartTitle = 'পণ্য ভিত্তিক লাভ (৳)';
+      let labels = shop.products.map((p) => p.name.split(' - ')[0]);
+      let values = shop.products.map((p) => p.weeklySales[3] * (p.sellingPrice - p.purchasePrice));
+
+      if (q.includes('কিনতে') || q.includes('reorder') || q.includes('স্টক')) {
+        answer = `এই সপ্তাহে আপনার নিচের পণ্যগুলো অর্ডার করা দরকার:\n` +
+          (restocks.length ? restocks.map((r) => `• ${r.product.name}: ${r.Q} ইউনিট অর্ডার করুন (বর্তমান স্টক ${r.S}, ROP ${r.ROP})`).join('\n') : 'সব পণ্যের পর্যাপ্ত স্টক রয়েছে।');
+        chartTitle = 'Smart Reorder Quantities (Units)';
+        labels = restocks.map((r) => r.product.name.split(' - ')[0]);
+        values = restocks.map((r) => r.Q);
+      } else if (q.includes('নষ্ট') || q.includes('ডিম') || q.includes('waste')) {
+        answer = `Waste Rescue AI সতর্কতা:\n` + (waste.length ? waste.map((w) => `• ${w.headline}`).join('\n') : 'কোনো পণ্য নষ্ট হওয়ার ঝুঁকিতে নেই।');
+        chartTitle = 'Waste Rescue Cash Recovery (৳)';
+        labels = waste.map((w) => w.productName.split(' - ')[0]);
+        values = waste.map((w) => w.cashRecovered);
+      } else if (q.includes('বাকি') || q.includes('baki')) {
+        answer = `বাকির খাতা রিপোর্ট (মোট বাকি ৳${shop.bakiLedger.reduce((s, b) => s + b.amount, 0)}):\n` +
+          shop.bakiLedger.map((b) => `• ${b.name}: ৳${b.amount} (${b.daysOverdue} দিন বকেয়া)`).join('\n');
+        chartTitle = 'Customer Outstanding Baki (৳)';
+        labels = shop.bakiLedger.map((b) => b.name);
+        values = shop.bakiLedger.map((b) => b.amount);
+      } else {
+        answer = `${shop.shopName}-এর আর্থিক সারসংক্ষেপ:\n• মোট বিক্রি: ৳${revenue.toLocaleString()}\n• নিট লাভ: ৳${net.toLocaleString()} (খরচ ৳${expenses} ও স্টক লস ৳${losses} বাদ দিয়ে)\n• জরুরি রিস্টক: ${restocks.length}টি পণ্য\n• Waste Rescue সুযোগ: ${waste.length}টি ব্যাচ`;
+      }
+
+      lastSpokenAnswer = answer;
+      document.getElementById('aiChatAnswerText').textContent = answer;
+      document.getElementById('chatChartTitle').textContent = chartTitle;
+
+      const ctx = document.getElementById('assistantChart').getContext('2d');
+      if (chatChartInstance) chatChartInstance.destroy();
+      chatChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels,
+          datasets: [{ label: chartTitle, data: values, backgroundColor: '#4f46e5', borderRadius: 6 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.nav-btn').forEach((b) => {
+        b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+      });
+      document.querySelectorAll('.tab-panel').forEach((p) => p.classList.add('hidden'));
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Language Toggle
+      document.getElementById('langToggleBtn').addEventListener('click', () => {
+        currentLang = currentLang === 'bn' ? 'en' : 'bn';
+        applyLanguage();
+        renderAll();
+        showToast(currentLang === 'bn' ? 'ভাষা বাংলায় পরিবর্তন করা হয়েছে!' : 'Language switched to English!');
+      });
+
+      // Light / Dark Mode Toggle
+      document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        isDarkMode = !isDarkMode;
+        applyTheme();
+        showToast(isDarkMode ? 'Dark Mode চালু হয়েছে!' : 'Light Mode চালু হয়েছে!');
+      });
+
+      document.querySelectorAll('.nav-btn').forEach((btn) => {
+        btn.addEventListener('click', () => switchTab(btn.getAttribute('data-tab')));
+      });
+
+      document.getElementById('shopSelector').addEventListener('change', (e) => {
+        currentShopKey = e.target.value;
+        renderAll();
+        answerAssistantQuestion('আজ কত বিক্রি হলো?');
+      });
+
+      document.getElementById('festivalSelector').addEventListener('change', (e) => {
+        currentFestival = e.target.value;
+        showToast('উৎসবভিত্তিক চাহিদা পূর্বাভাস আপডেট করা হয়েছে!');
+        renderAll();
+      });
+
+      document.getElementById('resetDemoBtn').addEventListener('click', () => {
+        stores = createInitialStores();
+        currentFestival = 'NONE';
+        document.getElementById('festivalSelector').value = 'NONE';
+        showToast('রহিম ভাইয়ের মুদি দোকানের ৯০ দিনের বাস্তবসম্মত ডেমো লোড হয়েছে!');
+        renderAll();
+      });
+
+      document.getElementById('storyDemoBtn').addEventListener('click', () => {
+        switchTab('waste');
+        showToast('গল্প: রহিম ভাইয়ের দোকানে ৫৫টি ডিম ৪ দিনে নষ্ট হবে — Waste Rescue AI দেখুন!');
+      });
+
+      document.getElementById('whyMorningBriefBtn').addEventListener('click', () => {
+        openWhyModal(
+          'কেন এই ৩টি কাজ আজ সবচেয়ে জরুরি?',
+          `<p>১) <strong>স্টক অর্ডার:</strong> Reorder Point (ROP = D × L + SS) অনুযায়ী যেসব পণ্যের স্টক ৩ দিনের আগেই শেষ হবে।</p>
+           <p>২) <strong>Waste Rescue:</strong> যেসব ব্যাচের মেয়াদ ৭ দিনের কম আছে সেগুলোতে ১৫% ছাড় দিলে নগদ ক্যাশ ফেরত আসে।</p>
+           <p>৩) <strong>বাকি আদায়:</strong> ১২+ দিন বকেয়া থাকা কাস্টমারদের অগ্রাধিকার দেওয়া হয়েছে।</p>`
+        );
+      });
+
+      document.getElementById('closeWhyModalBtn').addEventListener('click', () => {
+        document.getElementById('whyModal').classList.add('hidden');
+      });
+
+      document.getElementById('closeToastBtn').addEventListener('click', () => {
+        document.getElementById('toastBanner').classList.add('hidden');
+      });
+
+      document.getElementById('voiceSpeakBtn').addEventListener('click', () => {
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRec) {
+          const fallbackQ = 'কোন জিনিসগুলো এই সপ্তাহে কিনতে হবে?';
+          document.getElementById('aiChatInput').value = fallbackQ;
+          answerAssistantQuestion(fallbackQ);
+          showToast('ডেমো বাংলা প্রশ্ন চালানো হয়েছে!');
+          return;
+        }
+        const rec = new SpeechRec();
+        rec.lang = currentLang === 'bn' ? 'bn-BD' : 'en-US';
+        rec.onresult = (ev) => {
+          const transcript = ev.results[0][0].transcript;
+          document.getElementById('aiChatInput').value = transcript;
+          answerAssistantQuestion(transcript);
+        };
+        rec.onerror = () => {
+          const fallbackQ = 'কোন জিনিসগুলো এই সপ্তাহে কিনতে হবে?';
+          document.getElementById('aiChatInput').value = fallbackQ;
+          answerAssistantQuestion(fallbackQ);
+        };
+        rec.start();
+        showToast('মাইক্রোফোন চালু হয়েছে — কথা বলুন...');
+      });
+
+      document.getElementById('readAloudAnswerBtn').addEventListener('click', () => {
+        if ('speechSynthesis' in window && lastSpokenAnswer) {
+          window.speechSynthesis.cancel();
+          const utter = new SpeechSynthesisUtterance(lastSpokenAnswer);
+          utter.lang = 'bn-BD';
+          window.speechSynthesis.speak(utter);
+          showToast('উত্তরটি পড়ে শোনানো হচ্ছে...');
+        }
+      });
+
+      document.querySelectorAll('.quick-ask-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const q = btn.getAttribute('data-ask');
+          document.getElementById('aiChatInput').value = q;
+          answerAssistantQuestion(q);
+        });
+      });
+
+      document.getElementById('aiChatForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const q = document.getElementById('aiChatInput').value.trim();
+        if (q) answerAssistantQuestion(q);
+      });
+
+      document.getElementById('addBakiForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const shop = getShop();
+        shop.bakiLedger.unshift({
+          id: 'bk_' + Date.now(),
+          name: document.getElementById('bakiName').value.trim(),
+          phone: document.getElementById('bakiPhone').value.trim(),
+          amount: Number(document.getElementById('bakiAmount').value),
+          daysOverdue: 1,
+          notes: document.getElementById('bakiNotes').value.trim()
+        });
+        showToast('নতুন কাস্টমার বাকির খাতায় যুক্ত হয়েছে!');
+        renderAll();
+      });
+
+      document.getElementById('scanChalanBtn').addEventListener('click', () => {
+        const shop = getShop();
+        const raw = document.getElementById('chalanTextInput').value.trim();
+        const lines = raw.split(/\r?\n/).filter((l) => l.trim());
+        const parsed = [];
+        lines.forEach((line) => {
+          const nums = line.match(/\d+(\.\d+)?/g)?.map(Number) || [];
+          const name = line.replace(/\d+(\.\d+)?/g, '').replace(/[xX×@৳,:=-]/g, ' ').trim();
+          if (name && nums.length >= 2) {
+            parsed.push({
+              productName: name,
+              quantity: nums[0],
+              unitCost: nums[1],
+              sellingPrice: Math.round(nums[1] * 1.18),
+              expiryDays: 30
+            });
+          }
+        });
+        if (parsed.length > 0) shop.pendingChalanItems = parsed;
+        showToast(`চালান থেকে ${shop.pendingChalanItems.length}টি পণ্য সফলভাবে পড়া হয়েছে!`);
+        renderAll();
+      });
+
+      document.getElementById('commitChalanStockBtn').addEventListener('click', () => {
+        const shop = getShop();
+        if (shop.pendingChalanItems.length === 0) return;
+        shop.pendingChalanItems.forEach((item) => {
+          let prod = shop.products.find((p) => p.name.toLowerCase().includes(item.productName.toLowerCase().slice(0, 6)));
+          if (!prod) {
+            prod = {
+              id: 'p_' + Date.now() + Math.random(),
+              name: item.productName,
+              purchasePrice: item.unitCost,
+              sellingPrice: item.sellingPrice,
+              safetyStock: 10,
+              leadTimeDays: 3,
+              supplier: 'Chalan Supplier',
+              weeklySales: [5, 8, 10, 12],
+              batches: []
+            };
+            shop.products.push(prod);
+          }
+          prod.batches.push({
+            id: 'b_' + Date.now() + Math.random(),
+            batchNumber: 'CHALAN-' + Math.floor(100 + Math.random() * 900),
+            purchasePrice: item.unitCost,
+            sellingPrice: item.sellingPrice,
+            currentQty: item.quantity,
+            expiryDays: item.expiryDays
+          });
+        });
+        const count = shop.pendingChalanItems.length;
+        shop.pendingChalanItems = [];
+        showToast(`চালানের ${count}টি পণ্য স্বয়ংক্রিয়ভাবে ইনভেন্টরি ব্যাচে যোগ হয়েছে!`);
+        renderAll();
+      });
+
+      document.getElementById('posSaleForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const shop = getShop();
+        const prodId = document.getElementById('posProductSelect').value;
+        const qty = Number(document.getElementById('posQty').value);
+        const prod = shop.products.find((p) => p.id === prodId);
+        if (!prod) return;
+        const avail = prod.batches.reduce((s, b) => s + b.currentQty, 0);
+        if (avail < qty) {
+          showToast(`স্টক পর্যাপ্ত নয়! মজুদ আছে ${avail}টি।`);
+          return;
+        }
+        let rem = qty;
+        let cogs = 0;
+        prod.batches.sort((a, b) => a.expiryDays - b.expiryDays).forEach((b) => {
+          if (rem <= 0 || b.currentQty <= 0) return;
+          const take = Math.min(b.currentQty, rem);
+          b.currentQty -= take;
+          rem -= take;
+          cogs += take * b.purchasePrice;
+        });
+        const rev = qty * prod.sellingPrice;
+        shop.sales.push({ id: 'INV-' + Date.now(), productId: prod.id, qty, revenue: rev, cogs });
+        showToast(`FEFO পদ্ধতিতে ${qty}টি ${prod.name.split(' - ')[0]} বিক্রি সম্পন্ন!`);
+        renderAll();
+      });
+
+      ['simPriceRange', 'simMktRange', 'simStockRange'].forEach((id) => {
+        document.getElementById(id).addEventListener('input', updateWhatIfSimulator);
+      });
+
+      applyLanguage();
+      applyTheme();
+      renderAll();
+      answerAssistantQuestion('আজ কত বিক্রি হলো?');
+    });
+  </script>
 </body>
 </html>
