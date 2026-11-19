@@ -118,7 +118,8 @@
         </button>
         <button type="button" id="openLoginBtn" data-i18n="btnDemoLogin" class="min-h-[36px] px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 text-white font-bold text-xs shadow-md"></button>
         <div id="sessionPillWrap" class="hidden items-center gap-1.5">
-          <span id="sessionRoleBadge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold"></span>
+          <button type="button" id="backToDashNavBtn" class="hidden inline-flex items-center gap-1 min-h-[36px] px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 text-white font-bold text-xs shadow-md hover:brightness-110 transition"></button>
+          <button type="button" id="sessionRoleBadge" class="hidden sm:inline-flex items-center px-2.5 py-1 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 text-xs font-bold cursor-pointer hover:bg-emerald-500/25 transition"></button>
           <button type="button" id="planSwitchBtn" class="hidden sm:inline-flex items-center min-h-[36px] px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-extrabold text-xs"></button>
           <button type="button" id="logoutBtn" data-i18n="btnLogout" class="min-h-[36px] px-2.5 py-1.5 rounded-xl border border-rose-500/35 bg-rose-500/10 text-rose-600 dark:text-rose-300 font-bold text-xs"></button>
         </div>
@@ -1008,6 +1009,7 @@
     let lang = safeStorageGet('bizmind_lang', 'bn');
     let isDark = safeStorageGet('bizmind_theme', 'light') === 'dark';
     let session = null;
+    let activeWorkspace = 'landing';
     let activeShopTab = 'overview';
     let genUiScenario = 'expiry_critical';
     let aiUsedCount = 18;
@@ -1122,6 +1124,7 @@
     }
 
     function setWorkspace(ws) {
+      activeWorkspace = ws;
       ['landing', 'shop', 'admin', '404'].forEach((w) => document.getElementById('workspace-' + w).classList.toggle('hidden', w !== ws));
       document.getElementById('mobileBottomBar').classList.toggle('hidden', ws !== 'shop');
       renderAll();
@@ -1289,8 +1292,13 @@
       document.getElementById('openSearchBtn').classList.toggle('hidden', !(loggedIn && session.role !== 'SUPER_ADMIN'));
       document.getElementById('activePlanBadge').classList.toggle('hidden', !(loggedIn && session.role !== 'SUPER_ADMIN'));
 
-      if (!loggedIn) { document.getElementById('activeContextSubtitle').textContent = L('স্মার্ট রিটেইল এআই প্ল্যাটফর্ম', 'Smart Retail AI Platform'); return; }
+      if (!loggedIn) { document.getElementById('backToDashNavBtn').classList.add('hidden'); document.getElementById('activeContextSubtitle').textContent = L('স্মার্ট রিটেইল এআই প্ল্যাটফর্ম', 'Smart Retail AI Platform'); return; }
       document.getElementById('sessionRoleBadge').textContent = `🔐 ${roleLabel(session.role)}`;
+      const backBtn = document.getElementById('backToDashNavBtn');
+      const onLanding = activeWorkspace === 'landing';
+      backBtn.classList.toggle('hidden', !onLanding);
+      backBtn.textContent = L('📊 ড্যাশবোর্ডে ফিরুন', '📊 Dashboard');
+      document.getElementById('heroDemoLoginBtn').textContent = L(`📊 ${roleLabel(session.role)} ড্যাশবোর্ডে ফিরুন →`, `📊 Return to ${roleLabel(session.role)} Dashboard →`);
       document.getElementById('activePlanBadge').textContent = session.plan === 'PREMIUM' ? L('প্রিমিয়াম', 'PREMIUM') : L('ফ্রি', 'FREE');
       document.getElementById('planSwitchBtn').classList.toggle('hidden', session.role === 'SUPER_ADMIN');
       document.getElementById('planSwitchBtn').textContent = session.plan === 'FREE' ? L('⚡ প্রিমিয়াম নিন', '⚡ Upgrade Pro') : L('👑 প্রিমিয়াম', '👑 Pro');
@@ -1463,7 +1471,18 @@
 
       const openLogin = () => document.getElementById('loginModal').classList.remove('hidden');
       document.getElementById('openLoginBtn').addEventListener('click', openLogin);
-      document.getElementById('heroDemoLoginBtn').addEventListener('click', openLogin);
+      const returnToDashboard = () => {
+        if (!session) { openLogin(); return; }
+        if (session.role === 'SUPER_ADMIN') { setWorkspace('admin'); return; }
+        setWorkspace('shop');
+        switchShopTab(activeShopTab || ROLE_TABS[session.role][0]);
+      };
+      document.getElementById('backToDashNavBtn').addEventListener('click', returnToDashboard);
+      document.getElementById('sessionRoleBadge').addEventListener('click', returnToDashboard);
+      document.getElementById('heroDemoLoginBtn').addEventListener('click', () => {
+        if (session) returnToDashboard();
+        else openLogin();
+      });
       document.getElementById('heroQuickOwnerBtn').addEventListener('click', () => loginAsDemo('OWNER'));
       document.getElementById('closeLoginBtn').addEventListener('click', () => document.getElementById('loginModal').classList.add('hidden'));
       document.querySelectorAll('.demo-login-btn').forEach((b) => b.addEventListener('click', () => loginAsDemo(b.getAttribute('data-demo-role'))));
