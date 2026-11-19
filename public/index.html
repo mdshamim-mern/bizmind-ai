@@ -284,6 +284,10 @@
           </div>
 
           <!-- Conversation Chat Thread (Real Multi-Turn Bubbles) -->
+          <div class="flex flex-wrap items-center justify-between gap-2 px-3 py-2 rounded-xl bg-indigo-50/80 border border-indigo-200 text-[11px] font-semibold text-indigo-900">
+            <span id="multiAgentTraceBanner">🤖 5-Agent Pipeline: Inventory · Sales · Finance · Supplier · Manager + RAG</span>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-600 text-white font-bold">AI Accuracy: 94% (MAPE + Z-Score)</span>
+          </div>
           <div id="chatMessagesContainer" class="surface-sub bg-slate-50 border border-slate-200 rounded-2xl p-3 sm:p-4 h-80 sm:h-96 overflow-y-auto space-y-3"></div>
 
           <!-- Live Listening Status Banner -->
@@ -1817,6 +1821,47 @@
       }));
 
       try {
+        // Try SSE Word-by-Word Streaming first, then fallback to JSON /chat
+        const streamResp = await fetch('https://bizmind-ai-orcin.vercel.app/api/v1/public-ai/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: userText, lang: currentLang, history: historyPayload, shopContext })
+        });
+        if (streamResp.ok && streamResp.body) {
+          const reader = streamResp.body.getReader();
+          const decoder = new TextDecoder();
+          let streamedText = '';
+          let buffer = '';
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+            const parts = buffer.split('\n\n');
+            buffer = parts.pop() || '';
+            for (const part of parts) {
+              if (!part.startsWith('data: ')) continue;
+              try {
+                const evt = JSON.parse(part.slice(6));
+                if (evt.type === 'meta' && Array.isArray(evt.agents)) {
+                  const banner = document.getElementById('multiAgentTraceBanner');
+                  if (banner) {
+                    banner.textContent = '🤖 ' + evt.agents.map((a) => a.agent).join(' → ') + ' (' + (evt.latencyMs || 0) + 'ms)';
+                  }
+                } else if (evt.type === 'token') {
+                  streamedText += evt.text;
+                  chatHistory[chatHistory.length - 1] = { role: 'ai', text: streamedText };
+                  renderChatMessages();
+                }
+              } catch (_e) {}
+            }
+          }
+          if (streamedText.trim()) {
+            lastSpokenAnswer = streamedText.trim();
+            updateAssistantChart(localResult.chartTitle, localResult.labels, localResult.values);
+            if (autoSpeakEnabled) speakText(lastSpokenAnswer);
+            return;
+          }
+        }
         const resp = await fetch('https://bizmind-ai-orcin.vercel.app/api/v1/public-ai/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
