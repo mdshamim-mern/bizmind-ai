@@ -9,6 +9,15 @@ AI-Powered Multi-Shop Business Management, Inventory, POS, and Demand Forecastin
 - **Authentication & Authorization**: JWT-based authentication with role-based access control (`auth.middleware.ts`) and bcryptjs password hashing.
 - **Modular Structure**: Clean separation of concerns across `src/shared`, `src/middlewares`, and `src/modules`.
 
+
+
+## BizMind AI Co-Pilot Features
+
+- **Bangla Voice**: Natural-language Bangla voice and text assistant for hands-free shop queries, stock checks, and daily summaries.
+- **Waste Rescue AI**: Detects expiring or slow-moving inventory batches and recommends targeted discounts, bundles, or rescue actions to minimize waste.
+- **Baki Khata**: Digital credit/due ledger for tracking customer dues (baki), partial repayments, and automated payment reminders.
+- **Chalan Scanner**: OCR/AI-powered supplier invoice (chalan) scanner that extracts line items, quantities, and costs to auto-update stock batches.
+- **Impact Dashboard**: Real-time sustainability and financial impact metrics tracking waste prevented, revenue recovered, and baki collection efficiency.
 ## Core Data Models
 
 - **Core & Auth**: `Shop`, `User`
