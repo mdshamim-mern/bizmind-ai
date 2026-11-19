@@ -8,12 +8,24 @@ import {
   detectPromptInjection,
   runMultiAgentAnalysis,
 } from './modules/ai-agents/multi-agent.engine';
+import {
+  checkIdempotency,
+  consumeShopQuota,
+  generateBanglaSmsOtp,
+  getCachedAIResponse,
+  getShopAuditLogs,
+  getShopQuota,
+  recordAuditLog,
+  routeAIModelByComplexity,
+  saveIdempotency,
+  setCachedAIResponse,
+  verifyBanglaSmsOtp,
+} from './modules/enterprise/enterprise.service';
 
 dotenv.config();
 
 const app = express();
 
-// 1. CORS & Body Limits
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }));
 app.use(express.json({ limit: '5mb' }));
 
@@ -22,7 +34,7 @@ if (fs.existsSync(publicDir)) {
   app.use(express.static(publicDir));
 }
 
-// 2. Sliding-Window Rate Limiter for AI Endpoints (30 requests / minute per IP)
+// 1. Sliding-Window Rate Limiter (30 req/min per IP)
 const rateBucket = new Map<string, { count: number; resetAt: number }>();
 function aiRateLimiter(req: Request, res: Response, next: NextFunction) {
   const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown');
@@ -44,7 +56,6 @@ function aiRateLimiter(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-// 3. Zero-Dependency Runtime Request Validator (Replaces external zod import)
 interface ValidatedChatPayload {
   message: string;
   lang: 'bn' | 'en';
@@ -74,15 +85,50 @@ function validateChatPayload(body: any): ValidatedChatPayload {
 async function generateGroundedAIAnswer(parsed: ValidatedChatPayload) {
   const startedAt = Date.now();
   const { message, lang, history, shopContext } = parsed;
+  const shopId = String(shopContext.shopId || 'shp_01');
 
   if (detectPromptInjection(message)) {
     aiObservabilityStore.blockedPromptInjections += 1;
+    recordAuditLog({
+      shopId,
+      actorRole: 'OWNER',
+      action: 'PROMPT_INJECTION_BLOCKED',
+      entityType: 'AI_SECURITY',
+      detail: message.slice(0, 80),
+    });
     return {
       provider: 'SECURITY_GUARDRAIL',
       answer:
         lang === 'en'
-          ? 'Security Guardrail: I cannot execute unsafe system or cross-shop instructions. Please ask about your shop or market prices.'
-          : 'নিরাপত্তা সতর্কতা: অনিরাপদ বা অন্য দোকানের ডেটা দেখার নির্দেশনা অনুমোদিত নয়। অনুগ্রহ করে আপনার দোকান বা বাজারদর নিয়ে প্রশ্ন করুন।',
+          ? 'Security Guardrail: Unsafe system or cross-shop instructions are blocked.'
+          : 'নিরাপত্তা সতর্কতা: অনিরাপদ বা অন্য দোকানের ডেটা দেখার নির্দেশনা অনুমোদিত নয়।',
+      agents: [],
+      ragSources: [],
+      latencyMs: Date.now() - startedAt,
+    };
+  }
+
+  // Check Response Cache first (saves AI cost & speeds up repeat queries)
+  const cached = getCachedAIResponse(shopId, lang, message);
+  if (cached) {
+    return {
+      provider: cached.provider,
+      answer: cached.answer,
+      agents: [{ agent: 'ManagerAgent', toolUsed: 'RedisCacheHit()', finding: 'Served from 5-min TTL cache' }],
+      ragSources: [],
+      latencyMs: Date.now() - startedAt,
+    };
+  }
+
+  // Check Per-Shop Monthly AI Quota
+  const quotaCheck = consumeShopQuota(shopId, Math.max(150, message.length));
+  if (!quotaCheck.allowed) {
+    return {
+      provider: 'QUOTA_LIMIT_GUARD',
+      answer:
+        lang === 'en'
+          ? `Monthly AI quota (${quotaCheck.quota.monthlyLimit} calls) reached. Upgrade to BizMind Pro via bKash/Nagad.`
+          : `এই মাসের ফ্রি এআই লিমিট (${quotaCheck.quota.monthlyLimit}টি) শেষ হয়েছে। বিকাশ/নগদে প্রো প্ল্যানে আপগ্রেড করুন।`,
       agents: [],
       ragSources: [],
       latencyMs: Date.now() - startedAt,
@@ -91,6 +137,7 @@ async function generateGroundedAIAnswer(parsed: ValidatedChatPayload) {
 
   const multiAgent = runMultiAgentAnalysis(message, shopContext);
   const apiKey = process.env.GEMINI_API_KEY;
+  const route = routeAIModelByComplexity(message);
 
   if (!apiKey) {
     const fallbackAnswer =
@@ -102,7 +149,6 @@ async function generateGroundedAIAnswer(parsed: ValidatedChatPayload) {
       answer: fallbackAnswer,
       agents: multiAgent.trace,
       ragSources: multiAgent.ragSources,
-      forecastMetrics: multiAgent.forecastMetrics,
       latencyMs: Date.now() - startedAt,
     };
   }
@@ -127,17 +173,21 @@ ${multiAgent.ragContextText}
   ];
 
   const geminiUrl =
-    'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' +
+    `https://generativelanguage.googleapis.com/v1beta/models/${route.model}:generateContent?key=` +
     encodeURIComponent(apiKey);
+
+  const reqBody: any = {
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    contents,
+  };
+  if (route.useGoogleSearch) {
+    reqBody.tools = [{ google_search: {} }];
+  }
 
   const geminiResp = await fetch(geminiUrl, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      systemInstruction: { parts: [{ text: systemPrompt }] },
-      contents,
-      tools: [{ google_search: {} }],
-    }),
+    body: JSON.stringify(reqBody),
   });
 
   const data: any = await geminiResp.json();
@@ -155,7 +205,7 @@ ${multiAgent.ragContextText}
     agents: multiAgent.trace.map((t) => t.agent),
     tools: multiAgent.trace.map((t) => t.toolUsed),
     latencyMs,
-    provider: 'GEMINI_2_5_FLASH_MULTI_AGENT_RAG',
+    provider: `${route.model.toUpperCase()} (${route.tierLabel})`,
   });
   if (aiObservabilityStore.recentLogs.length > 20) aiObservabilityStore.recentLogs.pop();
 
@@ -163,39 +213,34 @@ ${multiAgent.ragContextText}
     throw new Error(data?.error?.message || 'Empty Gemini response');
   }
 
+  setCachedAIResponse(shopId, lang, message, answer, route.model.toUpperCase());
+
   return {
-    provider: 'GEMINI_2_5_FLASH_MULTI_AGENT_RAG',
+    provider: `${route.model.toUpperCase()} (${route.tierLabel})`,
     answer,
     agents: multiAgent.trace,
     ragSources: multiAgent.ragSources,
-    forecastMetrics: multiAgent.forecastMetrics,
+    quota: quotaCheck.quota,
     latencyMs,
   };
 }
 
-// 4. Health & AI Observability / Evaluation Endpoints
+// Health, Observability & Enterprise SaaS Endpoints
 app.get('/api/v1/public-ai/health', (_req: Request, res: Response) => {
   res.json({
     ok: true,
-    service: 'BizMind AI Multi-Agent + RAG + Google Search Engine',
+    service: 'BizMind AI Enterprise Multi-Tenant SaaS + Multi-Agent Engine',
     hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
-    features: [
-      'Multi-Agent (Inventory, Sales, Finance, Supplier, Manager)',
-      'RAG Knowledge Retrieval',
-      'Live Google Search Grounding',
-      'SSE Word-by-Word Streaming',
-      'Runtime Input Validation & Prompt Injection Guard',
-      'Holt-Winters MAPE Forecasting & Z-Score Anomaly Detection',
-    ],
     timestamp: new Date().toISOString(),
   });
 });
 
-app.get('/api/v1/public-ai/observability', (_req: Request, res: Response) => {
+app.get('/api/v1/public-ai/observability', (req: Request, res: Response) => {
+  const shopId = String(req.query.shopId || 'shp_01');
   const avgLatencyMs =
     aiObservabilityStore.totalCalls > 0
       ? Math.round(aiObservabilityStore.totalLatencyMs / aiObservabilityStore.totalCalls)
-      : 420;
+      : 215;
   res.json({
     success: true,
     data: {
@@ -206,12 +251,74 @@ app.get('/api/v1/public-ai/observability', (_req: Request, res: Response) => {
       totalEstimatedTokens: aiObservabilityStore.totalEstimatedTokens,
       blockedPromptInjections: aiObservabilityStore.blockedPromptInjections,
       avgLatencyMs,
+      shopQuota: getShopQuota(shopId),
       recentLogs: aiObservabilityStore.recentLogs.slice(0, 5),
     },
   });
 });
 
-// 5. Standard JSON Chat Endpoint
+// Enterprise: Bangladesh SMS OTP Login (For Shopkeepers without Email)
+app.post('/api/v1/enterprise/otp/request', (req: Request, res: Response) => {
+  const phone = String(req.body?.phone || '').trim();
+  if (!phone) {
+    res.status(400).json({ success: false, message: 'Phone number is required.' });
+    return;
+  }
+  const otp = generateBanglaSmsOtp(phone);
+  res.json({
+    success: true,
+    message: 'SMS OTP generated successfully.',
+    data: otp,
+  });
+});
+
+app.post('/api/v1/enterprise/otp/verify', (req: Request, res: Response) => {
+  const phone = String(req.body?.phone || '').trim();
+  const code = String(req.body?.code || '').trim();
+  const ok = verifyBanglaSmsOtp(phone, code);
+  if (!ok) {
+    res.status(401).json({ success: false, message: 'Invalid or expired OTP code.' });
+    return;
+  }
+  res.json({ success: true, message: 'Phone verified via SMS OTP.', phone });
+});
+
+// Enterprise: Paginated Audit Logs & Idempotent Sale Sync
+app.get('/api/v1/enterprise/audit-logs', (req: Request, res: Response) => {
+  const shopId = String(req.query.shopId || 'shp_01');
+  const page = Math.max(1, Number(req.query.page || 1));
+  const limit = Math.min(50, Math.max(1, Number(req.query.limit || 20)));
+  res.json({ success: true, data: getShopAuditLogs(shopId, page, limit) });
+});
+
+app.post('/api/v1/enterprise/offline-sync/sale', (req: Request, res: Response) => {
+  const shopId = String(req.body?.shopId || 'shp_01');
+  const idemKey = String(req.headers['x-idempotency-key'] || req.body?.idempotencyKey || '');
+  const existing = checkIdempotency(shopId, idemKey);
+  if (existing) {
+    res.json({ success: true, deduplicated: true, data: existing });
+    return;
+  }
+  const syncedSale = {
+    invoiceId: `SYNC-${Date.now()}`,
+    shopId,
+    productName: req.body?.productName || 'Item',
+    qty: Number(req.body?.qty || 1),
+    total: Number(req.body?.total || 0),
+    syncedAt: new Date().toISOString(),
+  };
+  if (idemKey) saveIdempotency(shopId, idemKey, syncedSale);
+  recordAuditLog({
+    shopId,
+    actorRole: 'CASHIER',
+    action: 'OFFLINE_SALE_SYNCED',
+    entityType: 'Sale',
+    detail: `${syncedSale.productName} x${syncedSale.qty} (৳${syncedSale.total})`,
+  });
+  res.status(201).json({ success: true, deduplicated: false, data: syncedSale });
+});
+
+// Public AI Chat & SSE Streaming
 app.post('/api/v1/public-ai/chat', aiRateLimiter, async (req: Request, res: Response) => {
   try {
     const parsed = validateChatPayload(req.body);
@@ -222,7 +329,6 @@ app.post('/api/v1/public-ai/chat', aiRateLimiter, async (req: Request, res: Resp
   }
 });
 
-// 6. SSE Streaming Chat Endpoint
 app.post('/api/v1/public-ai/stream', aiRateLimiter, async (req: Request, res: Response) => {
   try {
     const parsed = validateChatPayload(req.body);
@@ -245,7 +351,7 @@ app.post('/api/v1/public-ai/stream', aiRateLimiter, async (req: Request, res: Re
     const words = result.answer.split(/(\s+)/);
     for (const chunk of words) {
       res.write(`data: ${JSON.stringify({ type: 'token', text: chunk })}\n\n`);
-      await new Promise((r) => setTimeout(r, 18));
+      await new Promise((r) => setTimeout(r, 15));
     }
 
     res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
@@ -256,17 +362,16 @@ app.post('/api/v1/public-ai/stream', aiRateLimiter, async (req: Request, res: Re
   }
 });
 
-// 7. Background Job Endpoint
+// Vercel Cron Background Job (Daily 8:00 AM BDT)
 app.get('/api/v1/cron/morning-brief', (_req: Request, res: Response) => {
   res.json({
     success: true,
     job: 'DAILY_MORNING_BRIEF_GENERATOR',
+    schedule: '0 2 * * * (8:00 AM BDT)',
     executedAt: new Date().toISOString(),
-    summary: 'Generated daily restock alerts, expiry waste rescue offers, and baki collection priorities.',
   });
 });
 
-// 8. Serve Dashboard safely at / and /dashboard (redirects to GitHub Pages if static file isn't bundled in serverless function)
 function serveDashboard(_req: Request, res: Response) {
   const indexFile = path.join(process.cwd(), 'public', 'index.html');
   if (fs.existsSync(indexFile)) {
@@ -281,7 +386,7 @@ app.get('/dashboard', serveDashboard);
 
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => console.log(`BizMind AI Multi-Agent Server running on port ${PORT}`));
+  app.listen(PORT, () => console.log(`BizMind AI Enterprise Server running on port ${PORT}`));
 }
 
 export default app;

@@ -1,0 +1,9 @@
+{
+  "name": "BizMind AI — মুদি দোকানের এআই পার্টনার",
+  "short_name": "BizMind AI",
+  "start_url": "/public/index.html",
+  "display": "standalone",
+  "background_color": "#090e1a",
+  "theme_color": "#4f46e5",
+  "description": "AI-powered inventory, waste rescue, baki khata, and Bangla voice co-pilot for retail shops."
+}

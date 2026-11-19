@@ -1,4 +1,4 @@
-name: BizMind AI CI & Evaluation Pipeline
+name: BizMind AI CI, Isolation & Evaluation Pipeline
 
 on:
   push:
@@ -26,3 +26,6 @@ jobs:
 
       - name: Run AI Grounding, RAG, MAPE & Security Evaluation Tests
         run: npx ts-node tests/ai-evaluation.test.ts
+
+      - name: Run Multi-Tenant Isolation, Idempotency, RBAC, OTP & AI Quota Tests
+        run: npx ts-node tests/isolation-and-enterprise.test.ts

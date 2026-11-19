@@ -12,10 +12,20 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="./manifest.webmanifest" />
   <style>
+    :root {
+      --bm-primary: #4f46e5;
+      --bm-accent: #10b981;
+      --bm-glass: rgba(255, 255, 255, 0.86);
+      --bm-radius: 1rem;
+    }
+    html.dark {
+      --bm-glass: rgba(15, 23, 42, 0.88);
+    }
     body {
-      font-family: 'Inter', sans-serif;
+      font-family: 'Hind Siliguri', 'Inter', sans-serif;
       transition: background-color 0.2s ease, color 0.2s ease;
       -webkit-tap-highlight-color: transparent;
     }
@@ -58,6 +68,11 @@
     }
     html.dark tr:hover { background-color: #1e293b !important; }
     .safe-pb { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+    @media print {
+      body * { visibility: hidden; }
+      #thermalReceiptArea, #thermalReceiptArea * { visibility: visible; }
+      #thermalReceiptArea { position: fixed; left: 0; top: 0; width: 58mm; font-size: 11px; color: #000; background: #fff; padding: 4mm; }
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen flex flex-col overflow-x-hidden">
@@ -84,6 +99,8 @@
 
       <!-- Compact Action Controls (Always visible & touch-friendly) -->
       <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button type="button" id="openCmdPaletteBtn" class="hidden sm:inline-flex min-h-[36px] px-2.5 py-1.5 rounded-xl border border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200 text-xs font-semibold items-center gap-1" title="Ctrl+K">⌘K</button>
+        <button type="button" id="openSetupWizardBtn" class="min-h-[36px] px-2.5 py-1.5 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100 text-xs font-bold transition">🚀 Pro</button>
         <button type="button" id="langToggleBtn" class="min-h-[36px] px-2.5 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50 text-indigo-800 hover:bg-indigo-100 text-xs font-bold transition">
           🌐 EN
         </button>
@@ -177,6 +194,53 @@
           <span class="text-xs font-bold text-indigo-800" data-i18n="mTab_simulator"></span>
         </button>
       </div>
+    </div>
+  </div>
+
+
+  <!-- Command Palette Modal (Ctrl+K) -->
+  <div id="cmdPaletteModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-start justify-center pt-16 p-4">
+    <div class="surface-card bg-white rounded-2xl max-w-md w-full p-4 shadow-2xl border border-slate-200 space-y-3">
+      <div class="flex items-center justify-between gap-2 border-b border-slate-200 pb-2">
+        <input type="text" id="cmdSearchInput" placeholder="Search tabs or commands (e.g. Voice, Waste, Baki, POS)..." class="w-full text-xs sm:text-sm outline-none bg-transparent" />
+        <button type="button" id="closeCmdPaletteBtn" class="text-xs font-bold text-slate-500 px-2 py-1">ESC</button>
+      </div>
+      <div id="cmdResultsList" class="space-y-1 max-h-64 overflow-y-auto text-xs"></div>
+    </div>
+  </div>
+
+  <!-- Self-Signup, SMS OTP & Pro Subscription Wizard Modal -->
+  <div id="setupWizardModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="surface-card bg-white rounded-t-3xl sm:rounded-2xl max-w-lg w-full p-5 shadow-2xl border border-slate-200 space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-200 pb-2.5">
+        <h3 class="font-bold text-sm text-indigo-700">🚀 Quick Shop Setup, SMS OTP &amp; Pro Plan</h3>
+        <button type="button" id="closeSetupWizardBtn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs">✕</button>
+      </div>
+      <form id="quickShopSetupForm" class="space-y-3 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="block font-semibold mb-1">দোকানের নাম / Shop Name</label>
+            <input type="text" id="wizShopName" value="মদিনা স্টোর ও ডিপার্টমেন্টাল" required class="w-full min-h-[40px] border border-slate-300 rounded-xl px-3" />
+          </div>
+          <div>
+            <label class="block font-semibold mb-1">মোবাইল (SMS OTP লগইন)</label>
+            <input type="text" id="wizPhone" value="01711-000000" required class="w-full min-h-[40px] border border-slate-300 rounded-xl px-3" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="p-3 rounded-xl border border-slate-200 bg-slate-50">
+            <div class="font-bold text-slate-900">Free Plan (৳০/মাস)</div>
+            <div class="text-[11px] text-slate-500 mt-0.5">৫০টি AI কল · অফলাইন POS · বাকির খাতা</div>
+          </div>
+          <div class="p-3 rounded-xl border-2 border-indigo-500 bg-indigo-50/70">
+            <div class="font-bold text-indigo-900">Pro Plan (৳৪৯৯/মাস)</div>
+            <div class="text-[11px] text-indigo-700 mt-0.5">১,০০০ AI কল · মাল্টি-ব্রাঞ্চ · bKash/Nagad পেমেন্ট</div>
+          </div>
+        </div>
+        <button type="submit" class="w-full min-h-[42px] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold">
+          ✓ দোকান সেটআপ ও SMS OTP চালু করুন
+        </button>
+      </form>
     </div>
   </div>
 
@@ -482,7 +546,18 @@
         </div>
 
         <div class="lg:col-span-2 surface-card bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <h3 class="text-base font-bold text-slate-900" data-i18n="posBatchTitle"></h3>
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-base font-bold text-slate-900" data-i18n="posBatchTitle"></h3>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <label class="cursor-pointer min-h-[34px] px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 hover:bg-indigo-100 text-xs font-bold inline-flex items-center gap-1">
+                📥 CSV Import
+                <input type="file" id="csvImportInput" accept=".csv" class="hidden" />
+              </label>
+              <button type="button" id="printThermalBtn" class="min-h-[34px] px-3 py-1.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs font-bold">🖨️ 58mm Print</button>
+              <button type="button" id="exportShopDataBtn" class="min-h-[34px] px-3 py-1.5 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">⬇ Export JSON</button>
+            </div>
+          </div>
+          <div id="thermalReceiptArea" class="hidden"></div>
           <!-- Mobile Batch Cards -->
           <div id="posBatchMobileCards" class="md:hidden space-y-2.5"></div>
           <!-- Tablet/Laptop Table -->
@@ -2215,6 +2290,120 @@
 
       ['simPriceRange', 'simMktRange', 'simStockRange'].forEach((id) => {
         document.getElementById(id).addEventListener('input', updateWhatIfSimulator);
+      });
+
+
+      // Enterprise Controls: Ctrl+K Command Palette, Setup Wizard, CSV Import, 58mm Thermal Print & Export
+      const cmdItems = [
+        { label: '1. AI Command Center (Home)', tab: 'dashboard' },
+        { label: '2. Bangla Voice & Multi-Agent AI Chat', tab: 'assistant' },
+        { label: '3. Waste Rescue AI (Expiring Batches)', tab: 'waste' },
+        { label: '4. Baki Khata (Customer Credit & Reminders)', tab: 'baki' },
+        { label: '5. Vision AI Chalan Scanner', tab: 'chalan' },
+        { label: '6. Bangladesh Festival Forecast (7/15/30d)', tab: 'forecast' },
+        { label: '7. Smart Stock Reorder Advisor', tab: 'restock' },
+        { label: '8. FEFO POS, CSV Import & 58mm Print', tab: 'pos' },
+        { label: '9. What-If Simulator & Smart Combos', tab: 'simulator' }
+      ];
+      function renderCmdResults(filter) {
+        const q = (filter || '').toLowerCase();
+        const matches = cmdItems.filter((c) => c.label.toLowerCase().includes(q));
+        document.getElementById('cmdResultsList').innerHTML = matches
+          .map((c) => `<button type="button" data-cmd-tab="${c.tab}" class="cmd-pick-btn w-full text-left px-3 py-2 rounded-xl hover:bg-indigo-50 font-semibold text-slate-800">${c.label}</button>`)
+          .join('');
+        document.querySelectorAll('.cmd-pick-btn').forEach((b) => {
+          b.addEventListener('click', () => {
+            switchTab(b.getAttribute('data-cmd-tab'));
+            document.getElementById('cmdPaletteModal').classList.add('hidden');
+          });
+        });
+      }
+      function openCmdPalette() {
+        document.getElementById('cmdPaletteModal').classList.remove('hidden');
+        document.getElementById('cmdSearchInput').value = '';
+        renderCmdResults('');
+        document.getElementById('cmdSearchInput').focus();
+      }
+      document.getElementById('openCmdPaletteBtn').addEventListener('click', openCmdPalette);
+      document.getElementById('closeCmdPaletteBtn').addEventListener('click', () => document.getElementById('cmdPaletteModal').classList.add('hidden'));
+      document.getElementById('cmdSearchInput').addEventListener('input', (e) => renderCmdResults(e.target.value));
+      window.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          openCmdPalette();
+        } else if (e.key === 'Escape') {
+          document.getElementById('cmdPaletteModal').classList.add('hidden');
+          document.getElementById('setupWizardModal').classList.add('hidden');
+        }
+      });
+
+      document.getElementById('openSetupWizardBtn').addEventListener('click', () => document.getElementById('setupWizardModal').classList.remove('hidden'));
+      document.getElementById('closeSetupWizardBtn').addEventListener('click', () => document.getElementById('setupWizardModal').classList.add('hidden'));
+      document.getElementById('quickShopSetupForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const nm = document.getElementById('wizShopName').value.trim();
+        const ph = document.getElementById('wizPhone').value.trim();
+        const shop = getShop();
+        shop.nameBn = nm;
+        shop.nameEn = nm;
+        document.getElementById('setupWizardModal').classList.add('hidden');
+        populateSelectors();
+        renderAll();
+        showToast(L(`স্বাগতম ${nm}! ${ph}-এ SMS OTP ও প্রো ট্রায়াল চালু হয়েছে।`, `Welcome ${nm}! SMS OTP & Pro trial activated for ${ph}.`));
+      });
+
+      document.getElementById('csvImportInput').addEventListener('change', (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          const lines = String(reader.result || '').split(/\r?\n/).slice(1).filter((l) => l.trim());
+          const shop = getShop();
+          let imported = 0;
+          lines.forEach((line) => {
+            const cols = line.split(',').map((c) => c.trim());
+            if (cols.length >= 4) {
+              const [name, cost, price, qty] = cols;
+              shop.products.push({
+                id: 'csv_' + Date.now() + Math.random(),
+                nameBn: name,
+                nameEn: name,
+                purchasePrice: Number(cost) || 10,
+                sellingPrice: Number(price) || 15,
+                safetyStock: 10,
+                leadTimeDays: 3,
+                supplierBn: 'CSV সাপ্লায়ার',
+                supplierEn: 'CSV Supplier',
+                weeklySales: [5, 8, 10, 12],
+                batches: [{ id: 'bcsv_' + Math.random(), batchNumber: 'CSV-01', purchasePrice: Number(cost) || 10, sellingPrice: Number(price) || 15, currentQty: Number(qty) || 20, expiryDays: 45 }]
+              });
+              imported++;
+            }
+          });
+          showToast(L(`CSV থেকে ${imported}টি পণ্য ইনভেন্টরিতে যুক্ত হয়েছে!`, `Imported ${imported} products from CSV into inventory!`));
+          renderAll();
+        };
+        reader.readAsText(file);
+      });
+
+      document.getElementById('printThermalBtn').addEventListener('click', () => {
+        const shop = getShop();
+        const latest = shop.sales[shop.sales.length - 1];
+        const receiptEl = document.getElementById('thermalReceiptArea');
+        receiptEl.innerHTML = `<div style="text-align:center;font-weight:bold;">${L(shop.nameBn, shop.nameEn)}</div><div style="text-align:center;">58mm POS Receipt · BizMind AI</div><hr/><div>Invoice: ${latest ? latest.id : 'INV-01'}</div><div>Total: ৳${latest ? latest.revenue : 900}</div><hr/><div style="text-align:center;">ধন্যবাদ / Thank You!</div>`;
+        window.print();
+      });
+
+      document.getElementById('exportShopDataBtn').addEventListener('click', () => {
+        const dataStr = JSON.stringify(getShop(), null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `bizmind-${getShop().shopId}-export.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast(L('দোকানের সম্পূর্ণ ব্যাকআপ JSON ডাউনলোড হয়েছে!', 'Shop backup JSON exported!'));
       });
 
       applyLanguage();
