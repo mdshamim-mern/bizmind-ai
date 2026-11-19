@@ -1,210 +1,103 @@
+import express, { Request, Response } from 'express';
+import cors from 'cors';
+import path from 'path';
 import dotenv from 'dotenv';
+
 dotenv.config();
 
-import express, { Request, Response, NextFunction } from 'express';
-import cors from 'cors';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
-import { PrismaClient } from '@prisma/client';
-
 const app = express();
-const prisma = new PrismaClient();
-const PORT = process.env.PORT || 5000;
-const JWT_SECRET = process.env.JWT_SECRET || 'bizmind-default-secret';
 
-app.use(cors());
-app.use(express.json());
+// Allow requests from GitHub Pages ([invalid URL]) and Vercel
+app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }));
+app.use(express.json({ limit: '5mb' }));
+app.use(express.static(path.join(process.cwd(), 'public')));
 
-export interface AuthPayload {
-  userId: string;
-  shopId: string;
-  role: string;
-  email: string;
-}
-
-export interface AuthRequest extends Request {
-  user?: AuthPayload;
-}
-
-export const authenticateShop = (req: AuthRequest, res: Response, next: NextFunction): void => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    res.status(401).json({ error: 'Authorization token is required' });
-    return;
-  }
-
-  const token = authHeader.split(' ')[1];
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET) as AuthPayload;
-    req.user = decoded;
-    next();
-  } catch {
-    res.status(401).json({ error: 'Invalid or expired token' });
-  }
-};
-
-app.get('/', (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: 'ok',
-    service: 'BizMind AI API',
+// 1. Health check to verify GEMINI_API_KEY is live on Vercel
+app.get('/api/v1/public-ai/health', (_req: Request, res: Response) => {
+  res.json({
+    ok: true,
+    service: 'BizMind AI Live Voice & Search Engine',
+    hasGeminiKey: Boolean(process.env.GEMINI_API_KEY),
     timestamp: new Date().toISOString(),
   });
 });
 
-app.post('/api/v1/auth/register-shop', async (req: Request, res: Response): Promise<void> => {
+// 2. Public Zero-Setup Voice AI with Live Google Search Grounding
+[invalid URL]('/api/v1/public-ai/chat', async (req: Request, res: Response) => {
   try {
-    const { shopName, ownerName, email, password, currency, timezone } = req.body;
-    if (!shopName || !ownerName || !email || !password) {
-      res.status(400).json({ error: 'shopName, ownerName, email, and password are required' });
+    const { message, lang, history = [], shopContext = {} } = req.body || {};
+    const apiKey = process.env.GEMINI_API_KEY;
+
+    if (!apiKey) {
+      res.status(500).json({
+        success: false,
+        answer: lang === 'en'
+          ? 'Server GEMINI_API_KEY is missing in Vercel Environment Variables.'
+          : 'Vercel-এ GEMINI_API_KEY সেট করা নেই। অনুগ্রহ করে Environment Variables চেক করুন।',
+      });
       return;
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-      res.status(409).json({ error: 'An account with this email already exists' });
-      return;
-    }
+    const systemPrompt = `You are BizMind AI, a warm, intelligent voice assistant for Bangladeshi shopkeepers and everyday users.
+- Always respond in ${lang === 'en' ? 'clear, natural English' : 'natural, friendly pure Bengali (Bangla)'}.
+- Answer ONLY what the user actually asks. Keep answers concise (2-4 sentences) so they sound natural when read aloud.
+- If the user asks about live market prices (like potato price in Kurigram, Bogura, Joypurhat, or Dhaka), weather, or current events, USE Google Search to give the latest accurate info in BDT (৳).
+- If the user asks about their shop, use this live shop [invalid URL] ${JSON.stringify(shopContext)}.
+- If the user wants to chat casually or tell stories, talk naturally like a friendly human companion.`;
 
-    const baseSlug = String(shopName).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'shop';
-    const slug = `${baseSlug}-${Date.now().toString(36)}`;
-    const passwordHash = await bcrypt.hash(password, 10);
+    const contents = [
+      ...history.slice(-6).map((m: any) => ({
+        role: m.role === 'user' ? 'user' : 'model',
+        parts: [{ text: String(m.text || '') }],
+      })),
+      { role: 'user', parts: [{ text: String(message || '') }] },
+    ];
 
-    const result = await prisma.$transaction(async (tx) => {
-      const shop = await tx.shop.create({
-        data: {
-          name: shopName,
-          slug,
-          currency: currency || 'USD',
-          timezone: timezone || 'UTC',
-        },
-      });
-
-      const user = await tx.user.create({
-        data: {
-          shopId: shop.id,
-          name: ownerName,
-          email,
-          passwordHash,
-          role: 'OWNER',
-        },
-        select: {
-          id: true,
-          shopId: true,
-          name: true,
-          email: true,
-          role: true,
-          isActive: true,
-          createdAt: true,
-        },
-      });
-
-      return { shop, user };
-    });
-
-    const token = jwt.sign(
-      { userId: result.user.id, shopId: result.shop.id, role: result.user.role, email: result.user.email },
-      JWT_SECRET,
-      { expiresIn: '7d' }
+    const geminiResp = await fetch(
+      `[invalid URL]`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          systemInstruction: { parts: [{ text: systemPrompt }] },
+          contents,
+          tools: [{ google_search: {} }],
+        }),
+      }
     );
 
-    res.status(201).json({
-      message: 'Shop registered successfully',
-      token,
-      shop: result.shop,
-      user: result.user,
-    });
-  } catch (error) {
-    console.error('Register shop error:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    const [invalid URL] any = await geminiResp.json();
+    const answer = data?.candidates?.[0]?.content?.parts
+      ?.map((p: any) => p.text || '')
+      .join('')
+      .trim();
+
+    if (!answer) {
+      res.status(502).json({
+        success: false,
+        error: data?.error?.message || 'Empty Gemini response',
+      });
+      return;
+    }
+
+    res.json({ success: true, answer });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Server error' });
   }
 });
 
-app.post('/api/v1/auth/login', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) {
-      res.status(400).json({ error: 'Email and password are required' });
-      return;
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { email },
-      include: { shop: true },
-    });
-
-    if (!user || !user.isActive) {
-      res.status(401).json({ error: 'Invalid credentials or inactive account' });
-      return;
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
-    if (!isPasswordValid) {
-      res.status(401).json({ error: 'Invalid credentials' });
-      return;
-    }
-
-    const token = jwt.sign(
-      { userId: user.id, shopId: user.shopId, role: user.role, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.status(200).json({
-      message: 'Login successful',
-      token,
-      shop: user.shop,
-      user: {
-        id: user.id,
-        shopId: user.shopId,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        isActive: user.isActive,
-      },
-    });
-  } catch (error) {
-    console.error('Login error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+// 3. Serve Dashboard at / and /dashboard
+app.get('/', (_req: Request, res: Response) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
-app.get('/api/v1/auth/me', authenticateShop, async (req: AuthRequest, res: Response): Promise<void> => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { id: req.user.userId },
-      select: {
-        id: true,
-        shopId: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-        shop: true,
-      },
-    });
-
-    if (!user) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-
-    res.status(200).json({ user });
-  } catch (error) {
-    console.error('Fetch current user error:', error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+app.get('/dashboard', (_req: Request, res: Response) => {
+  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
 });
 
+const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`BizMind AI server running on port ${PORT}`);
-  });
+  app.listen(PORT, () => console.log(`BizMind AI running on port ${PORT}`));
 }
 
 export default app;
