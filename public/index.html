@@ -7,7 +7,196 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>BizMind AI — Multi-Agent Retail Co-Pilot &amp; Digital Twin</title>
-  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.tailwindcss.com/3.4.17">
+    // ========================================================================
+    // PART 2: Vision/Voice, Offline PWA + Holt-Winters JS, Promo Banner, FinSphere
+    // ========================================================================
+    let simulatedOffline = false;
+    let offlineSalesQueue = JSON.parse(localStorage.getItem('bizmind_offline_queue') || '[]');
+    const BARCODE_DB = {
+      '8941100100012': { bn: 'ফার্মের লাল ডিম (১ ডজন) — ৳১৫০', en: 'Brown Farm Eggs (12 pcs) — ৳150' },
+      '8941100200029': { bn: 'সয়াবিন তেল (২ লিটার) — ৳৩৫০', en: 'Soybean Oil (2L) — ৳350' },
+      '8941100300036': { bn: 'মিনিকেট চাল (৫ কেজি) — ৳৩৬০', en: 'Miniket Rice (5kg) — ৳360' },
+      '8941100400043': { bn: 'তরল দুধ (১ লিটার) — ৳৯৫', en: 'Liquid Milk (1L) — ৳95' },
+      '8941100500050': { bn: 'সাদা চিনি (১ কেজি) — ৳১৩৫', en: 'White Sugar (1kg) — ৳135' }
+    };
+
+    function runLocalHoltWinters(series) {
+      let level = series[0], trend = series[1] - series[0];
+      const alpha = 0.5, beta = 0.3;
+      for (let i = 1; i < series.length; i++) {
+        const prevLevel = level;
+        level = alpha * series[i] + (1 - alpha) * (level + trend);
+        trend = beta * (level - prevLevel) + (1 - beta) * trend;
+      }
+      return Math.round(level + trend);
+    }
+
+    function drawPromoBanner() {
+      const c = document.getElementById('p2BannerCanvas');
+      if (!c) return;
+      const ctx = c.getContext('2d');
+      const g = ctx.createLinearGradient(0, 0, 600, 240);
+      g.addColorStop(0, '#312e81'); g.addColorStop(0.55, '#0f172a'); g.addColorStop(1, '#065f46');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, 600, 240);
+      ctx.fillStyle = 'rgba(251, 191, 36, 0.2)'; ctx.fillRect(24, 24, 210, 32);
+      ctx.fillStyle = '#fbbf24'; ctx.font = 'bold 16px sans-serif';
+      ctx.fillText(L('🔥 ১৫% সুপার সেভার কম্বো', '🔥 15% SUPER SAVER COMBO'), 36, 46);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 30px sans-serif';
+      ctx.fillText(L('ফার্মের লাল ডিম + তরল দুধ', 'Brown Farm Eggs + Fresh Milk'), 24, 112);
+      ctx.fillStyle = '#6ee7b7'; ctx.font = 'bold 22px sans-serif';
+      ctx.fillText(L('আজ মাত্র ৳১২.৭৫/পিস · ৫৫টি সীমিত স্টক!', 'Only ৳12.75/egg Today · 55 Units Left!'), 24, 158);
+      ctx.fillStyle = '#cbd5e1'; ctx.font = '15px sans-serif';
+      ctx.fillText(L('রহিম ভাইয়ের মুদি দোকান · BizMind AI Waste Rescue', "Rahim's Grocery Store · BizMind AI Waste Rescue"), 24, 208);
+    }
+
+    function renderFinSphere() {
+      const cash = Number(document.getElementById('p2FinCashSlider')?.value || 14000);
+      const need = 25000;
+      const gap = Math.max(0, need - cash);
+      const score = Math.min(100, 34 + 30 + Math.round((cash / need) * 20));
+      document.getElementById('p2FinCashVal').textContent = fmtTaka(cash);
+      document.getElementById('p2FinScoreVal').textContent = `${fmtNum(score)}/${fmtNum(100)}`;
+      document.getElementById('p2FinGapVal').textContent = fmtTaka(gap);
+      document.getElementById('p2FinLetterBox').value = L(
+        `প্রিয় মেঘনা ট্রেডার্স,\nঈদের আগে ৳২৫,০০০ টাকার পণ্যের মধ্যে নগদ ${fmtTaka(cash)} দিয়ে বাকি ${fmtTaka(gap)} টাকা ৭ দিনের সাপ্লায়ার ক্রেডিটে নেওয়ার অনুরোধ করছি। আমাদের ৬ মাসের বিক্রি ও ৮৬% বাকি আদায় অনুযায়ী ক্রেডিট-রেডিনেস স্কোর ${fmtNum(score)}/১০০ (সিমুলেশন)।`,
+        `Dear Meghna Traders,\nAhead of Eid, we need ৳25,000 in stock. We can pay ${fmtTaka(cash)} upfront and request ${fmtTaka(gap)} on 7-day trade credit. Based on 6-month sales & 86% recovery rate, our Credit-Readiness Score is ${score}/100 (Simulation).`
+      );
+    }
+
+    function renderPart2UI() {
+      if (!document.getElementById('p2VisionTitle')) return;
+      document.getElementById('p2VisionTitle').textContent = L('৭. ভিশন (চালান OCR + বারকোড) ও বাংলা ভয়েস', '7. Vision (Chalan OCR + Barcode) & Voice');
+      document.getElementById('p2VisionScope').textContent = L('⚠️ স্বচ্ছ সীমা: পুরো দোকানের তাক গোনার বদলে চালানের ছবি (OCR) ও ৫–১০টি পণ্যের বারকোড স্ক্যানে উচ্চ নির্ভুলতা পাওয়া যায়।', '⚠️ Honest Scope: Built for reliable Chalan OCR & Barcode lookup rather than error-prone full-shelf counting.');
+      document.getElementById('p2ChalanLbl').textContent = L('চালানের ছবি আপলোড করুন (OCR Purchase Entry):', 'Upload Chalan / Invoice Photo (OCR Purchase Entry):');
+      document.getElementById('p2RunOcrBtn').textContent = L('📷 চালান স্ক্যান করে স্টকে যোগ করুন', '📷 Scan Chalan & Add to Stock');
+      document.getElementById('p2BarcodeLbl').textContent = L('বারকোড স্ক্যান / লুকআপ (৫টি ডেমো পণ্য):', 'Barcode Scan / Lookup (5 Demo SKUs):');
+      document.getElementById('p2BarcodeBtn').textContent = L('খুঁজুন', 'Scan');
+      document.getElementById('p2VoiceAskBtn').textContent = L('🎤 বাংলায় ভয়েস প্রশ্ন করুন', '🎤 Ask via Voice');
+      document.getElementById('p2VoiceSpeakBtn').textContent = L('🔊 উত্তর পড়ে শোনান', '🔊 Read Aloud');
+
+      document.getElementById('p2EdgeTitle').textContent = L('৮. Edge AI: ইন্টারনেট ছাড়াও কাজ চলে (Offline PWA)', '8. Edge AI: Works Without Internet (Offline PWA)');
+      document.getElementById('p2EdgeSub').textContent = L('ভারী WebGPU নয় — হালকা Offline PWA, ব্রাউজারেই Holt-Winters JS ফোরকাস্ট এবং অফলাইনে বিক্রি করে পরে সিঙ্ক।', 'No heavy WebGPU — lightweight Offline PWA, local JS Holt-Winters forecast, and offline POS queue + sync.');
+      document.getElementById('p2NetBadge').textContent = simulatedOffline ? L('✈️ অফলাইন মোড', '✈️ OFFLINE') : L('🟢 অনলাইন', '🟢 ONLINE');
+      document.getElementById('p2ToggleOfflineBtn').textContent = simulatedOffline ? L('🌐 অনলাইনে ফিরুন', '🌐 Go Online') : L('✈️ অফলাইন টেস্ট করুন', '✈️ Simulate Offline');
+      document.getElementById('p2AddOfflineSaleBtn').textContent = L('🧾 অফলাইনে ১টি বিক্রি সেভ', '🧾 Record Offline Sale');
+      document.getElementById('p2SyncQueueBtn').textContent = L(`🔄 সিঙ্ক করুন (${fmtNum(offlineSalesQueue.length)})`, `🔄 Sync Now (${offlineSalesQueue.length})`);
+      document.getElementById('p2OfflineQueueBox').innerHTML = offlineSalesQueue.length === 0
+        ? `<span class="text-muted">${L('কোনো পেন্ডিং অফলাইন বিক্রি নেই — সবকিছু সিঙ্ক করা আছে।', 'No pending offline sales — everything is synced.')}</span>`
+        : offlineSalesQueue.map((x) => `<div>⏳ <strong>${x.id}</strong> · ${x.item} (${fmtTaka(x.rev)})</div>`).join('');
+
+      const hwNext = runLocalHoltWinters([50, 65, 80, 100]);
+      document.getElementById('p2HwTitle').textContent = L('⚡ ব্রাউজারেই লোকাল Holt-Winters JS ফোরকাস্ট (ইন্টারনেট ছাড়াই চলে):', '⚡ Local In-Browser Holt-Winters JS Forecast (Zero Network Needed):');
+      document.getElementById('p2HwOutput').textContent = L(`সপ্তাহ ১-৪: [৫০, ৬৫, ৮০, ১০০] → ৫ম সপ্তাহের পূর্বাভাস: ${fmtNum(hwNext)} ইউনিট`, `W1–W4: [50, 65, 80, 100] → Next Week Forecast: ${hwNext} units`);
+
+      document.getElementById('p2MktTitle').textContent = L('৯. অটোনোমাস মার্কেটিং (খসড়া ও ১ ক্লিকে শেয়ার)', '9. Autonomous Marketing (Draft & 1-Click Share)');
+      document.getElementById('p2PostCopyBox').value = L(
+        '📢 আজকের সুপার সেভার কম্বো — রহিম ভাইয়ের মুদি দোকান!\nফার্মের লাল ডিম (৫৫টি সীমিত স্টক) + তরল দুধ আজ পাচ্ছেন ১৫% ছাড়ে (ডিম মাত্র ৳১২.৭৫)! আজই আসুন।',
+        "📢 Today's Super Saver Combo — Rahim's Grocery!\nBrown Farm Eggs (55 limited stock) + Fresh Milk at 15% OFF (only ৳12.75/egg)! Visit today."
+      );
+      document.getElementById('p2DownloadBannerBtn').textContent = L('⬇ ব্যানার ছবি ডাউনলোড (PNG)', '⬇ Download Banner (PNG)');
+      document.getElementById('p2SharePostBtn').textContent = L('📤 ১ ক্লিকে শেয়ার / কপি', '📤 1-Click Share / Copy');
+      drawPromoBanner();
+
+      document.getElementById('p2FinTitle').textContent = L('১০. FinSphere / SME Capital (ক্রেডিট-রেডিনেস)', '10. FinSphere / SME Capital (Credit-Readiness)');
+      document.getElementById('p2FinDisclaimer').textContent = L('🧪 স্পষ্ট ঘোষণা: এটি শুধুমাত্র Simulation। এআই নিজে কোনো আসল ঋণ বা আর্থিক চুক্তি করে না।', '🧪 Explicit Notice: SIMULATION ONLY. AI never issues real loans or binding financial decisions.');
+      document.getElementById('p2FinScoreLbl').textContent = L('ক্রেডিট-রেডিনেস স্কোর', 'Credit-Readiness Score');
+      document.getElementById('p2FinGapLbl').textContent = L('ঈদ স্টক মূলধন ঘাটতি', 'Pre-Eid Capital Gap');
+      document.getElementById('p2FinCashLbl').textContent = L('হাতে নগদ টাকা (প্রয়োজন ৳২৫,০০০):', 'Cash on Hand (Need ৳25,000):');
+      document.getElementById('p2CopyFinLetterBtn').textContent = L('📋 সাপ্লায়ার ক্রেডিট অনুরোধ খসড়া কপি করুন', '📋 Copy Supplier Credit Request Draft');
+      renderFinSphere();
+    }
+
+    const _origRenderAll = renderAll;
+    renderAll = function () { _origRenderAll(); renderPart2UI(); };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      if ('serviceWorker' in navigator) { navigator.serviceWorker.register('./sw.js').catch(() => {}); }
+
+      document.getElementById('p2RunOcrBtn').addEventListener('click', () => {
+        shopState.products[0].stock += 100;
+        const box = document.getElementById('p2OcrResultBox');
+        box.classList.remove('hidden');
+        box.textContent = L('✅ চালান OCR সম্পন্ন: ১০০টি লাল ডিম (@৳১০) ও ২৫ বস্তা মিনিকেট চাল (@৳৩৩০) স্টকে যোগ হয়েছে!', '✅ Chalan OCR Done: Added 100 Brown Eggs (@৳10) & 25 Miniket Rice (@৳330) to stock!');
+        renderShopContent();
+      });
+
+      const lookupBarcode = (code) => {
+        const hit = BARCODE_DB[code.trim()];
+        document.getElementById('p2BarcodeResult').textContent = hit
+          ? `✅ ${L(hit.bn, hit.en)}`
+          : L('❌ এই বারকোডটি ডেমো ক্যাটালগে নেই।', '❌ Barcode not found in demo catalog.');
+      };
+      document.getElementById('p2BarcodeBtn').addEventListener('click', () => lookupBarcode(document.getElementById('p2BarcodeIn').value));
+      document.querySelectorAll('.bc-chip').forEach((b) => b.addEventListener('click', () => {
+        const code = b.getAttribute('data-bc');
+        document.getElementById('p2BarcodeIn').value = code;
+        lookupBarcode(code);
+      }));
+      lookupBarcode('8941100100012');
+
+      document.getElementById('p2VoiceSpeakBtn').addEventListener('click', () => {
+        if (!('speechSynthesis' in window)) { showToast(L('এই ব্রাউজারে স্পিচ সাপোর্ট নেই।', 'Speech synthesis not supported.')); return; }
+        const u = new SpeechSynthesisUtterance(L('আসসালামু আলাইকুম। আজ মোট বিক্রি এক লাখ সাত হাজার নয়শো টাকা এবং ৫৫টি ডিম চার দিনে মেয়াদ শেষ হবে।', 'Today total sales are 107,900 taka, and 55 eggs expire in 4 days.'));
+        u.lang = lang === 'bn' ? 'bn-BD' : 'en-US';
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+        showToast(L('🔊 উত্তর পড়ে শোনানো হচ্ছে...', '🔊 Reading summary aloud...'));
+      });
+
+      document.getElementById('p2VoiceAskBtn').addEventListener('click', () => {
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SR) { showToast(L('ভয়েস ইনপুটের জন্য ক্রোম ব্রাউজার ব্যবহার করুন।', 'Use Chrome for voice input.')); return; }
+        const rec = new SR();
+        rec.lang = lang === 'bn' ? 'bn-BD' : 'en-US';
+        rec.onresult = (ev) => { switchShopTab('ai'); sendAgentQuery(ev.results[0][0].transcript); };
+        rec.start();
+        showToast(L('🎤 শুনছি... বাংলায় বলুন', '🎤 Listening... speak now'));
+      });
+
+      document.getElementById('p2ToggleOfflineBtn').addEventListener('click', () => { simulatedOffline = !simulatedOffline; renderPart2UI(); });
+      document.getElementById('p2AddOfflineSaleBtn').addEventListener('click', () => {
+        const entry = { id: 'OFF-' + Math.floor(100 + Math.random() * 900), item: L('ফার্মের লাল ডিম × ১২', 'Brown Eggs × 12'), rev: 180 };
+        offlineSalesQueue.push(entry);
+        localStorage.setItem('bizmind_offline_queue', JSON.stringify(offlineSalesQueue));
+        renderPart2UI();
+        showToast(L('✈️ অফলাইন কিউতে বিক্রি সংরক্ষিত হয়েছে!', '✈️ Sale saved to Offline Queue!'));
+      });
+      document.getElementById('p2SyncQueueBtn').addEventListener('click', () => {
+        if (simulatedOffline) { showToast(L('আগে অনলাইন মোডে ফিরুন, তারপর সিঙ্ক করুন।', 'Switch back Online before syncing.')); return; }
+        if (offlineSalesQueue.length === 0) { showToast(L('সিঙ্ক করার মতো কোনো পেন্ডিং বিক্রি নেই।', 'No pending offline sales to sync.')); return; }
+        offlineSalesQueue.forEach((x) => shopState.sales.push({ id: x.id, itemBn: x.item, itemEn: x.item, rev: x.rev, pay: 'CASH' }));
+        const n = offlineSalesQueue.length;
+        offlineSalesQueue = [];
+        localStorage.removeItem('bizmind_offline_queue');
+        renderAll();
+        showToast(L(`✅ ${fmtNum(n)}টি অফলাইন বিক্রি মূল লেজারে সিঙ্ক হয়েছে!`, `✅ Synced ${n} offline sale(s) to main ledger!`));
+      });
+
+      document.getElementById('p2DownloadBannerBtn').addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.download = 'bizmind-promo-banner.png';
+        a.href = document.getElementById('p2BannerCanvas').toDataURL('image/png');
+        a.click();
+        showToast(L('🎨 প্রোমো ব্যানার PNG ডাউনলোড হয়েছে!', '🎨 Promo Banner PNG downloaded!'));
+      });
+      document.getElementById('p2SharePostBtn').addEventListener('click', async () => {
+        const txt = document.getElementById('p2PostCopyBox').value;
+        if (navigator.share) { try { await navigator.share({ title: 'BizMind AI Offer', text: txt }); return; } catch {} }
+        navigator.clipboard?.writeText(txt);
+        showToast(L('📋 ফেসবুক ও এসএমএস অফার পোস্ট কপি হয়েছে!', '📋 Facebook & SMS promo post copied!'));
+      });
+
+      document.getElementById('p2FinCashSlider').addEventListener('input', renderFinSphere);
+      document.getElementById('p2CopyFinLetterBtn').addEventListener('click', () => {
+        navigator.clipboard?.writeText(document.getElementById('p2FinLetterBox').value);
+        showToast(L('📋 সাপ্লায়ার ক্রেডিট অনুরোধের খসড়া কপি হয়েছে (Simulation)!', '📋 Supplier credit request draft copied (Simulation)!'));
+      });
+
+      renderPart2UI();
+    });
+
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -534,6 +723,111 @@
         </div>
       </section>
 
+      
+      <!-- TAB: PART 2 — VISION/VOICE, EDGE OFFLINE PWA, MARKETING & FINSPHERE SIMULATION -->
+      <section id="tab-part2" class="shop-tab hidden space-y-5">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <!-- 7. Vision (Chalan Photo OCR + 5-SKU Barcode) & Bangla Voice -->
+          <div class="bento-card p-5 space-y-3.5">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-extrabold text-base text-indigo-600 dark:text-indigo-300" id="p2VisionTitle"></h3>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/15 text-indigo-500 dark:text-indigo-300">OCR + Barcode + Voice</span>
+            </div>
+            <p class="text-[11px] p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-muted" id="p2VisionScope"></p>
+
+            <div class="space-y-2 text-xs">
+              <label class="block font-bold" id="p2ChalanLbl"></label>
+              <input type="file" id="p2ChalanFile" accept="image/*" class="w-full glass-input rounded-xl p-2 text-xs" />
+              <button type="button" id="p2RunOcrBtn" class="w-full min-h-[38px] rounded-xl bg-indigo-600 text-white font-bold text-xs"></button>
+              <div id="p2OcrResultBox" class="hidden p-2.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-xs font-semibold"></div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-500/20 space-y-2 text-xs">
+              <label class="block font-bold" id="p2BarcodeLbl"></label>
+              <div class="flex gap-2">
+                <input type="text" id="p2BarcodeIn" value="8941100100012" class="flex-1 glass-input rounded-xl px-3 min-h-[38px] font-mono text-xs" />
+                <button type="button" id="p2BarcodeBtn" class="px-3.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs"></button>
+              </div>
+              <div class="flex flex-wrap gap-1.5 text-[10px]">
+                <button type="button" data-bc="8941100100012" class="bc-chip px-2 py-1 rounded-lg sub-glass-row font-mono">8941100100012 (Eggs)</button>
+                <button type="button" data-bc="8941100200029" class="bc-chip px-2 py-1 rounded-lg sub-glass-row font-mono">8941100200029 (Oil)</button>
+                <button type="button" data-bc="8941100300036" class="bc-chip px-2 py-1 rounded-lg sub-glass-row font-mono">8941100300036 (Rice)</button>
+                <button type="button" data-bc="8941100400043" class="bc-chip px-2 py-1 rounded-lg sub-glass-row font-mono">8941100400043 (Milk)</button>
+              </div>
+              <div id="p2BarcodeResult" class="p-2.5 rounded-xl sub-glass-row text-xs font-semibold"></div>
+            </div>
+
+            <div class="pt-2 border-t border-slate-500/20 flex flex-wrap gap-2">
+              <button type="button" id="p2VoiceAskBtn" class="flex-1 min-h-[38px] px-3 rounded-xl bg-rose-600 text-white font-bold text-xs"></button>
+              <button type="button" id="p2VoiceSpeakBtn" class="flex-1 min-h-[38px] px-3 rounded-xl bg-sky-600 text-white font-bold text-xs"></button>
+            </div>
+          </div>
+
+          <!-- 8. Edge AI (Offline PWA + Local Holt-Winters JS + Offline POS Queue & Sync) -->
+          <div class="bento-card p-5 space-y-3.5">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-extrabold text-base text-emerald-600 dark:text-emerald-300" id="p2EdgeTitle"></h3>
+              <span id="p2NetBadge" class="text-[10px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300">ONLINE</span>
+            </div>
+            <p class="text-xs text-muted" id="p2EdgeSub"></p>
+
+            <div class="flex flex-wrap gap-2 text-xs">
+              <button type="button" id="p2ToggleOfflineBtn" class="px-3.5 py-2 rounded-xl sub-glass-row font-bold"></button>
+              <button type="button" id="p2AddOfflineSaleBtn" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-bold"></button>
+              <button type="button" id="p2SyncQueueBtn" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold"></button>
+            </div>
+            <div id="p2OfflineQueueBox" class="p-3 rounded-xl sub-glass-row text-xs space-y-1"></div>
+
+            <div class="p-3.5 rounded-xl bg-indigo-500/12 border border-indigo-500/30 space-y-1.5 text-xs">
+              <div class="font-extrabold" id="p2HwTitle"></div>
+              <div id="p2HwOutput" class="font-mono text-emerald-600 dark:text-emerald-300 font-bold"></div>
+            </div>
+          </div>
+
+          <!-- 9. Autonomous Marketing (Waste Rescue -> Combo + Canvas Banner PNG + 1-Click Share) -->
+          <div class="bento-card p-5 space-y-3.5">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-extrabold text-base text-amber-600 dark:text-amber-300" id="p2MktTitle"></h3>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-300">Waste Rescue Pair</span>
+            </div>
+            <canvas id="p2BannerCanvas" width="600" height="240" class="w-full rounded-xl border border-white/15 shadow-lg"></canvas>
+            <textarea id="p2PostCopyBox" rows="3" readonly class="w-full glass-input rounded-xl p-2.5 text-xs"></textarea>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <button type="button" id="p2DownloadBannerBtn" class="px-3.5 py-2 rounded-xl bg-amber-400 text-slate-950 font-extrabold"></button>
+              <button type="button" id="p2SharePostBtn" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-bold"></button>
+            </div>
+          </div>
+
+          <!-- 10. Cross-Domain FinSphere SME Capital (Explicitly Simulation Only) -->
+          <div class="bento-card p-5 space-y-3.5">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="font-extrabold text-base text-sky-600 dark:text-sky-300" id="p2FinTitle"></h3>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-500 dark:text-rose-300">SIMULATION ONLY</span>
+            </div>
+            <div class="p-2.5 rounded-xl bg-rose-500/12 border border-rose-500/35 text-[11px] font-bold" id="p2FinDisclaimer"></div>
+
+            <div class="grid grid-cols-2 gap-2.5 text-xs">
+              <div class="p-3 rounded-xl sub-glass-row">
+                <div class="text-muted" id="p2FinScoreLbl"></div>
+                <div class="text-2xl font-extrabold text-emerald-500 dark:text-emerald-300 mt-0.5" id="p2FinScoreVal"></div>
+              </div>
+              <div class="p-3 rounded-xl sub-glass-row">
+                <div class="text-muted" id="p2FinGapLbl"></div>
+                <div class="text-2xl font-extrabold text-amber-500 dark:text-amber-300 mt-0.5" id="p2FinGapVal"></div>
+              </div>
+            </div>
+
+            <div class="space-y-1.5 text-xs">
+              <div class="flex justify-between font-bold"><span id="p2FinCashLbl"></span><span id="p2FinCashVal"></span></div>
+              <input type="range" id="p2FinCashSlider" min="5000" max="25000" step="1000" value="14000" class="w-full accent-sky-500" />
+            </div>
+
+            <textarea id="p2FinLetterBox" rows="4" readonly class="w-full glass-input rounded-xl p-2.5 text-xs leading-relaxed"></textarea>
+            <button type="button" id="p2CopyFinLetterBtn" class="w-full min-h-[38px] rounded-xl bg-sky-600 text-white font-bold text-xs"></button>
+          </div>
+        </div>
+      </section>
+
       <!-- TAB: BILLING & STAFF (Owner Only) -->
       <section id="tab-settings" class="shop-tab hidden space-y-5">
         <div class="bento-card p-5 space-y-3 text-xs sm:text-sm">
@@ -743,8 +1037,8 @@
     const fmtTaka = (v) => `৳${fmtNum(v)}`;
 
     const ROLE_TABS = {
-      OWNER: ['overview', 'twin', 'ai', 'pos', 'stock', 'baki', 'settings'],
-      MANAGER: ['overview', 'twin', 'ai', 'pos', 'stock', 'baki'],
+      OWNER: ['overview', 'twin', 'part2', 'ai', 'pos', 'stock', 'baki', 'settings'],
+      MANAGER: ['overview', 'twin', 'part2', 'ai', 'pos', 'stock', 'baki'],
       CASHIER: ['pos', 'stock', 'baki', 'ai'],
       STOCK_KEEPER: ['stock']
     };
@@ -1016,6 +1310,7 @@
       const meta = {
         overview: { icon: '🏠', bn: 'ওভারভিউ ও ব্যাকটেস্ট', en: 'Overview & Backtest' },
         twin: { icon: '🌦️', bn: 'Digital Twin', en: 'Digital Twin' },
+        part2: { icon: '⚡', bn: 'Vision · Edge · Fin', en: 'Vision · Edge · Fin' },
         ai: { icon: '🧠', bn: '৬-এজেন্ট ট্রেস', en: '6-Agent Trace' },
         pos: { icon: '🧾', bn: 'বিক্রি (POS)', en: 'POS Sales' },
         stock: { icon: '📦', bn: 'স্টক ও মেয়াদ', en: 'Stock & Expiry' },

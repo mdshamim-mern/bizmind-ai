@@ -1,9 +1,16 @@
 {
-  "name": "BizMind AI — মুদি দোকানের এআই পার্টনার",
+  "name": "BizMind AI — স্মার্ট মুদি দোকান পার্টনার",
   "short_name": "BizMind AI",
-  "start_url": "/public/index.html",
+  "description": "Offline-ready AI inventory, POS, waste rescue, and retail co-pilot for Bangladesh.",
+  "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#090e1a",
+  "background_color": "#050814",
   "theme_color": "#4f46e5",
-  "description": "AI-powered inventory, waste rescue, baki khata, and Bangla voice co-pilot for retail shops."
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%234f46e5'/%3E%3Ctext x='50%25' y='56%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='54' font-family='sans-serif' font-weight='bold'%3EBM%3C/text%3E%3C/svg%3E",
+      "sizes": "128x128",
+      "type": "image/svg+xml"
+    }
+  ]
 }
