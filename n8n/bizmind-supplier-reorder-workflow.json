@@ -1,0 +1,66 @@
+{
+  "name": "BizMind AI — Human-in-the-Loop Supplier Reorder (Sandbox)",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Webhook: Owner Approved PO",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "bizmind-po-approved",
+        "responseMode": "onReceived"
+      }
+    },
+    {
+      "id": "2",
+      "name": "Guard: Verify Owner Approval & Sandbox Mode",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [480, 300],
+      "parameters": {
+        "conditions": {
+          "boolean": [{ "value1": "={{$json.ownerApproved}}", "value2": true }],
+          "string": [{ "value1": "={{$json.recipientEmail}}", "operation": "contains", "value2": "sandbox" }]
+        }
+      }
+    },
+    {
+      "id": "3",
+      "name": "Send Sandbox Supplier PO Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2,
+      "position": [740, 260],
+      "parameters": {
+        "fromEmail": "orders@bizmind.ai",
+        "toEmail": "={{$json.recipientEmail}}",
+        "subject": "=[SANDBOX PO] {{$json.poNumber}} — {{$json.shopName}}",
+        "text": "=Dear {{$json.supplierName}},\n\nPlease supply:\n{{$json.itemsSummary}}\nTotal Estimate: BDT {{$json.totalBdt}}\n\nApproved by: {{$json.approvedBy}} via BizMind AI."
+      }
+    },
+    {
+      "id": "4",
+      "name": "Log to BizMind Audit Trail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [980, 260],
+      "parameters": {
+        "method": "POST",
+        "url": "https://bizmind-ai-orcin.vercel.app/api/v1/supplier/po-audit-callback",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            { "name": "poNumber", "value": "={{$json.poNumber}}" },
+            { "name": "status", "value": "SENT_TO_SANDBOX" }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: Owner Approved PO": { "main": [[{ "node": "Guard: Verify Owner Approval & Sandbox Mode", "type": "main", "index": 0 }]] },
+    "Guard: Verify Owner Approval & Sandbox Mode": { "main": [[{ "node": "Send Sandbox Supplier PO Email", "type": "main", "index": 0 }]] },
+    "Send Sandbox Supplier PO Email": { "main": [[{ "node": "Log to BizMind Audit Trail", "type": "main", "index": 0 }]] }
+  }
+}
