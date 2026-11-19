@@ -1,8 +1,8 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
+import fs from 'fs';
 import path from 'path';
 import dotenv from 'dotenv';
-import { z } from 'zod';
 import {
   aiObservabilityStore,
   detectPromptInjection,
@@ -16,7 +16,11 @@ const app = express();
 // 1. CORS & Body Limits
 app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'] }));
 app.use(express.json({ limit: '5mb' }));
-app.use(express.static(path.join(process.cwd(), 'public')));
+
+const publicDir = path.join(process.cwd(), 'public');
+if (fs.existsSync(publicDir)) {
+  app.use(express.static(publicDir));
+}
 
 // 2. Sliding-Window Rate Limiter for AI Endpoints (30 requests / minute per IP)
 const rateBucket = new Map<string, { count: number; resetAt: number }>();
@@ -40,23 +44,34 @@ function aiRateLimiter(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-// 3. Zod Structured Request Validation Schema
-const PublicChatSchema = z.object({
-  message: z.string().min(1).max(1500),
-  lang: z.enum(['bn', 'en']).optional().default('bn'),
-  history: z
-    .array(
-      z.object({
-        role: z.enum(['user', 'model']),
-        text: z.string(),
-      })
-    )
-    .optional()
-    .default([]),
-  shopContext: z.record(z.any()).optional().default({}),
-});
+// 3. Zero-Dependency Runtime Request Validator (Replaces external zod import)
+interface ValidatedChatPayload {
+  message: string;
+  lang: 'bn' | 'en';
+  history: Array<{ role: 'user' | 'model'; text: string }>;
+  shopContext: Record<string, any>;
+}
 
-async function generateGroundedAIAnswer(parsed: z.infer<typeof PublicChatSchema>) {
+function validateChatPayload(body: any): ValidatedChatPayload {
+  if (!body || typeof body.message !== 'string' || body.message.trim().length === 0) {
+    throw new Error('Message is required.');
+  }
+  if (body.message.length > 1500) {
+    throw new Error('Message exceeds 1500 characters.');
+  }
+  const lang: 'bn' | 'en' = body.lang === 'en' ? 'en' : 'bn';
+  const history = Array.isArray(body.history)
+    ? body.history
+        .filter((m: any) => m && (m.role === 'user' || m.role === 'model') && typeof m.text === 'string')
+        .map((m: any) => ({ role: m.role as 'user' | 'model', text: m.text }))
+    : [];
+  const shopContext =
+    body.shopContext && typeof body.shopContext === 'object' ? body.shopContext : {};
+
+  return { message: body.message.trim(), lang, history, shopContext };
+}
+
+async function generateGroundedAIAnswer(parsed: ValidatedChatPayload) {
   const startedAt = Date.now();
   const { message, lang, history, shopContext } = parsed;
 
@@ -169,7 +184,7 @@ app.get('/api/v1/public-ai/health', (_req: Request, res: Response) => {
       'RAG Knowledge Retrieval',
       'Live Google Search Grounding',
       'SSE Word-by-Word Streaming',
-      'Zod Input Validation & Prompt Injection Guard',
+      'Runtime Input Validation & Prompt Injection Guard',
       'Holt-Winters MAPE Forecasting & Z-Score Anomaly Detection',
     ],
     timestamp: new Date().toISOString(),
@@ -196,10 +211,10 @@ app.get('/api/v1/public-ai/observability', (_req: Request, res: Response) => {
   });
 });
 
-// 5. Standard JSON Chat Endpoint (Zod Validated + Rate Limited)
+// 5. Standard JSON Chat Endpoint
 app.post('/api/v1/public-ai/chat', aiRateLimiter, async (req: Request, res: Response) => {
   try {
-    const parsed = PublicChatSchema.parse(req.body);
+    const parsed = validateChatPayload(req.body);
     const result = await generateGroundedAIAnswer(parsed);
     res.json({ success: true, ...result });
   } catch (err: any) {
@@ -207,17 +222,16 @@ app.post('/api/v1/public-ai/chat', aiRateLimiter, async (req: Request, res: Resp
   }
 });
 
-// 6. SSE Streaming Chat Endpoint (Word-by-Word Live Streaming like ChatGPT)
+// 6. SSE Streaming Chat Endpoint
 app.post('/api/v1/public-ai/stream', aiRateLimiter, async (req: Request, res: Response) => {
   try {
-    const parsed = PublicChatSchema.parse(req.body);
+    const parsed = validateChatPayload(req.body);
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
 
     const result = await generateGroundedAIAnswer(parsed);
 
-    // Emit Multi-Agent & RAG metadata first
     res.write(
       `data: ${JSON.stringify({
         type: 'meta',
@@ -228,7 +242,6 @@ app.post('/api/v1/public-ai/stream', aiRateLimiter, async (req: Request, res: Re
       })}\n\n`
     );
 
-    // Stream answer word-by-word
     const words = result.answer.split(/(\s+)/);
     for (const chunk of words) {
       res.write(`data: ${JSON.stringify({ type: 'token', text: chunk })}\n\n`);
@@ -243,7 +256,7 @@ app.post('/api/v1/public-ai/stream', aiRateLimiter, async (req: Request, res: Re
   }
 });
 
-// 7. Background Job Endpoint (Vercel Cron / Morning Brief Generator)
+// 7. Background Job Endpoint
 app.get('/api/v1/cron/morning-brief', (_req: Request, res: Response) => {
   res.json({
     success: true,
@@ -253,14 +266,18 @@ app.get('/api/v1/cron/morning-brief', (_req: Request, res: Response) => {
   });
 });
 
-// 8. Serve Mobile-First Dashboard at / and /dashboard
-app.get('/', (_req: Request, res: Response) => {
-  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
-});
+// 8. Serve Dashboard safely at / and /dashboard (redirects to GitHub Pages if static file isn't bundled in serverless function)
+function serveDashboard(_req: Request, res: Response) {
+  const indexFile = path.join(process.cwd(), 'public', 'index.html');
+  if (fs.existsSync(indexFile)) {
+    res.sendFile(indexFile);
+    return;
+  }
+  res.redirect('https://mdshamim-mern.github.io/bizmind-ai/');
+}
 
-app.get('/dashboard', (_req: Request, res: Response) => {
-  res.sendFile(path.join(process.cwd(), 'public', 'index.html'));
-});
+app.get('/', serveDashboard);
+app.get('/dashboard', serveDashboard);
 
 const PORT = process.env.PORT || 5000;
 if (process.env.NODE_ENV !== 'production') {
