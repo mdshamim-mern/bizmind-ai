@@ -829,7 +829,7 @@
                   <option value="1" selected>1.0x</option>
                   <option value="1.2">1.2x</option>
                 </select>
-                <button type="button" id="stopTtsBtn" class="hidden px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-600 dark:text-rose-300 font-bold">⏹️ Stop</button>
+                <button type="button" id="stopTtsBtn" class="hidden px-2.5 py-1 rounded-lg bg-rose-500/20 text-rose-600 dark:text-rose-300 font-bold"></button>
               </div>
               <span id="voicePrivacyHint" class="text-muted text-[10px]"></span>
             </div>
@@ -1419,14 +1419,16 @@
 
     const backtestData = compute90DayBacktest();
 
+    let lastTraceQuery = '';
     function buildSixAgentTrace(query) {
+      const qShow = query || L('ডিমের মেয়াদ, নিট লাভ ও সাপ্লায়ার অর্ডার', 'Expiring eggs, net profit & supplier PO');
       return [
-        { agent: 'Router', badge: 'ROUTER', tool: 'intent_classifier_v2', ms: 18, thought: L(`প্রশ্ন বিশ্লেষণ: "${query}" — টাকার হিসাব SQL টুলে এবং নীতিমালা pgvector RAG-এ পাঠানো হচ্ছে।`, `Parsed "${query}" — routing financial math to SQL DB tools and policies to pgvector RAG.`), res: L('Inventory + Sales + Finance + Supplier → Manager', 'Inventory + Sales + Finance + Supplier → Manager') },
-        { agent: 'Inventory', badge: 'SQL DB TOOL', tool: 'sql_expiring_batches(shopId)', ms: 32, thought: L('সরাসরি PostgreSQL থেকে মেয়াদোত্তীর্ণ ব্যাচ ও রি-অর্ডার সীমা পরীক্ষা করছি।', 'Querying PostgreSQL batch expiry table & ROP thresholds directly.'), res: L('৫৫টি ডিম ৪ দিনে মেয়াদ শেষ; তেল ৩৮টি (ROP-এর নিচে)।', '55 Eggs expire in 4d; Soybean Oil at 38 (below ROP).') },
-        { agent: 'Sales', badge: 'OPTIMIZER', tool: 'price_elasticity_solver(E=-2.4)', ms: 29, thought: L('গত ৩০ দিনের বিক্রি ও প্রাইস ইলাস্টিসিটি হিসাব করছি।', 'Computing 30-day sales velocity & price elasticity (E=-2.4).'), res: L('১৫% ছাড়ে দৈনিক বিক্রি ৮→১১, ৳৭০১ ক্যাশ উদ্ধার।', '15% off lifts sales 8→11/day, recovering ৳701 cash.') },
-        { agent: 'Finance', badge: 'SQL DB TOOL', tool: 'sql_ledger_pnl(shopId)', ms: 24, thought: L('টাকার হিসাব কখনোই RAG দিয়ে নয় — সরাসরি SQL লেজার থেকে মোট বিক্রি ও লাভ গণনা করছি।', 'Financial totals strictly via SQL ledger query (never RAG).'), res: L('বিক্রি ৳১,০৭,৯০০ · নিট লাভ ৳৪,৫৫০ · বাকি ৳৮,২০০।', 'Revenue ৳107,900 · Net Profit ৳4,550 · Dues ৳8,200.') },
-        { agent: 'Supplier', badge: 'PGVECTOR RAG', tool: 'pgvector_search("supplier_terms")', ms: 41, thought: L('pgvector RAG থেকে সাপ্লায়ারের ডেলিভারি সময় ও শর্ত খুঁজে আনছি।', 'Retrieving supplier lead-time & MOQ contract terms via pgvector RAG.'), res: L('মেঘনা ট্রেডার্স (২ দিন ডেলিভারি): ২৮টি তেলের PO স্যান্ডবক্স ড্রাফট প্রস্তুত।', 'Meghna Traders (2d lead time): 28-Oil PO sandbox email drafted.') },
-        { agent: 'Manager', badge: 'SYNTHESIZER', tool: 'emit_decision_and_gen_ui_json()', ms: 22, thought: L('সবার মত মিলিয়ে চূড়ান্ত সিদ্ধান্ত ও নিরাপদ Generative UI JSON তৈরি করছি।', 'Synthesizing all agents into final plan & safe Generative UI JSON.'), res: L('সিদ্ধান্ত প্রস্তুত: লাল Alert Card সবার ওপরে + PO অনুমোদন।', 'Decision ready: Critical Alert Card prioritized + PO queued.') }
+        { agent: L('রাউটার এজেন্ট', 'Router Agent'), badge: L('রাউটার', 'ROUTER'), type: 'ROUTER', tool: 'intent_classifier_v2', ms: 18, thought: L(`প্রশ্ন বিশ্লেষণ: "${qShow}" — টাকার হিসাব SQL টুলে এবং নীতিমালা pgvector RAG-এ পাঠানো হচ্ছে।`, `Parsed "${qShow}" — routing financial math to SQL DB tools and policies to pgvector RAG.`), res: L('ইনভেন্টরি + সেলস + ফাইন্যান্স + সাপ্লায়ার → ম্যানেজার', 'Inventory + Sales + Finance + Supplier → Manager') },
+        { agent: L('ইনভেন্টরি এজেন্ট', 'Inventory Agent'), badge: L('SQL ডাটাবেস টুল', 'SQL DB TOOL'), type: 'SQL DB TOOL', tool: 'sql_expiring_batches(shopId)', ms: 32, thought: L('সরাসরি PostgreSQL থেকে মেয়াদোত্তীর্ণ ব্যাচ ও রি-অর্ডার সীমা পরীক্ষা করছি।', 'Querying PostgreSQL batch expiry table & ROP thresholds directly.'), res: L('৫৫টি ডিম ৪ দিনে মেয়াদ শেষ; সয়াবিন তেল ৩৮টি (সীমার নিচে)।', '55 Eggs expire in 4d; Soybean Oil at 38 (below ROP).') },
+        { agent: L('সেলস এজেন্ট', 'Sales Agent'), badge: L('অপটিমাইজার', 'OPTIMIZER'), type: 'OPTIMIZER', tool: 'price_elasticity_solver(E=-2.4)', ms: 29, thought: L('গত ৩০ দিনের বিক্রি ও প্রাইস ইলাস্টিসিটি (E=-2.4) হিসাব করছি।', 'Computing 30-day sales velocity & price elasticity (E=-2.4).'), res: L('১৫% ছাড়ে দৈনিক বিক্রি ৮→১১, ৳৭০১ ক্যাশ উদ্ধার হবে।', '15% off lifts sales 8→11/day, recovering ৳701 cash.') },
+        { agent: L('ফাইন্যান্স এজেন্ট', 'Finance Agent'), badge: L('SQL ডাটাবেস টুল', 'SQL DB TOOL'), type: 'SQL DB TOOL', tool: 'sql_ledger_pnl(shopId)', ms: 24, thought: L('টাকার হিসাব কখনোই RAG দিয়ে নয় — সরাসরি SQL লেজার থেকে মোট বিক্রি ও লাভ গণনা করছি।', 'Financial totals strictly via SQL ledger query (never RAG).'), res: L('মোট বিক্রি ৳১,০৭,৯০০ · নিট লাভ ৳৪,৫৫০ · বাকি ৳৮,২০০।', 'Revenue ৳107,900 · Net Profit ৳4,550 · Dues ৳8,200.') },
+        { agent: L('সাপ্লায়ার এজেন্ট', 'Supplier Agent'), badge: 'PGVECTOR RAG', type: 'PGVECTOR RAG', tool: 'pgvector_search("supplier_terms")', ms: 41, thought: L('pgvector RAG থেকে সাপ্লায়ারের ডেলিভারি সময় ও শর্ত খুঁজে আনছি।', 'Retrieving supplier lead-time & MOQ contract terms via pgvector RAG.'), res: L('মেঘনা ট্রেডার্স (২ দিন ডেলিভারি): ২৮টি তেলের PO খসড়া প্রস্তুত।', 'Meghna Traders (2d lead time): 28-Oil PO sandbox draft ready.') },
+        { agent: L('ম্যানেজার এজেন্ট', 'Manager Agent'), badge: L('সমন্বয়কারী', 'SYNTHESIZER'), type: 'SYNTHESIZER', tool: 'emit_decision_and_gen_ui_json()', ms: 22, thought: L('সব এজেন্টের মত মিলিয়ে চূড়ান্ত সিদ্ধান্ত ও নিরাপদ Generative UI JSON তৈরি করছি।', 'Synthesizing all agents into final plan & safe Generative UI JSON.'), res: L('সিদ্ধান্ত প্রস্তুত: লাল সতর্কতা কার্ড সবার ওপরে + PO অনুমোদন।', 'Decision ready: Critical Alert Card prioritized + PO queued.') }
       ];
     }
 
@@ -1582,16 +1584,16 @@
     }
 
     function renderAgentTrace() {
-      if (currentTrace.length === 0) currentTrace = buildSixAgentTrace(L('ডিমের মেয়াদ, নিট লাভ ও সাপ্লায়ার PO', 'Expiring eggs, net profit & supplier PO'));
+      currentTrace = buildSixAgentTrace(lastTraceQuery);
       const totalMs = currentTrace.reduce((s, x) => s + x.ms, 0);
-      document.getElementById('traceTotalMs').textContent = `${fmtNum(totalMs)}ms`;
+      document.getElementById('traceTotalMs').textContent = `${fmtNum(totalMs)} ${L('মি.সে.', 'ms')}`;
       document.getElementById('agentTraceList').innerHTML = currentTrace
         .map((s, idx) => {
-          const bCls = s.badge === 'SQL DB TOOL' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300' : s.badge === 'PGVECTOR RAG' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300' : 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-300';
+          const bCls = s.type === 'SQL DB TOOL' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-300' : s.type === 'PGVECTOR RAG' ? 'bg-amber-500/20 text-amber-600 dark:text-amber-300' : 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-300';
           return `<div class="p-3 rounded-xl sub-glass-row space-y-1">
             <div class="flex items-center justify-between gap-2">
-              <span class="font-extrabold">${idx + 1}. ${s.agent} Agent</span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${bCls}">${s.badge} · ${s.ms}ms</span>
+              <span class="font-extrabold">${fmtNum(idx + 1)}. ${s.agent}</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ${bCls}">${s.badge} · ${fmtNum(s.ms)} ${L('মি.সে.', 'ms')}</span>
             </div>
             <div class="text-muted">${s.thought}</div>
             <div class="font-mono text-[11px] text-sky-600 dark:text-sky-300">↳ ${s.tool}</div>
@@ -1770,6 +1772,7 @@
         return;
       }
 
+      lastTraceQuery = text;
       currentTrace = buildSixAgentTrace(text);
       chatHistory.push({ role: 'ai', text: L('🔍 ৬-এজেন্ট ও লাইভ Gemini + Google Search উত্তর আনছে...', '🔍 Running 6-Agent + live Gemini & Google Search...') });
       renderShopContent();
@@ -1877,7 +1880,7 @@
         if (!session || session.role === 'SUPER_ADMIN') return;
         document.getElementById('searchModal').classList.remove('hidden');
         document.getElementById('globalSearchIn').value = '';
-        document.getElementById('globalSearchResults').innerHTML = (ROLE_TABS[session.role] || []).map((t) => `<button type="button" data-gs="${t}" class="gs-b w-full text-left p-2.5 rounded-xl sub-glass-row font-bold">${t.toUpperCase()}</button>`).join('');
+        const gsNames = { overview: L('ওভারভিউ ও ব্যাকটেস্ট', 'Overview & Backtest'), ops: L('অডিট ও অপারেশন', 'Audit & Ops'), twin: L('ডিজিটাল টুইন', 'Digital Twin'), part2: L('ভিশন · এজ · ফিন', 'Vision · Edge · Fin'), ai: L('৬-এজেন্ট ট্রেস', '6-Agent Trace'), pos: L('বিক্রি ও বিল', 'POS Sales'), stock: L('স্টক ও মেয়াদ', 'Stock & Expiry'), baki: L('বাকির খাতা', 'Credit Dues'), settings: L('বিলিং', 'Billing') }; document.getElementById('globalSearchResults').innerHTML = (ROLE_TABS[session.role] || []).map((t) => `<button type="button" data-gs="${t}" class="gs-b w-full text-left p-2.5 rounded-xl sub-glass-row font-bold">${gsNames[t] || t.toUpperCase()}</button>`).join('');
         document.querySelectorAll('.gs-b').forEach((b) => b.addEventListener('click', () => { document.getElementById('searchModal').classList.add('hidden'); switchShopTab(b.getAttribute('data-gs')); }));
       };
       document.getElementById('openSearchBtn').addEventListener('click', openSearch);
@@ -2440,9 +2443,9 @@
     }
     function buildCleanChain() {
       const raw = [
-        { idx: 0, actor: 'Finance Agent', scope: 'sql_readonly', action: 'Computed Net Profit ৳4,550' },
-        { idx: 1, actor: 'Supplier Agent', scope: 'po_draft_only', action: 'Flagged ৳200 Rice Overcharge' },
-        { idx: 2, actor: 'Owner (Md. Rahim)', scope: 'approve_po', action: 'Approved Hold-Payment on PO-884' }
+        { idx: 0, actor: 'Finance Agent', actorBn: 'ফাইন্যান্স এজেন্ট', scope: 'sql_readonly', action: 'Computed Net Profit ৳4,550', actionBn: 'নিট লাভ ৳৪,৫৫০ গণনা সম্পন্ন' },
+        { idx: 1, actor: 'Supplier Agent', actorBn: 'সাপ্লায়ার এজেন্ট', scope: 'po_draft_only', action: 'Flagged ৳200 Rice Overcharge', actionBn: 'চালের চালানে ৳২০০ বেশি চার্জ শনাক্ত' },
+        { idx: 2, actor: 'Owner (Md. Rahim)', actorBn: 'মালিক (মো. রহিম)', scope: 'approve_po', action: 'Approved Hold-Payment on PO-884', actionBn: 'PO-884 পেমেন্ট থামানোর সুপারিশ অনুমোদন' }
       ];
       const out = [];
       for (let i = 0; i < raw.length; i++) {
@@ -2490,7 +2493,7 @@
         ? 'px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 font-bold text-[10px]'
         : 'px-2.5 py-0.5 rounded-full bg-rose-500/25 text-rose-600 dark:text-rose-300 font-extrabold text-[10px]';
       document.getElementById('v5HashChainList').innerHTML = auditChain
-        .map((c) => `<div class="p-2 rounded-lg sub-glass-row"><div>#${c.idx} <strong>${c.actor}</strong> [${c.scope}]: ${c.action}</div><div class="text-[10px] text-muted">prev:${c.prev.slice(0, 8)} → hash:${c.hash.slice(0, 10)}</div></div>`)
+        .map((c) => `<div class="p-2 rounded-lg sub-glass-row"><div>#${fmtNum(c.idx)} <strong>${L(c.actorBn || c.actor, c.actor)}</strong> [${c.scope}]: ${L(c.actionBn || c.action, c.action)}</div><div class="text-[10px] text-muted">prev:${c.prev.slice(0, 8)} → hash:${c.hash.slice(0, 10)}</div></div>`)
         .join('');
       document.getElementById('v5VerifyHashBtn').textContent = L('🔍 Integrity যাচাই', '🔍 Verify Integrity');
       document.getElementById('v5TamperHashBtn').textContent = L('🧪 সারি বদলে টেস্ট', '🧪 Tamper Row #1');
@@ -2504,9 +2507,9 @@
       // #31 Supplier Damage Claim
       document.getElementById('v5ClaimTitle').textContent = L('ক্ষতিগ্রস্ত মালের সাপ্লায়ার ক্লেইম খসড়া', 'Damaged Stock Supplier Claim Draft');
       const sel = document.getElementById('v5ClaimReasonSel');
-      if (sel.options.length === 0) {
-        sel.innerHTML = `<option value="BROKEN">${L('কারণ: ভাঙা মাল', 'Reason: Broken')}</option><option value="SPOILED">${L('কারণ: নষ্ট মাল', 'Reason: Spoiled')}</option><option value="EXPIRED">${L('কারণ: মেয়াদোত্তীর্ণ', 'Reason: Expired')}</option>`;
-      }
+      const prevReason = sel.value || 'BROKEN';
+      sel.innerHTML = `<option value="BROKEN">${L('কারণ: ভাঙা মাল', 'Reason: Broken')}</option><option value="SPOILED">${L('কারণ: নষ্ট মাল', 'Reason: Spoiled')}</option><option value="EXPIRED">${L('কারণ: মেয়াদোত্তীর্ণ', 'Reason: Expired')}</option>`;
+      sel.value = prevReason;
       document.getElementById('v5GenClaimBtn').textContent = L('ক্লেইম খসড়া বানান', 'Generate Claim');
       const reasonTxt = sel.value === 'BROKEN' ? L('ভাঙা', 'broken') : sel.value === 'SPOILED' ? L('নষ্ট', 'spoiled') : L('মেয়াদোত্তীর্ণ', 'expired');
       document.getElementById('v5ClaimDraftBox').value = L(
@@ -2555,7 +2558,7 @@
       });
 
       document.getElementById('v5TamperHashBtn')?.addEventListener('click', () => {
-        auditChain[1].action = 'TAMPERED: Changed ৳200 to ৳0';
+        auditChain[1].action = 'TAMPERED: Changed ৳200 to ৳0'; auditChain[1].actionBn = 'টেম্পার করা হয়েছে: ৳২০০ বদলে ৳০ করা হয়েছে';
         showToast(L('🧪 সারি #১ হাতে বদলানো হয়েছে — এবার "Integrity যাচাই" চাপুন!', '🧪 Row #1 tampered — now click "Verify Integrity"!'));
         renderV5MasterUI();
       });
@@ -3186,6 +3189,7 @@
       if (lt) lt.textContent = L('শুনছি... বাংলা বা ইংরেজিতে বলুন', 'Listening... speak now');
       const sm = document.getElementById('stopMicBtn');
       if (sm) sm.textContent = L('থামুন', 'Stop');
+      const stts = document.getElementById('stopTtsBtn'); if (stts) stts.textContent = L('⏹️ থামুন', '⏹️ Stop');
 
       // Add 🔊 Listen button to every AI bubble in #chatThreadBox!
       const box = document.getElementById('chatThreadBox');
