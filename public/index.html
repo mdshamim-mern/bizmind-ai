@@ -202,9 +202,19 @@
       </div>
       <p class="text-xs sm:text-sm text-muted" data-i18n="upgradeModalSub"></p>
       <div class="grid grid-cols-3 gap-2 text-xs font-bold">
-        <button type="button" data-pay="bKash Sandbox" class="pay-method-btn p-3 rounded-xl border-2 border-pink-500 bg-pink-500/15 text-pink-500 dark:text-pink-300" data-i18n="payBkash"></button>
-        <button type="button" data-pay="Nagad Sandbox" class="pay-method-btn p-3 rounded-xl border border-slate-500/30" data-i18n="payNagad"></button>
-        <button type="button" data-pay="SSLCommerz Sandbox" class="pay-method-btn p-3 rounded-xl border border-slate-500/30" data-i18n="payCard"></button>
+        <button type="button" data-pay="bKash Sandbox" class="pay-method-btn p-3 rounded-xl border-2 border-pink-500 bg-pink-500/15 text-pink-600 dark:text-pink-300 transition" data-i18n="payBkash"></button>
+        <button type="button" data-pay="Nagad Sandbox" class="pay-method-btn p-3 rounded-xl border border-slate-500/30 hover:border-orange-400 transition" data-i18n="payNagad"></button>
+        <button type="button" data-pay="SSLCommerz Sandbox" class="pay-method-btn p-3 rounded-xl border border-slate-500/30 hover:border-indigo-400 transition" data-i18n="payCard"></button>
+      </div>
+      <div id="sandboxPayDetails" class="p-3.5 rounded-xl sub-glass-row space-y-2 text-xs">
+        <div class="flex justify-between font-bold">
+          <span id="sbxSelectedLbl">bKash Sandbox</span>
+          <span class="text-emerald-600 dark:text-emerald-300">৳499/mo · Sandbox</span>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <input type="text" id="sbxAccountIn" value="01865190471" class="glass-input rounded-xl px-3 py-2 text-xs font-mono" />
+          <input type="text" id="sbxOtpIn" value="123456" class="glass-input rounded-xl px-3 py-2 text-xs font-mono" />
+        </div>
       </div>
       <button type="button" id="confirmUpgradeBtn" data-i18n="btnActivatePro" class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-extrabold text-xs sm:text-sm"></button>
     </div>
@@ -229,6 +239,21 @@
       <p class="text-xs sm:text-sm text-muted" data-i18n="notFoundSub"></p>
       <button type="button" id="backFrom404Btn" data-i18n="btnReturnSafe" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs"></button>
     </div>
+  </section>
+
+  
+  <!-- WORKSPACE: DEDICATED MODERN GLASSY FULL PAGES (Help Center, FAQ, Demo Video, About Us, Privacy, Terms, Security & Tech) -->
+  <section id="workspace-page" class="hidden max-w-5xl w-full mx-auto px-4 py-8 pb-24 space-y-6 fade-in-up">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <button type="button" id="pageBackHomeBtn" class="min-h-[44px] px-4 py-2 rounded-xl glass-input font-bold text-xs sm:text-sm inline-flex items-center gap-2 hover:border-indigo-400 transition"></button>
+      <div id="pageQuickTabs" class="flex flex-wrap gap-1.5 text-xs"></div>
+    </div>
+    <div id="pageHeroBanner" class="rounded-3xl bg-gradient-to-br from-indigo-600 via-blue-700 to-emerald-600 text-white p-6 sm:p-9 shadow-xl space-y-2">
+      <span id="pageBadge" class="inline-block text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-white/15 border border-white/20"></span>
+      <h1 id="pageTitle" class="text-2xl sm:text-4xl font-extrabold tracking-tight"></h1>
+      <p id="pageSubtitle" class="text-sm sm:text-base text-indigo-100 max-w-2xl leading-relaxed"></p>
+    </div>
+    <div id="pageContentGrid" class="space-y-5"></div>
   </section>
 
   <!-- WORKSPACE 1: LANDING PAGE -->
@@ -1344,7 +1369,7 @@
 
     function setWorkspace(ws) {
       activeWorkspace = ws;
-      ['landing', 'shop', '404'].forEach((w) => document.getElementById('workspace-' + w).classList.toggle('hidden', w !== ws));
+      ['landing', 'shop', '404', 'page'].forEach((w) => document.getElementById('workspace-' + w).classList.toggle('hidden', w !== ws));
       document.getElementById('mobileBottomBar').classList.toggle('hidden', ws !== 'shop');
       renderAll();
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2669,6 +2694,229 @@
         } catch (_e) {}
       });
       renderDemandIqProof();
+    });
+
+  
+
+    // ========================================================================
+    // V12: WORKING bKash + Nagad + SSLCommerz SANDBOX + DEDICATED FULL GLASSY PAGES
+    // ========================================================================
+    let activePayGateway = 'bKash Sandbox';
+    let currentInfoPage = 'help';
+    let demoWalkStep = 0;
+
+    function updateSandboxGatewayUI() {
+      document.querySelectorAll('.pay-method-btn').forEach((btn) => {
+        const g = btn.getAttribute('data-pay');
+        const active = g === activePayGateway;
+        btn.classList.remove('border-2', 'border-pink-500', 'bg-pink-500/15', 'text-pink-600', 'dark:text-pink-300', 'border-orange-500', 'bg-orange-500/15', 'text-orange-600', 'dark:text-orange-300', 'border-indigo-500', 'bg-indigo-500/15', 'text-indigo-600', 'dark:text-indigo-300', 'border', 'border-slate-500/30');
+        if (active) {
+          btn.classList.add('border-2');
+          if (g.includes('bKash')) btn.classList.add('border-pink-500', 'bg-pink-500/15', 'text-pink-600', 'dark:text-pink-300');
+          else if (g.includes('Nagad')) btn.classList.add('border-orange-500', 'bg-orange-500/15', 'text-orange-600', 'dark:text-orange-300');
+          else btn.classList.add('border-indigo-500', 'bg-indigo-500/15', 'text-indigo-600', 'dark:text-indigo-300');
+        } else {
+          btn.classList.add('border', 'border-slate-500/30');
+        }
+      });
+      const lbl = document.getElementById('sbxSelectedLbl');
+      const acc = document.getElementById('sbxAccountIn');
+      const otp = document.getElementById('sbxOtpIn');
+      if (lbl) lbl.textContent = activePayGateway;
+      if (acc && otp) {
+        if (activePayGateway.includes('bKash')) { acc.placeholder = 'bKash Wallet (017XX...)'; otp.placeholder = 'OTP (123456)'; }
+        else if (activePayGateway.includes('Nagad')) { acc.placeholder = 'Nagad Wallet (018XX...)'; otp.placeholder = 'PIN / OTP (1234)'; }
+        else { acc.placeholder = 'Card (4242 •••• 4242)'; otp.placeholder = 'CVV (123)'; }
+      }
+    }
+
+    function openFullInfoPage(pageKey) {
+      currentInfoPage = pageKey || 'help';
+      setWorkspace('page');
+      renderFullInfoPage();
+    }
+
+    function renderFullInfoPage() {
+      if (activeWorkspace !== 'page') return;
+      document.getElementById('pageBackHomeBtn').textContent = L('← হোম পেজে ফিরুন', '← Back to Home');
+
+      const navPages = [
+        { k: 'help', bn: 'সাহায্য কেন্দ্র', en: 'Help Center' },
+        { k: 'faq', bn: 'সচরাচর প্রশ্ন', en: 'FAQ' },
+        { k: 'demo', bn: 'ডেমো ভিডিও', en: 'Demo Video' },
+        { k: 'about', bn: 'আমাদের সম্পর্কে', en: 'About Us' },
+        { k: 'techsec', bn: 'নিরাপত্তা ও প্রযুক্তি', en: 'Security & Tech' },
+        { k: 'privacy', bn: 'গোপনীয়তা ও শর্তাবলী', en: 'Privacy & Terms' }
+      ];
+      document.getElementById('pageQuickTabs').innerHTML = navPages
+        .map((p) => `<button type="button" data-pnav="${p.k}" class="pnav-btn px-3 py-1.5 rounded-xl font-bold transition ${currentInfoPage === p.k ? 'bg-indigo-600 text-white shadow-md' : 'sub-glass-row hover:border-indigo-400'}">${L(p.bn, p.en)}</button>`)
+        .join('');
+      document.querySelectorAll('.pnav-btn').forEach((b) => b.addEventListener('click', () => { currentInfoPage = b.getAttribute('data-pnav'); renderFullInfoPage(); }));
+
+      const badge = document.getElementById('pageBadge');
+      const title = document.getElementById('pageTitle');
+      const sub = document.getElementById('pageSubtitle');
+      const grid = document.getElementById('pageContentGrid');
+
+      if (currentInfoPage === 'help') {
+        badge.textContent = L('সাহায্য কেন্দ্র · সকাল ১০টা–রাত ৮টা', 'Help Center · 10 AM – 8 PM BST');
+        title.textContent = L('কীভাবে আপনাকে সাহায্য করতে পারি?', 'How Can We Help Your Shop Today?');
+        sub.textContent = L('দোকান সেটআপ, চালান স্ক্যান, অফলাইন বিক্রি বা যেকোনো প্রয়োজনে সরাসরি কথা বলুন অথবা গাইড পড়ুন।', 'Step-by-step guides for shopkeepers plus direct phone, WhatsApp, and email support.');
+        grid.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <a href="tel:+8801865190471" class="bento-card p-5 space-y-2 hover:border-emerald-400 block">
+              <div class="text-xs font-extrabold text-emerald-600 dark:text-emerald-300">${L('সরাসরি ফোন কল', 'Direct Phone Call')}</div>
+              <div class="text-lg font-extrabold">01865190471</div>
+              <p class="text-xs text-muted">${L('সকাল ১০টা থেকে রাত ৮টা (বাংলাদেশ সময়)', '10 AM – 8 PM Bangladesh Standard Time')}</p>
+            </a>
+            <a href="https://wa.me/8801865190471" target="_blank" rel="noopener noreferrer" class="bento-card p-5 space-y-2 hover:border-emerald-400 block">
+              <div class="text-xs font-extrabold text-emerald-600 dark:text-emerald-300">WhatsApp</div>
+              <div class="text-lg font-extrabold">${L('তাৎক্ষণিক মেসেজ করুন', 'Instant Chat Support')}</div>
+              <p class="text-xs text-muted">${L('স্ক্রিনশট বা দোকানের সমস্যা সরাসরি পাঠান', 'Send screenshots or quick shop questions')}</p>
+            </a>
+            <a href="mailto:mdshamim.mern@gmail.com" class="bento-card p-5 space-y-2 hover:border-indigo-400 block">
+              <div class="text-xs font-extrabold text-indigo-600 dark:text-indigo-300">${L('ইমেইল সাপোর্ট', 'Email Support')}</div>
+              <div class="text-sm font-extrabold break-all">mdshamim.mern@gmail.com</div>
+              <p class="text-xs text-muted">${L('২৪ ঘণ্টার মধ্যে নিশ্চিত উত্তর', 'Guaranteed reply within 24 hours')}</p>
+            </a>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div class="bento-card p-5 space-y-1.5"><h3 class="font-extrabold">${L('১. প্রথমবার দোকান সেটআপ', '1. Quick Shop Setup')}</h3><p class="text-xs text-muted">${L('লগইন করে "বিক্রি ও বিল" ট্যাবে পণ্য বেছে নিন বা "ভিশন · এজ · ফিন" থেকে বারকোড স্ক্যান করুন।', 'Sign in, pick items in POS Sales, or scan barcodes in Vision · Edge · Fin.')}</p></div>
+            <div class="bento-card p-5 space-y-1.5"><h3 class="font-extrabold">${L('২. ইন্টারনেট না থাকলে বিক্রি', '2. Selling Without Internet')}</h3><p class="text-xs text-muted">${L('অফলাইন মোডে সব বিক্রি ফোনেই জমা থাকে; ইন্টারনেট ফিরলে ১ ক্লিকে মূল হিসাবে সিঙ্ক হয়ে যায়।', 'Sales queue safely offline on your phone and sync in 1 click when back online.')}</p></div>
+            <div class="bento-card p-5 space-y-1.5"><h3 class="font-extrabold">${L('৩. কর্মীদের আলাদা রোল', '3. Staff Role Isolation')}</h3><p class="text-xs text-muted">${L('ক্যাশিয়ার শুধু বিক্রি ও বাকি দেখতে পাবে — দোকানের লাভ-ক্ষতি ও বিলিং সবসময় গোপন থাকবে।', 'Cashiers only access POS & Credit Dues — profit and billing stay strictly private.')}</p></div>
+            <div class="bento-card p-5 space-y-1.5"><h3 class="font-extrabold">${L('৪. চালান ছবি থেকে স্টক এন্ট্রি', '4. Chalan Photo Stock Entry')}</h3><p class="text-xs text-muted">${L('সাপ্লায়ারের চালানের ছবি তুললে এআই পণ্য ও দাম পড়ে PO-র সাথে মিলিয়ে বেশি চার্জ ধরে ফেলে।', 'Upload a supplier chalan photo — AI checks prices against your PO to catch overcharges.')}</p></div>
+          </div>`;
+      } else if (currentInfoPage === 'faq') {
+        badge.textContent = L('সচরাচর জিজ্ঞাসিত প্রশ্ন (FAQ)', 'Frequently Asked Questions');
+        title.textContent = L('দোকানদার ও বিচারকদের সাধারণ প্রশ্নোত্তর', 'Clear Answers for Shopkeepers & Judges');
+        sub.textContent = L('নিরাপত্তা, অফলাইন ব্যবহার, এআই নির্ভুলতা এবং দাম নিয়ে সব প্রশ্নের স্পষ্ট উত্তর।', 'Transparent answers on offline reliability, security, AI methodology, and pricing.');
+        const qas = [
+          [L('ইন্টারনেট না থাকলেও কি দোকানে বিক্রি করা যাবে?', 'Can I record sales when internet goes down?'), L('হ্যাঁ। বিজমাইন্ড এআই একটি Offline PWA — ইন্টারনেট না থাকলেও বিক্রি ফোনেই সেভ থাকবে এবং নেট এলে ১ ক্লিকে সিঙ্ক হবে।', 'Yes. BizMind AI is an Offline-First PWA. Sales queue locally and sync in 1 click when reconnected.')],
+          [L('ক্যাশিয়ার কি আমার দোকানের আসল লাভ-ক্ষতি দেখতে পারবে?', 'Can a Cashier see my net profit or margins?'), L('কখনোই না। সার্ভার-সাইড রোল গার্ডের কারণে ক্যাশিয়ারের মেনুতে লাভ-ক্ষতির পেজ থাকে না, সরাসরি লিংকে গেলেও ৪০৪ দেখায়, আর এআই-কে জিজ্ঞেস করলেও ব্লক হয়।', 'Never. Server-side RBAC hides Profit & Loss, returns 404 on direct URL attempts, and blocks financial questions in AI chat.')],
+          [L('বিকাশ, নগদ ও SSLCommerz কি এখন স্যান্ডবক্স মোডে আছে?', 'Are bKash, Nagad, and SSLCommerz in Sandbox mode?'), L('হ্যাঁ। হ্যাকাথন ডেমোর জন্য তিনটি পেমেন্ট গেটওয়েই স্যান্ডবক্স মোডে রাখা হয়েছে, যাতে কোনো আসল টাকা না কেটেই সম্পূর্ণ আপগ্রেড ফ্লো পরীক্ষা করা যায়।', 'Yes. All three gateways run in Sandbox mode for the demo so anyone can test the full upgrade flow with zero real charge.')],
+          [L('৯০ দিনের ব্যাকটেস্ট ও WAPE কীভাবে মাপা হয়েছে?', 'How are the 90-day Backtest and WAPE measured?'), L('সময়ভিত্তিক ভাগ (আগের ডেটায় ট্রেন → শেষ ৯০ দিনে টেস্ট) ব্যবহার করে সাধারণ বেসলাইনের (১৮.৬% WAPE) সাথে তুলনা করা হয়েছে, যেখানে আবহাওয়া যুক্ত মডেলের WAPE ১০.৪% (৪৪.১% কম ভুল)।', 'Using a strict chronological split (train earlier, test final 90 days), comparing Naive Baseline (18.6% WAPE) vs Weather-Aware DemandIQ (10.4% WAPE — 44.1% lower error).')],
+          [L('AI চ্যাটবট কি আসল বাজারদর ও বাইরের প্রশ্ন বলতে পারে?', 'Does the AI chat answer live market prices?'), L('হ্যাঁ। ভার্সেল ব্যাকএন্ডে লাইভ Gemini 2.5 Flash + Google Search যুক্ত আছে, যা যেকোনো জেলার আলু-চাল-ডিমের বাজারদর ও দোকানের হিসাব একসাথে উত্তর দেয়।', 'Yes. The Vercel backend connects live Gemini 2.5 Flash + Google Search grounding alongside your shop ledger.')],
+          [L('কোনো সমস্যা হলে কার সাথে যোগাযোগ করব?', 'How do I reach support?'), L('সকাল ১০টা থেকে রাত ৮টার মধ্যে সরাসরি কল বা WhatsApp করুন 01865190471 নম্বরে অথবা ইমেইল করুন mdshamim.mern@gmail.com।', 'Call or WhatsApp 01865190471 (10 AM – 8 PM BST) or email mdshamim.mern@gmail.com.')]
+        ];
+        grid.innerHTML = `<div class="space-y-3">${qas.map((x, idx) => `<details ${idx === 0 ? 'open' : ''} class="bento-card p-5 cursor-pointer"><summary class="font-extrabold text-sm sm:text-base">${x[0]}</summary><p class="text-xs sm:text-sm text-muted mt-2.5 leading-relaxed">${x[1]}</p></details>`).join('')}</div>`;
+      } else if (currentInfoPage === 'demo') {
+        badge.textContent = L('৩ মিনিটের ইন্টারঅ্যাক্টিভ ডেমো গাইড', '3-Minute Interactive Demo Walkthrough');
+        title.textContent = L('রহিম ভাইয়ের মুদি দোকানের গল্প (ধাপে ধাপে)', "Rahim Bhai's Grocery Story (Step by Step)");
+        sub.textContent = L('চালান আসা থেকে শুরু করে অপচয় রোধ, ভয়েস বিক্রি, হ্যাশ-চেইন অডিট ও নিরাপত্তা — নিচে ধাপ বদলে দেখুন।', 'Walk through the complete 6-step End-to-End retail AI demo right here.');
+        const steps = [
+          { t: '0:00 – 0:30', bnT: '১. সমস্যা ও লাল Alert Card (Generative UI)', enT: '1. The Problem & Red Alert Card (Generative UI)', bnD: '৫৫টি লাল ডিম ৪ দিনে নষ্ট হবে। ড্যাশবোর্ড খুলতেই নিরাপদ JSON Generative UI সবার ওপরে লাল Alert Card দেখায়।', enD: '55 Brown Eggs expire in 4 days. Safe JSON Generative UI automatically prioritizes the red Alert Card at the top.' },
+          { t: '0:30 – 1:00', bnT: '২. চালান OCR + ৩-মুখী PO মেলানো (৳২০০ সাশ্রয়)', enT: '2. Invoice OCR + 3-Way PO Reconciliation (৳200 Saved)', bnD: 'চালের চালানে ৳৬২ বনাম PO-তে ৳৫৮ — ৫০ কেজিতে ৳২০০ বেশি চার্জ ধরা পড়ে এবং সাপ্লায়ার রিস্ক স্কোর কমে যায়।', enD: 'Rice invoice charges ৳62 vs PO ৳58 — catches ৳200 overcharge on 50kg and lowers the Supplier Risk Score.' },
+          { t: '1:00 – 1:30', bnT: '৩. ৬-এজেন্ট ট্রেস ও লাইভ Gemini + Google Search', enT: '3. 6-Agent Trace & Live Gemini + Google Search', bnD: 'টাকার হিসাব সরাসরি SQL-এ, সাপ্লায়ার শর্ত pgvector RAG-এ, আর বাজারদর লাইভ Google Search-এ।', enD: 'Financial math runs strictly via SQL, supplier terms via pgvector RAG, and live prices via Google Search.' },
+          { t: '1:30 – 2:00', bnT: '৪. ডাইনামিক মার্কডাউন + প্রোমো ব্যানার + WhatsApp PO', enT: '4. Dynamic Markdown + Promo Banner + WhatsApp PO', bnD: 'ধাপে ধাপে ছাড় (১০% → ২০% → কম্বো), PNG ব্যানার ডাউনলোড এবং মালিকের অনুমোদনে WhatsApp অর্ডার।', enD: 'Phased markdown (10% -> 20% -> Combo), instant PNG banner export, and owner-approved WhatsApp PO.' },
+          { t: '2:00 – 2:30', bnT: '৫. Digital Twin আবহাওয়া + ৯০-দিন WAPE/Bias প্রমাণ', enT: '5. Digital Twin Weather + 90-Day WAPE/Bias Proof', bnD: 'Open-Meteo লাইভ বৃষ্টি ও সাপ্লায়ার ফেল সিমুলেটর + বেসলাইনের চেয়ে ৪৪.১% কম ভুল (WAPE ১০.৪%)।', enD: 'Live Open-Meteo weather & supplier outage What-If + 44.1% lower error vs Naive Baseline (10.4% WAPE).' },
+          { t: '2:30 – 3:00', bnT: '৬. রোল ৪০৪ গার্ড + Tamper-Evident হ্যাশ-চেইন', enT: '6. Role 404 Guard + Tamper-Evident Hash-Chain', bnD: 'ক্যাশিয়ার লাভ-ক্ষতির পেজে ৪০৪ পায় এবং হ্যাশ-চেইনে যেকোনো পরিবর্তন সাথে সাথে ধরা পড়ে।', enD: 'Cashiers receive 404 on profit routes and the SHA-256 hash-chain flags any tampered audit row.' }
+        ];
+        const cur = steps[demoWalkStep % steps.length];
+        grid.innerHTML = `
+          <div class="bento-card p-6 sm:p-8 space-y-5">
+            <div class="flex items-center justify-between text-xs font-bold">
+              <span class="px-3 py-1 rounded-full bg-indigo-500/15 text-indigo-600 dark:text-indigo-300">${cur.t}</span>
+              <span class="text-muted">${L(`ধাপ ${fmtNum((demoWalkStep % steps.length) + 1)} / ৬`, `Step ${(demoWalkStep % steps.length) + 1} / 6`)}</span>
+            </div>
+            <div class="h-2 rounded-full bg-slate-500/20 overflow-hidden"><div class="h-full bg-gradient-to-r from-indigo-600 to-emerald-500 transition-all" style="width:${Math.round((((demoWalkStep % steps.length) + 1) / steps.length) * 100)}%"></div></div>
+            <h2 class="text-xl sm:text-2xl font-extrabold">${L(cur.bnT, cur.enT)}</h2>
+            <p class="text-sm sm:text-base text-muted leading-relaxed">${L(cur.bnD, cur.enD)}</p>
+            <div class="flex flex-wrap gap-2.5 pt-2">
+              <button type="button" id="demoPrevBtn" class="px-4 py-2.5 rounded-xl glass-input font-bold text-xs">${L('← আগের ধাপ', '← Previous')}</button>
+              <button type="button" id="demoNextBtn" class="px-5 py-2.5 rounded-xl bg-indigo-600 text-white font-bold text-xs">${L('পরবর্তী ধাপ →', 'Next Step →')}</button>
+              <button type="button" id="demoLaunchLiveBtn" class="px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs">${L('⚡ এখনই লাইভ ড্যাশবোর্ডে দেখুন', '⚡ Try Live Dashboard Now')}</button>
+            </div>
+          </div>`;
+        document.getElementById('demoPrevBtn').addEventListener('click', () => { demoWalkStep = (demoWalkStep - 1 + steps.length) % steps.length; renderFullInfoPage(); });
+        document.getElementById('demoNextBtn').addEventListener('click', () => { demoWalkStep = (demoWalkStep + 1) % steps.length; renderFullInfoPage(); });
+        document.getElementById('demoLaunchLiveBtn').addEventListener('click', () => loginAsDemo('OWNER'));
+      } else if (currentInfoPage === 'about') {
+        badge.textContent = L('আমাদের সম্পর্কে · বিজমাইন্ড এআই', 'About Us · BizMind AI');
+        title.textContent = L('মুদি দোকান থেকে রিটেল চেইন — বাংলাদেশের স্মার্ট বাণিজ্য', 'From Neighborhood Groceries to Retail Chains');
+        sub.textContent = L('আমরা মুদি দোকান দিয়ে প্রমাণ করছি, কারণ সেখানে অপচয় ও বাকির সমস্যা সবচেয়ে তীব্র। একই আর্কিটেকচার পরে রিটেল চেইনে স্কেল করবে।', 'We are proving this with neighborhood grocery stores where waste and credit losses hit hardest — the exact same multi-tenant architecture scales cleanly to retail chains.');
+        grid.innerHTML = `
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="bento-card p-6 space-y-3">
+              <h3 class="font-extrabold text-base">${L('আমাদের লক্ষ্য', 'Our Mission')}</h3>
+              <p class="text-xs sm:text-sm text-muted leading-relaxed">${L('বাংলাদেশের লাখো ক্ষুদ্র ও মাঝারি দোকানদার এখনো খাতায় হিসাব রাখেন, ফলে মেয়াদোত্তীর্ণ পণ্য, সাপ্লায়ারের বাড়তি চার্জ ও ঝুঁকিপূর্ণ বাকিতে প্রতি মাসে হাজার হাজার টাকা নষ্ট হয়। বিজমাইন্ড এআই সহজ বাংলায় তাঁদের হাতে এন্টারপ্রাইজ-মানের এআই তুলে দিচ্ছে।', 'Millions of MSME shopkeepers in Bangladesh rely on paper ledgers, losing cash silently to expiry waste, invoice overcharges, and overdue credit. BizMind AI brings practical, Bangla-first AI intelligence to every phone.')}</p>
+            </div>
+            <div class="bento-card p-6 space-y-3">
+              <h3 class="font-extrabold text-base">${L('নির্মাতা ও যোগাযোগ', 'Creator & Contact')}</h3>
+              <div class="space-y-1.5 text-xs sm:text-sm">
+                <div class="font-bold">MD. SHAMIM — Full-Stack &amp; AI Engineer</div>
+                <div class="text-muted">📍 ${L('ঢাকা, বাংলাদেশ', 'Dhaka, Bangladesh')}</div>
+                <div>📧 <a href="mailto:mdshamim.mern@gmail.com" class="text-indigo-500 hover:underline font-semibold">mdshamim.mern@gmail.com</a></div>
+                <div>📞 <a href="tel:+8801865190471" class="text-emerald-600 dark:text-emerald-300 hover:underline font-semibold">01865190471</a></div>
+                <div class="flex gap-2 pt-2">
+                  <a href="https://www.linkedin.com/in/md-shamim471/" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-sky-600 text-white font-bold text-xs">LinkedIn</a>
+                  <a href="https://www.facebook.com/share/1HJb2Cwxvt/" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs">Facebook</a>
+                  <a href="https://wa.me/8801865190471" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs">WhatsApp</a>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      } else if (currentInfoPage === 'techsec') {
+        badge.textContent = L('নিরাপত্তা ও আর্কিটেকচার (বিচারকদের জন্য)', 'Security & Technical Architecture');
+        title.textContent = L('এন্টারপ্রাইজ নিরাপত্তা ও যাচাইকৃত এআই স্ট্যাক', 'Enterprise Security & Verified AI Stack');
+        sub.textContent = L('প্রতিটি দাবির পেছনে বাস্তব কোড, স্বয়ংক্রিয় টেস্ট ও স্বচ্ছ আর্কিটেকচার।', 'Every claim is backed by real code, automated tests, and transparent benchmarks.');
+        grid.innerHTML = `
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
+            <div class="bento-card p-5 space-y-1.5"><h3 class="font-extrabold">🔐 PostgreSQL RLS + Server-Side RBAC</h3><p class="text-muted">${L('প্রতিটি দোকানের ডেটা shopId দিয়ে আলাদা; অননুমোদিত রুটে ৪০৪ গার্ড এবং আলাদা ২এফএ অ্যাডমিন কনসোল।', 'Strict tenant isolation by shopId, stealth 404 guards on restricted routes, and an isolated 2FA Admin Console.')}</p></div>
+            <div class="bento-card p-5 space-y-1.5"><h3 class="font-extrabold">🧠 6-Agent StateGraph + SQL / pgvector</h3><p class="text-muted">${L('টাকার হিসাব কখনোই RAG থেকে নয় — সরাসরি SQL ডাটাবেস টুল থেকে; নথিপত্র ও সাপ্লায়ার শর্ত pgvector RAG থেকে।', 'Financial totals run strictly on deterministic SQL tools while unstructured policies use pgvector RAG.')}</p></div>
+            <div class="bento-card p-5 space-y-1.5"><h3 class="font-extrabold">🔗 Tamper-Evident Hash-Chain Audit Log</h3><p class="text-muted">${L('প্রতিটি এআই সিদ্ধান্ত ও অনুমোদন SHA-256 হ্যাশ-চেইনে যুক্ত — যেকোনো পরিবর্তন সাথে সাথে ধরা পড়ে।', 'Every AI action and approval is chained with SHA-256 hashes for instant tamper detection.')}</p></div>
+            <div class="bento-card p-5 space-y-1.5"><h3 class="font-extrabold">📊 OpenAPI 3.0 + MCP + 25-Case Eval</h3><p class="text-muted">${L('Swagger ডকস (/api/v1/docs), MCP JSON-RPC (/api/v1/mcp) এবং ২৫টি অটোমেটেড ইভালুয়েশন টেস্ট।', 'Full Swagger docs (/api/v1/docs), MCP JSON-RPC server (/api/v1/mcp), and 25 automated evaluation tests.')}</p></div>
+          </div>`;
+      } else {
+        badge.textContent = L('আইনি তথ্য ও নীতিমালা', 'Legal & Policies');
+        title.textContent = currentInfoPage === 'terms' ? L('ব্যবহারের শর্তাবলী', 'Terms of Service') : L('গোপনীয়তা নীতি ও শর্তাবলী', 'Privacy Policy & Terms of Service');
+        sub.textContent = L('আপনার দোকানের ডেটা সম্পূর্ণ নিরাপদ এবং আপনার মালিকানাধীন।', 'Your shop data stays private, isolated, and 100% owned by you.');
+        grid.innerHTML = `
+          <div class="bento-card p-6 space-y-4 text-xs sm:text-sm leading-relaxed">
+            <div><h3 class="font-extrabold text-base mb-1">${L('১. ডেটা গোপনীয়তা', '1. Data Privacy')}</h3><p class="text-muted">${L('আপনার দোকানের বিক্রি, লাভ-ক্ষতি, স্টক ও কাস্টমারের বাকির হিসাব অন্য কোনো দোকান বা তৃতীয় পক্ষের সাথে শেয়ার করা হয় না। প্ল্যাটফর্ম অ্যাডমিনও ডিফল্টভাবে ব্যক্তিগত লাভ-ক্ষতি দেখতে পায় না।', 'Your sales, net profits, inventory, and customer credit records are never shared with other shops or third parties. Platform admins cannot view private P&L by default.')}</p></div>
+            <div><h3 class="font-extrabold text-base mb-1">${L('২. দায়িত্বশীল এআই (Human-in-the-Loop)', '2. Responsible AI (Human-in-the-Loop)')}</h3><p class="text-muted">${L('বিজমাইন্ড এআই-এর পূর্বাভাস ও সিমুলেশন ব্যবসায়িক সিদ্ধান্তে সহায়তা করে। মালিকের অনুমোদন ছাড়া কোনো সাপ্লায়ার অর্ডার বা কাস্টমার বার্তা পাঠানো হয় না।', 'Forecasts and simulations assist decisions. No supplier order or customer communication is executed without explicit owner approval.')}</p></div>
+            <div><h3 class="font-extrabold text-base mb-1">${L('৩. যোগাযোগ', '3. Contact')}</h3><p class="text-muted">mdshamim.mern@gmail.com · 01865190471 · ${L('ঢাকা, বাংলাদেশ', 'Dhaka, Bangladesh')}</p></div>
+          </div>`;
+      }
+    }
+
+    const _v11RenderAll = renderAll;
+    renderAll = function () { _v11RenderAll(); renderFullInfoPage(); };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      // Wire all 3 Sandbox Payment Gateways (bKash, Nagad, SSLCommerz)
+      document.querySelectorAll('.pay-method-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          activePayGateway = btn.getAttribute('data-pay');
+          updateSandboxGatewayUI();
+        });
+      });
+      updateSandboxGatewayUI();
+
+      // Override confirmUpgradeBtn to show selected gateway & sandbox TXN ID
+      const oldConfirm = document.getElementById('confirmUpgradeBtn');
+      const newConfirm = oldConfirm.cloneNode(true);
+      oldConfirm.parentNode.replaceChild(newConfirm, oldConfirm);
+      newConfirm.addEventListener('click', () => {
+        if (session) session.plan = 'PREMIUM';
+        const prefix = activePayGateway.includes('bKash') ? 'BKS' : activePayGateway.includes('Nagad') ? 'NGD' : 'SSL';
+        const txnId = `${prefix}-SBX-${Math.floor(10000 + Math.random() * 89999)}`;
+        document.getElementById('upgradeModal').classList.add('hidden');
+        renderAll();
+        showToast(L(`🎉 ${activePayGateway}-এ প্রিমিয়াম চালু হয়েছে! (TXN: ${txnId})`, `🎉 Premium unlocked via ${activePayGateway}! (TXN: ${txnId})`));
+      });
+
+      // Route all footer .ft-modal buttons to dedicated full Glassy Pages instead of tiny modal!
+      document.querySelectorAll('.ft-modal').forEach((btn) => {
+        const clone = btn.cloneNode(true);
+        btn.parentNode.replaceChild(clone, btn);
+        clone.addEventListener('click', () => {
+          const k = clone.getAttribute('data-ft-modal');
+          const mapped = (k === 'how' || k === 'whatsnew') ? 'demo' : (k === 'terms' ? 'privacy' : k);
+          openFullInfoPage(mapped);
+        });
+      });
+
+      document.getElementById('pageBackHomeBtn').addEventListener('click', () => setWorkspace('landing'));
     });
 
   </script>
