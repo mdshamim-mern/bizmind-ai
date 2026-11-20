@@ -1,0 +1,132 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 660" width="1200" height="660" font-family="Inter, Noto Sans, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#050814"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4f46e5"/>
+      <stop offset="50%" stop-color="#0ea5e9"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b"/>
+    </marker>
+  </defs>
+
+  <rect width="1200" height="660" rx="20" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="6" fill="url(#accent)"/>
+
+  <text x="48" y="54" fill="#f8fafc" font-size="26" font-weight="800">BizMind AI — System Architecture</text>
+  <text x="48" y="80" fill="#94a3b8" font-size="14">Multi-Tenant Retail OS · 6-Agent LangGraph StateGraph · DemandIQ Forecast API · Strict Security &amp; Hash-Chain Audit</text>
+
+  <!-- Layer 1: Clients -->
+  <rect x="48" y="110" width="250" height="480" rx="16" fill="#111c3a" stroke="#334155" stroke-width="1.5"/>
+  <text x="70" y="142" fill="#a5b4fc" font-size="14" font-weight="700">1. CLIENTS &amp; CHANNELS</text>
+
+  <rect x="68" y="162" width="210" height="86" rx="12" fill="#1e293b" stroke="#4f46e5" stroke-width="1.2"/>
+  <text x="82" y="188" fill="#f8fafc" font-size="14" font-weight="700">Shopkeeper PWA (Mobile/Web)</text>
+  <text x="82" y="208" fill="#cbd5e1" font-size="11.5">Bangla/English · Offline IndexedDB</text>
+  <text x="82" y="226" fill="#94a3b8" font-size="11">Voice POS · CSV Upload · PIN Login</text>
+
+  <rect x="68" y="266" width="210" height="86" rx="12" fill="#1e293b" stroke="#0ea5e9" stroke-width="1.2"/>
+  <text x="82" y="292" fill="#f8fafc" font-size="14" font-weight="700">External API Consumers</text>
+  <text x="82" y="312" fill="#cbd5e1" font-size="11.5">POST /api/v1/forecast (x-api-key)</text>
+  <text x="82" y="330" fill="#94a3b8" font-size="11">Swagger UI (/api/v1/docs) · MCP</text>
+
+  <rect x="68" y="370" width="210" height="86" rx="12" fill="#1e293b" stroke="#10b981" stroke-width="1.2"/>
+  <text x="82" y="396" fill="#f8fafc" font-size="14" font-weight="700">Demo Sandbox (isDemo)</text>
+  <text x="82" y="416" fill="#cbd5e1" font-size="11.5">Isolated shop_demo_rahim</text>
+  <text x="82" y="434" fill="#94a3b8" font-size="11">Nightly Reset · Owner/Cashier Preview</text>
+
+  <rect x="68" y="474" width="210" height="92" rx="12" fill="#1e293b" stroke="#f43f5e" stroke-width="1.2"/>
+  <text x="82" y="500" fill="#fda4af" font-size="14" font-weight="700">Isolated Admin Console</text>
+  <text x="82" y="520" fill="#cbd5e1" font-size="11.5">Hidden Subdomain · TOTP 2FA</text>
+  <text x="82" y="538" fill="#94a3b8" font-size="11">Masked PII · 30m Break-Glass</text>
+  <text x="82" y="554" fill="#94a3b8" font-size="11">robots.txt: Disallow /</text>
+
+  <!-- Layer 2: API Gateway & Security -->
+  <rect x="348" y="110" width="240" height="480" rx="16" fill="#111c3a" stroke="#334155" stroke-width="1.5"/>
+  <text x="370" y="142" fill="#6ee7b7" font-size="14" font-weight="700">2. SECURITY &amp; API GATEWAY</text>
+
+  <rect x="368" y="162" width="200" height="104" rx="12" fill="#172554" stroke="#6366f1" stroke-width="1.2"/>
+  <text x="382" y="188" fill="#f8fafc" font-size="13.5" font-weight="700">Auth &amp; Session Guard</text>
+  <text x="382" y="208" fill="#cbd5e1" font-size="11.5">• Scrypt Hash + Email Verify</text>
+  <text x="382" y="226" fill="#cbd5e1" font-size="11.5">• httpOnly Cookie + Refresh</text>
+  <text x="382" y="244" fill="#cbd5e1" font-size="11.5">• Rate Limit + PIN Lockout</text>
+
+  <rect x="368" y="284" width="200" height="104" rx="12" fill="#064e3b" stroke="#10b981" stroke-width="1.2"/>
+  <text x="382" y="310" fill="#f8fafc" font-size="13.5" font-weight="700">Tenant &amp; Role Isolation</text>
+  <text x="382" y="330" fill="#cbd5e1" font-size="11.5">• Strict shopId Enforcement</text>
+  <text x="382" y="348" fill="#cbd5e1" font-size="11.5">• Cashier → 404 on Profit</text>
+  <text x="382" y="366" fill="#cbd5e1" font-size="11.5">• Prompt Injection Guardrail</text>
+
+  <rect x="368" y="406" width="200" height="160" rx="12" fill="#1e293b" stroke="#f59e0b" stroke-width="1.2"/>
+  <text x="382" y="432" fill="#fcd34d" font-size="13.5" font-weight="700">Core Retail Engines</text>
+  <text x="382" y="454" fill="#cbd5e1" font-size="11.5">• 3-Way PO Reconciliation</text>
+  <text x="382" y="474" fill="#cbd5e1" font-size="11.5">• Supplier Risk Math (0–100)</text>
+  <text x="382" y="494" fill="#cbd5e1" font-size="11.5">• DemandIQ Forecast + CSV</text>
+  <text x="382" y="514" fill="#cbd5e1" font-size="11.5">• Digital Twin Simulator</text>
+  <text x="382" y="534" fill="#cbd5e1" font-size="11.5">• /health &amp; Sentry Telemetry</text>
+
+  <!-- Layer 3: 6-Agent AI Core -->
+  <rect x="638" y="110" width="250" height="480" rx="16" fill="#111c3a" stroke="#334155" stroke-width="1.5"/>
+  <text x="660" y="142" fill="#7dd3fc" font-size="14" font-weight="700">3. 6-AGENT AI CORE</text>
+
+  <rect x="658" y="162" width="210" height="54" rx="10" fill="#1e1b4b" stroke="#818cf8"/>
+  <text x="672" y="185" fill="#f8fafc" font-size="13" font-weight="700">1. Router Agent</text>
+  <text x="672" y="203" fill="#c7d2fe" font-size="11">Intent + Guardrail Classifier</text>
+
+  <rect x="658" y="226" width="210" height="54" rx="10" fill="#064e3b" stroke="#34d399"/>
+  <text x="672" y="249" fill="#f8fafc" font-size="13" font-weight="700">2. Inventory Agent (SQL)</text>
+  <text x="672" y="267" fill="#a7f3d0" font-size="11">Batch Expiry &amp; ROP Alerts</text>
+
+  <rect x="658" y="290" width="210" height="54" rx="10" fill="#1e1b4b" stroke="#818cf8"/>
+  <text x="672" y="313" fill="#f8fafc" font-size="13" font-weight="700">3. Sales Optimizer</text>
+  <text x="672" y="331" fill="#c7d2fe" font-size="11">Elasticity &amp; Phased Markdown</text>
+
+  <rect x="658" y="354" width="210" height="54" rx="10" fill="#064e3b" stroke="#34d399"/>
+  <text x="672" y="377" fill="#f8fafc" font-size="13" font-weight="700">4. Finance Agent (SQL)</text>
+  <text x="672" y="395" fill="#a7f3d0" font-size="11">Deterministic Net Profit &amp; Dues</text>
+
+  <rect x="658" y="418" width="210" height="54" rx="10" fill="#451a03" stroke="#fbbf24"/>
+  <text x="672" y="441" fill="#f8fafc" font-size="13" font-weight="700">5. Supplier Agent (RAG)</text>
+  <text x="672" y="459" fill="#fde68a" font-size="11">pgvector Contract Retrieval</text>
+
+  <rect x="658" y="482" width="210" height="84" rx="10" fill="#0f2942" stroke="#38bdf8"/>
+  <text x="672" y="505" fill="#f8fafc" font-size="13" font-weight="700">6. Manager + HITL Gate</text>
+  <text x="672" y="523" fill="#bae6fd" font-size="11">XAI “Why?” + Confidence Score</text>
+  <text x="672" y="541" fill="#6ee7b7" font-size="11">Owner 1-Click Approve Required</text>
+
+  <!-- Layer 4: Data & External APIs -->
+  <rect x="938" y="110" width="214" height="480" rx="16" fill="#111c3a" stroke="#334155" stroke-width="1.5"/>
+  <text x="958" y="142" fill="#fcd34d" font-size="14" font-weight="700">4. DATA &amp; EXTERNAL</text>
+
+  <rect x="956" y="162" width="178" height="114" rx="12" fill="#1e293b" stroke="#38bdf8"/>
+  <text x="970" y="188" fill="#f8fafc" font-size="13.5" font-weight="700">PostgreSQL + pgvector</text>
+  <text x="970" y="208" fill="#cbd5e1" font-size="11">• Row-Level Security</text>
+  <text x="970" y="226" fill="#cbd5e1" font-size="11">• SHA-256 Audit Chain</text>
+  <text x="970" y="244" fill="#cbd5e1" font-size="11">• Supplier Embeddings</text>
+  <text x="970" y="262" fill="#cbd5e1" font-size="11">• Sessions &amp; API Keys</text>
+
+  <rect x="956" y="296" width="178" height="122" rx="12" fill="#1e293b" stroke="#a855f7"/>
+  <text x="970" y="322" fill="#f8fafc" font-size="13.5" font-weight="700">AI &amp; Live Signals</text>
+  <text x="970" y="342" fill="#cbd5e1" font-size="11">• Gemini 2.5 Flash</text>
+  <text x="970" y="360" fill="#cbd5e1" font-size="11">• Google Search Tool</text>
+  <text x="970" y="378" fill="#cbd5e1" font-size="11">• Open-Meteo Weather</text>
+  <text x="970" y="396" fill="#cbd5e1" font-size="11">• GDELT Shock Signals</text>
+
+  <rect x="956" y="438" width="178" height="128" rx="12" fill="#1e293b" stroke="#10b981"/>
+  <text x="970" y="464" fill="#f8fafc" font-size="13.5" font-weight="700">Privacy &amp; FedAvg</text>
+  <text x="970" y="484" fill="#cbd5e1" font-size="11">• 10-Store FedAvg</text>
+  <text x="970" y="502" fill="#cbd5e1" font-size="11">• 0 Bytes Raw Shared</text>
+  <text x="970" y="520" fill="#cbd5e1" font-size="11">• n8n PO Webhooks</text>
+  <text x="970" y="538" fill="#cbd5e1" font-size="11">• Vercel Edge Deploy</text>
+
+  <!-- Arrows -->
+  <line x1="298" y1="350" x2="344" y2="350" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="588" y1="350" x2="634" y2="350" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+  <line x1="888" y1="350" x2="934" y2="350" stroke="#64748b" stroke-width="2.5" marker-end="url(#arrow)"/>
+
+  <text x="48" y="632" fill="#64748b" font-size="12">BizMind AI · https://bizmind-ai-orcin.vercel.app · Built by MD. SHAMIM</text>
+</svg>

@@ -1,5 +1,25 @@
-node_modules/
-dist/
+# Environment & Secrets (NEVER commit)
 .env
 .env.local
-.vercel
+.env.development.local
+.env.test.local
+.env.production
+.env.production.local
+*.pem
+*.key
+
+# Dependencies & Build
+node_modules/
+dist/
+build/
+.vercel/
+.next/
+coverage/
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+npm-debug.log*

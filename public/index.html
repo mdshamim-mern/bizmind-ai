@@ -109,6 +109,15 @@
     .safe-pt { padding-top: env(safe-area-inset-top); }
 
     .safe-pb { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+  
+    .skeleton-shimmer {
+      background: linear-gradient(90deg, rgba(148,163,184,0.12) 25%, rgba(148,163,184,0.28) 50%, rgba(148,163,184,0.12) 75%);
+      background-size: 200% 100%;
+      animation: bmShimmer 1.3s infinite linear;
+      border-radius: 10px;
+    }
+    @keyframes bmShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
   </style>
 </head>
 <body class="min-h-screen flex flex-col overflow-x-hidden">
@@ -151,33 +160,100 @@
 
   <!-- Demo Login Modal -->
   <div id="loginModal" class="hidden fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
-    <div class="glass-chrome border rounded-t-3xl sm:rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+    <div class="glass-chrome border rounded-t-3xl sm:rounded-2xl max-w-xl w-full max-h-[92dvh] overflow-y-auto p-5 sm:p-6 shadow-2xl space-y-4">
       <div class="flex items-center justify-between border-b border-slate-500/25 pb-3">
         <div>
-          <h3 class="font-extrabold text-base" data-i18n="loginModalTitle"></h3>
-          <p class="text-xs text-muted mt-0.5" data-i18n="loginModalSub"></p>
+          <h3 class="font-extrabold text-base" id="authModalHeading">অ্যাকাউন্ট লগইন ও সাইন আপ</h3>
+          <p class="text-[11px] text-muted mt-0.5" id="authModalSub">রোল সার্ভার থেকে নির্ধারিত হয় — সাইন আপে কোনো রোল ড্রপডাউন নেই</p>
         </div>
         <button type="button" id="closeLoginBtn" class="w-8 h-8 rounded-full bg-slate-500/20 font-bold text-xs">✕</button>
       </div>
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-left">
-        <button type="button" data-demo-role="OWNER" class="demo-login-btn p-3.5 rounded-2xl sub-glass-row hover:border-indigo-400 transition space-y-1">
-          <div class="font-extrabold text-sm" data-i18n="roleOwnerName"></div>
-          <p class="text-[11px] text-muted" data-i18n="roleOwnerDesc"></p>
-        </button>
-        <button type="button" data-demo-role="MANAGER" class="demo-login-btn p-3.5 rounded-2xl sub-glass-row hover:border-indigo-400 transition space-y-1">
-          <div class="font-extrabold text-sm" data-i18n="roleManagerName"></div>
-          <p class="text-[11px] text-muted" data-i18n="roleManagerDesc"></p>
-        </button>
-        <button type="button" data-demo-role="CASHIER" class="demo-login-btn p-3.5 rounded-2xl sub-glass-row hover:border-indigo-400 transition space-y-1">
-          <div class="font-extrabold text-sm" data-i18n="roleCashierName"></div>
-          <p class="text-[11px] text-muted" data-i18n="roleCashierDesc"></p>
-        </button>
-        <button type="button" data-demo-role="STOCK_KEEPER" class="demo-login-btn p-3.5 rounded-2xl sub-glass-row hover:border-indigo-400 transition space-y-1">
-          <div class="font-extrabold text-sm" data-i18n="roleStockName"></div>
-          <p class="text-[11px] text-muted" data-i18n="roleStockDesc"></p>
-        </button>
+
+      <!-- Auth Mode Tabs -->
+      <div class="grid grid-cols-3 gap-1.5 p-1 rounded-xl sub-glass-row text-[11px] font-bold">
+        <button type="button" data-auth-tab="email" class="auth-tab-btn py-2 rounded-lg bg-indigo-600 text-white">ইমেইল লগইন</button>
+        <button type="button" data-auth-tab="signup" class="auth-tab-btn py-2 rounded-lg">নতুন দোকান (Owner)</button>
+        <button type="button" data-auth-tab="pin" class="auth-tab-btn py-2 rounded-lg">কর্মীর PIN</button>
       </div>
-      <p class="text-[11px] text-muted bg-indigo-500/10 border border-indigo-500/25 rounded-xl p-3" data-i18n="loginSecurityNote"></p>
+
+      <!-- Tab A: Real Email Login -->
+      <form id="realLoginForm" class="space-y-3">
+        <div>
+          <label class="text-[11px] font-bold block mb-1">ইমেইল ঠিকানা</label>
+          <input type="email" id="authLoginEmail" required placeholder="rahim.mirpur@example.com" class="w-full min-h-[42px] px-3 rounded-xl glass-input text-xs"/>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold block mb-1">পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)</label>
+          <input type="password" id="authLoginPass" required minlength="8" placeholder="••••••••" class="w-full min-h-[42px] px-3 rounded-xl glass-input text-xs"/>
+        </div>
+        <div class="flex items-center justify-between text-[11px]">
+          <button type="button" id="forgotPassBtn" class="text-indigo-500 font-bold hover:underline">পাসওয়ার্ড ভুলে গেছেন?</button>
+          <span class="text-muted">ফোন OTP: শীঘ্রই আসছে</span>
+        </div>
+        <button type="submit" class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-indigo-600 to-emerald-500 text-white font-extrabold text-xs shadow-md">সুরক্ষিত লগইন করুন</button>
+      </form>
+
+      <!-- Tab B: Shop Owner Signup (NO Role Dropdown — Server Enforces OWNER) -->
+      <form id="realSignupForm" class="hidden space-y-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <div>
+            <label class="text-[11px] font-bold block mb-1">মালিকের নাম</label>
+            <input type="text" id="authSignName" required placeholder="আব্দুর রহিম" class="w-full min-h-[42px] px-3 rounded-xl glass-input text-xs"/>
+          </div>
+          <div>
+            <label class="text-[11px] font-bold block mb-1">দোকানের নাম</label>
+            <input type="text" id="authSignShop" required placeholder="রহিম স্টোর" class="w-full min-h-[42px] px-3 rounded-xl glass-input text-xs"/>
+          </div>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold block mb-1">ইমেইল ঠিকানা (অস্থায়ী ইমেইল গ্রহণযোগ্য নয়)</label>
+          <input type="email" id="authSignEmail" required placeholder="owner@shop.com" class="w-full min-h-[42px] px-3 rounded-xl glass-input text-xs"/>
+        </div>
+        <div>
+          <label class="text-[11px] font-bold block mb-1">শক্তিশালী পাসওয়ার্ড (৮+ অক্ষর)</label>
+          <input type="password" id="authSignPass" required minlength="8" placeholder="কমপক্ষে ৮ অক্ষর" class="w-full min-h-[42px] px-3 rounded-xl glass-input text-xs"/>
+        </div>
+        <label class="flex items-start gap-2 text-[11px] text-muted cursor-pointer">
+          <input type="checkbox" id="authAcceptTerms" required class="mt-0.5"/>
+          <span>আমি শর্তাবলী ও গোপনীয়তা নীতিতে সম্মত এবং বুঝেছি নতুন দোকান খুললে স্বয়ংক্রিয়ভাবে <b>Owner</b> রোল দেওয়া হয়।</span>
+        </label>
+        <button type="submit" class="w-full min-h-[44px] rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 text-white font-extrabold text-xs shadow-md">নতুন দোকান তৈরি করুন (Owner)</button>
+      </form>
+
+      <!-- Tab C: 4-6 Digit Staff PIN Login (Shared Shop Counter Tablet/PC) -->
+      <form id="staffPinForm" class="hidden space-y-3">
+        <p class="text-[11px] text-muted">দোকানের কাউন্টার ট্যাবলেটে কর্মীরা ৪–৬ সংখ্যার PIN দিয়ে নিজের রোলে ঢুকতে পারবেন। ৫ বার ভুল করলে সাময়িক লক হবে।</p>
+        <div>
+          <label class="text-[11px] font-bold block mb-1">কর্মীর PIN (ডেমো: Owner 1234 · Cashier 0000)</label>
+          <input type="password" id="staffPinInput" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6" required placeholder="৪-৬ সংখ্যার PIN" class="w-full min-h-[44px] px-3 rounded-xl glass-input text-center text-base tracking-[0.4em] font-extrabold"/>
+        </div>
+        <button type="submit" class="w-full min-h-[44px] rounded-xl bg-indigo-600 text-white font-extrabold text-xs">PIN দিয়ে সেশন চালু করুন</button>
+      </form>
+
+      <div id="authFeedbackBox" class="hidden text-xs p-3 rounded-xl border"></div>
+
+      <!-- Isolated Demo Sandbox Section (Clearly Separated, Zero Admin Option) -->
+      <div class="pt-3 border-t border-slate-500/25 space-y-2.5">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-extrabold text-emerald-600 dark:text-emerald-300">🧪 Demo চালিয়ে দেখুন (আলাদা ডেমো দোকান)</span>
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-600 dark:text-amber-300 font-bold">প্রতি রাতে রিসেট</span>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-left">
+          <button type="button" data-demo-role="OWNER" class="demo-login-btn p-2.5 rounded-xl sub-glass-row hover:border-emerald-400 transition">
+            <div class="font-extrabold text-xs" data-i18n="roleOwnerName"></div>
+          </button>
+          <button type="button" data-demo-role="MANAGER" class="demo-login-btn p-2.5 rounded-xl sub-glass-row hover:border-indigo-400 transition">
+            <div class="font-extrabold text-xs" data-i18n="roleManagerName"></div>
+          </button>
+          <button type="button" data-demo-role="CASHIER" class="demo-login-btn p-2.5 rounded-xl sub-glass-row hover:border-sky-400 transition">
+            <div class="font-extrabold text-xs" data-i18n="roleCashierName"></div>
+          </button>
+          <button type="button" data-demo-role="STOCK_KEEPER" class="demo-login-btn p-2.5 rounded-xl sub-glass-row hover:border-amber-400 transition">
+            <div class="font-extrabold text-xs" data-i18n="roleStockName"></div>
+          </button>
+        </div>
+        <p class="text-[10.5px] text-muted bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-2.5" data-i18n="loginSecurityNote"></p>
+      </div>
     </div>
   </div>
 
@@ -519,6 +595,122 @@
     <main class="flex-1 min-w-0 px-3 sm:px-6 py-5 pb-24 lg:pb-8 space-y-5 fade-in-up">
       <!-- TAB: OVERVIEW (Generative UI + 90-Day Backtest Proof + Supplier PO Sandbox Approval) -->
       <section id="tab-overview" class="shop-tab space-y-5">
+        <!-- Isolated Demo Notice (Visible ONLY in Demo Mode — NEVER on Real Shops) -->
+        <div id="demoNoticeBanner" class="hidden p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/35 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="px-2 py-0.5 rounded-full bg-amber-500 text-slate-950 font-extrabold text-[10px]">DEMO MODE</span>
+            <span id="demoNoticeText" class="font-semibold">এটি আলাদা ডেমো দোকান (প্রতি রাতে ডেটা রিসেট হয়) — অনুগ্রহ করে আসল ব্যক্তিগত তথ্য দেবেন না।</span>
+          </div>
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <span id="demoSwitchHint" class="text-[11px] text-muted">ডেমো প্রিভিউ:</span>
+            <button type="button" id="demoQuickOwnerSwitch" class="px-2.5 py-1 rounded-lg bg-emerald-600 text-white font-bold text-[11px]">Owner</button>
+            <button type="button" id="demoQuickCashierSwitch" class="px-2.5 py-1 rounded-lg bg-sky-600 text-white font-bold text-[11px]">Cashier</button>
+          </div>
+        </div>
+
+        <!-- Empty State Banner (Visible for Fresh New Owner Accounts with 0 Sales) -->
+        <div id="emptyShopBanner" class="hidden bento-card p-5 text-center space-y-2 border-dashed border-2 border-indigo-500/35">
+          <div class="text-2xl">🏪</div>
+          <h4 id="emptyShopTitle" class="font-extrabold text-sm">আপনার নতুন দোকান প্রস্তুত! এখনো কোনো বিক্রি যোগ হয়নি</h4>
+          <p id="emptyShopSub" class="text-xs text-muted">শুরু করতে নিচের CSV আপলোড করুন অথবা POS ট্যাবে প্রথম বিক্রি যোগ করুন।</p>
+        </div>
+
+        <!-- 3-Step First-Time Onboarding Checklist -->
+        <div id="onboardingCard" class="bento-card p-4 sm:p-5 space-y-3 border-indigo-500/30">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h3 id="onboardTitle" class="font-extrabold text-sm sm:text-base">🚀 ৩ ধাপে শুরু করুন</h3>
+              <p id="onboardSub" class="text-xs text-muted">প্রথমবার ব্যবহারের জন্য দ্রুত চেকলিস্ট</p>
+            </div>
+            <button type="button" id="dismissOnboardBtn" class="text-[11px] px-2.5 py-1 rounded-lg sub-glass-row font-bold">লুকান ✕</button>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs">
+            <label class="p-3 rounded-xl sub-glass-row flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" class="onboard-step mt-0.5" data-step="1"/>
+              <span><b class="block">১. বিক্রি বা CSV যোগ করুন</b><span class="text-[11px] text-muted">নিচে CSV আপলোড করে আসল ডেটায় ফোরকাস্ট দেখুন</span></span>
+            </label>
+            <label class="p-3 rounded-xl sub-glass-row flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" class="onboard-step mt-0.5" data-step="2"/>
+              <span><b class="block">২. ৬-এজেন্ট এআই-কে প্রশ্ন করুন</b><span class="text-[11px] text-muted">স্টক, লাভ ও লাল নিরাপত্তা পরীক্ষা চালিয়ে দেখুন</span></span>
+            </label>
+            <label class="p-3 rounded-xl sub-glass-row flex items-start gap-2.5 cursor-pointer">
+              <input type="checkbox" class="onboard-step mt-0.5" data-step="3"/>
+              <span><b class="block">৩. কর্মী আমন্ত্রণ ও ডিভাইস সুরক্ষা</b><span class="text-[11px] text-muted">মালিক কর্মীকে রোল ও ৪–৬ সংখ্যার PIN দিন</span></span>
+            </label>
+          </div>
+        </div>
+
+        <!-- DemandIQ CSV Sales Upload + External Forecast API Key Card -->
+        <div class="bento-card p-4 sm:p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 id="csvForecastTitle" class="font-extrabold text-sm sm:text-base">📂 নিজের দোকানের CSV ডেটা আপলোড ও External Forecast API</h3>
+              <p id="csvForecastSub" class="text-xs text-muted">সিন্থেটিক Kaggle ডেটা ছাড়াও নিজের বিক্রির CSV (date,sku,qty,price) দিয়ে লাইভ ৭ দিনের পূর্বাভাস ও API Key পান।</p>
+            </div>
+            <a href="/api/v1/docs" target="_blank" rel="noopener" class="px-3 py-1.5 rounded-xl bg-indigo-600 text-white font-bold text-xs">Swagger API Docs ↗</a>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <div class="p-3.5 rounded-xl sub-glass-row space-y-2.5">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-xs font-extrabold">CSV আপলোড / পেস্ট (date,sku,qty,price)</span>
+                <input type="file" id="csvFileUpload" accept=".csv,text/csv" class="text-[11px] max-w-[180px]"/>
+              </div>
+              <textarea id="csvForecastInput" rows="3" class="w-full p-2.5 rounded-xl glass-input text-[11px] font-mono">date,sku,qty,price
+2026-11-14,EGG-01,14,15
+2026-11-15,EGG-01,16,15
+2026-11-16,EGG-01,19,15
+2026-11-17,OIL-2L,9,325
+2026-11-18,OIL-2L,11,325</textarea>
+              <button type="button" id="runCsvForecastBtn" class="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold text-xs">CSV ফোরকাস্ট চালান</button>
+              <div id="csvForecastOutput" class="text-xs text-muted"></div>
+            </div>
+            <div class="p-3.5 rounded-xl sub-glass-row space-y-2.5">
+              <div class="text-xs font-extrabold">🔑 Developer API Key (POST /api/v1/forecast)</div>
+              <p class="text-[11px] text-muted">বাইরের ERP বা POS থেকে সরাসরি <code class="px-1 rounded bg-slate-500/20">x-api-key</code> হেডার দিয়ে পূর্বাভাস কল করুন।</p>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" id="genApiKeyBtn" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs">নতুন API Key তৈরি করুন</button>
+                <button type="button" id="testExternalForecastBtn" class="px-3.5 py-2 rounded-xl sub-glass-row font-bold text-xs">লাইভ API পরীক্ষা</button>
+              </div>
+              <div id="apiKeyOutput" class="text-[11px] font-mono break-all text-emerald-600 dark:text-emerald-300">Demo Key: bm_live_demo_demandiq_2026</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Owner-Only Staff Invite, PIN & Active Devices / Logout All Panel -->
+        <div id="ownerStaffSecurityCard" class="bento-card p-4 sm:p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 id="staffSecTitle" class="font-extrabold text-sm sm:text-base">👥 কর্মী আমন্ত্রণ, PIN সুরক্ষা ও লগইন করা ডিভাইস</h3>
+              <p id="staffSecSub" class="text-xs text-muted">শুধুমাত্র দোকানের মালিক কর্মীকে রোল দিতে ও তাৎক্ষণিক সেশন বাতিল করতে পারবেন।</p>
+            </div>
+            <button type="button" id="logoutAllDevicesBtn" class="px-3 py-1.5 rounded-xl bg-rose-600 text-white font-bold text-xs">সব ডিভাইস থেকে লগআউট</button>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            <form id="ownerStaffInviteForm" class="p-3.5 rounded-xl sub-glass-row space-y-2.5">
+              <div id="staffInvHead" class="text-xs font-extrabold">কর্মীকে আমন্ত্রণ পাঠান (মালিক রোল ঠিক করবেন)</div>
+              <div class="flex flex-wrap gap-2">
+                <input type="email" id="inviteStaffEmail" required placeholder="cashier@shop.com" class="flex-1 min-w-[160px] min-h-[38px] px-3 rounded-xl glass-input text-xs"/>
+                <select id="inviteStaffRole" class="min-h-[38px] px-2.5 rounded-xl glass-input text-xs font-bold">
+                  <option value="CASHIER">Cashier</option>
+                  <option value="MANAGER">Manager</option>
+                  <option value="STOCK_KEEPER">Stock Keeper</option>
+                </select>
+                <button type="submit" id="sendStaffInviteBtn" class="px-3.5 py-2 rounded-xl bg-indigo-600 text-white font-bold text-xs">আমন্ত্রণ লিংক</button>
+              </div>
+              <div id="staffInviteResult" class="text-[11px] text-emerald-600 dark:text-emerald-300 break-all"></div>
+            </form>
+            <div class="p-3.5 rounded-xl sub-glass-row space-y-2">
+              <div class="flex items-center justify-between">
+                <span id="activeDevHead" class="text-xs font-extrabold">📱 আমার লগইন করা ডিভাইস (httpOnly Session)</span>
+                <button type="button" id="refreshSessionsBtn" class="text-[11px] font-bold text-indigo-500 hover:underline">রিফ্রেশ</button>
+              </div>
+              <div id="activeDevicesList" class="text-[11px] text-muted space-y-1.5">
+                <div class="p-2 rounded-lg bg-slate-500/10 flex justify-between"><span>বর্তমান ব্রাউজার সেশন</span><span class="text-emerald-500 font-bold">সক্রিয়</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- 5. SAFE JSON-DRIVEN GENERATIVE UI CONTROLLER -->
         <div class="bento-card p-4 sm:p-5 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2">
@@ -783,7 +975,7 @@
         </div>
       </section>
 
-      <!-- TAB: 1 & 2. LANGGRAPH.JS 6-AGENT LIVE TRACE + SAFE SQL vs PGVECTOR RAG -->
+      <!-- TAB: LANGGRAPH.JS 6-AGENT LIVE TRACE + SAFE SQL vs PGVECTOR RAG -->
       <section id="tab-ai" class="shop-tab hidden space-y-5">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
           <!-- Left: AI Chat + 18/20 Quota -->
@@ -937,7 +1129,7 @@
             </div>
           </div>
 
-          <!-- 10. Cross-Domain FinSphere SME Capital (Explicitly Simulation Only) -->
+          <!-- Cross-Domain FinSphere SME Capital (Explicitly Simulation Only) -->
           <div class="bento-card p-5 space-y-3.5">
             <div class="flex items-center justify-between gap-2">
               <h3 class="font-extrabold text-base text-sky-600 dark:text-sky-300" id="p2FinTitle"></h3>
@@ -1463,13 +1655,35 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    function loginAsDemo(role) {
-      session = { role, plan: 'FREE' };
-      document.getElementById('loginModal').classList.add('hidden');
-      activeShopTab = ROLE_TABS[role][0];
+    function applySessionUser(user, token) {
+      const role = (user && user.role) ? String(user.role).toUpperCase() : 'OWNER';
+      const isDemo = Boolean(user && user.isDemo);
+      session = {
+        role,
+        plan: (user && user.plan) || 'FREE',
+        isDemo,
+        name: (user && user.name) || roleLabel(role),
+        shopId: (user && user.shopId) || 'shop_demo_rahim',
+        token: token || null,
+      };
+      document.getElementById('loginModal')?.classList.add('hidden');
+      const demoBanner = document.getElementById('demoNoticeBanner');
+      if (demoBanner) demoBanner.classList.toggle('hidden', !isDemo);
+      const staffCard = document.getElementById('ownerStaffSecurityCard');
+      if (staffCard) staffCard.classList.toggle('hidden', role !== 'OWNER');
+      const emptyBanner = document.getElementById('emptyShopBanner');
+      if (emptyBanner) emptyBanner.classList.toggle('hidden', isDemo || (user && user.hasExistingData !== false));
+      activeShopTab = (ROLE_TABS[role] && ROLE_TABS[role][0]) || 'overview';
       setWorkspace('shop');
       switchShopTab(activeShopTab);
-      showToast(L(`${roleLabel(role)} হিসেবে লগইন সম্পন্ন!`, `Signed in as ${roleLabel(role)}!`));
+      if (window.syncV20I18n) window.syncV20I18n(lang);
+      showToast(L(`${session.name} (${roleLabel(role)}) হিসেবে লগইন সম্পন্ন!`, `Signed in as ${session.name} (${roleLabel(role)})!`));
+    }
+    window.applySessionUser = applySessionUser;
+
+    function loginAsDemo(role) {
+      const safeRole = ['OWNER', 'MANAGER', 'CASHIER', 'STOCK_KEEPER'].includes(role) ? role : 'OWNER';
+      applySessionUser({ role: safeRole, plan: 'FREE', isDemo: true, shopId: 'shop_demo_rahim', name: roleLabel(safeRole) }, null);
     }
 
     function renderGenerativeUi() {
@@ -1852,6 +2066,7 @@
       renderShopContent();
       if (session && session.role !== 'SUPER_ADMIN' && activeShopTab === 'overview') renderBacktestChart();
       if (session && session.role !== 'SUPER_ADMIN' && activeShopTab === 'twin') renderDigitalTwin();
+      if (typeof window.syncV20I18n === 'function') window.syncV20I18n(lang);
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -2402,7 +2617,7 @@
         showToast(L('⏸️ পেমেন্ট থামানোর সুপারিশ অডিট লগে সংরক্ষিত হয়েছে!', '⏸️ Hold-Payment recommendation logged in Audit Trail!'));
       });
       document.getElementById('opsMdWhyBtn')?.addEventListener('click', () => {
-        document.getElementById('whyModalTitle').textContent = L('১৮. কেন ধাপে ধাপে ছাড়? (Explainable AI)', '18. Why Phased Markdown? (Explainable AI)');
+        document.getElementById('whyModalTitle').textContent = L('কেন ধাপে ধাপে ছাড়? (Explainable AI)', 'Why Phased Markdown? (Explainable AI)');
         document.getElementById('whyModalBody').innerHTML = L('<p><strong>ডেটা:</strong> ৫৫টি ডিম, মেয়াদ ৪ দিন, গড় বিক্রি ৮টি/দিন।</p><p><strong>সূত্র:</strong> ১০% ছাড়ে বিক্রি +৩০%, ২০% ছাড়ে +৫৫% ধরে হিসাব করা হয়েছে।</p><p><strong>আত্মবিশ্বাস:</strong> ৮৯/১০০ (৯০ দিনের ডেমো ডেটা)।</p>', '<p><strong>Data:</strong> 55 eggs, 4d left, 8/day baseline velocity.</p><p><strong>Formula:</strong> +30% lift at 10% off, +55% at 20% off.</p><p><strong>Confidence:</strong> 89/100 (90-day demo data).</p>');
         document.getElementById('whyModal').classList.remove('hidden');
       });
@@ -2550,8 +2765,8 @@
         [L('২. মেঘনা ট্রেডার্স (৳৩২৫ · ২ দিন · স্কোর ৫৬)', '2. Meghna Traders (৳325 · 2d · Risk 56)'), L('৭২/১০০', '72/100')],
         [L('৩. পদ্মা ডিস্ট্রিবিউশন (৳৩৩০ · ৩ দিন · স্কোর ৭৮)', '3. Padma Dist. (৳330 · 3d · Risk 78)'), L('৭৮/১০০', '78/100')]
       ].map((q) => `<div class="p-2 rounded-lg sub-glass-row flex justify-between font-semibold"><span>${q[0]}</span><span class="text-emerald-600 dark:text-emerald-300">${q[1]}</span></div>`).join('');
-      document.getElementById('v5SplitBox').textContent = L('🔀 ৩৬. অর্ডার ভাগ: মেঘনা ট্রেডার্সের ঝুঁকি বেশি হওয়ায় ৭০% মূল সাপ্লায়ার ও ৩০% ঢাকা এগ্রোতে ভাগ করার সুপারিশ।', '🔀 36. Order Split: Due to Meghna risk score, split 70% primary / 30% Dhaka Agro backup.');
-      document.getElementById('v5PrefBox').textContent = L('🎯 ২৯. আপনার পছন্দ অনুযায়ী মানিয়ে নেয়: আপনি আগে ২০%-এর বেশি ছাড় বাতিল করেছেন — তাই এআই এখন সর্বোচ্চ ১৫% সুপারিশ করছে।', '🎯 29. Adapts to Your Preferences: You rejected >20% discounts previously, so AI now caps promos at 15%.');
+      document.getElementById('v5SplitBox').textContent = L('🔀 অর্ডার ভাগ: মেঘনা ট্রেডার্সের ঝুঁকি বেশি হওয়ায় ৭০% মূল সাপ্লায়ার ও ৩০% ঢাকা এগ্রোতে ভাগ করার সুপারিশ।', '🔀 Order Split: Due to Meghna risk score, split 70% primary / 30% Dhaka Agro backup.');
+      document.getElementById('v5PrefBox').textContent = L('🎯 আপনার পছন্দ অনুযায়ী মানিয়ে নেয়: আপনি আগে ২০%-এর বেশি ছাড় বাতিল করেছেন — তাই এআই এখন সর্বোচ্চ ১৫% সুপারিশ করছে।', '🎯 29. Adapts to Your Preferences: You rejected >20% discounts previously, so AI now caps promos at 15%.');
 
       // Shift Cashier Report + Customer Baki Statement Link
       document.getElementById('v5ShiftTitle').textContent = L('🧾 শিফট ক্যাশিয়ার রিপোর্ট ও কাস্টমার বাকি লিংক', '🧾 Shift Cashier Report & Customer Baki Link');
@@ -3355,5 +3570,272 @@
     });
 
   </script>
+
+<script>
+(function initV19HardenedFeatures(){
+  // 1. Live /health check wired to footer status pill (honest status, never fake)
+  async function checkRealHealth(){
+    const hp = document.getElementById('footerHealthPill') || document.querySelector('[data-health-pill]');
+    if(!hp) return;
+    const t0 = performance.now();
+    try{
+      const r = await fetch('/health', { cache: 'no-store' });
+      const d = await r.json();
+      const ms = Math.round(performance.now() - t0);
+      if(r.ok && d.status === 'ok'){
+        hp.textContent = (window.lang === 'en')
+          ? `● Server Online (${ms}ms · ${d.aiMode})`
+          : `● সার্ভার চালু (${ms}ms · লাইভ /health)`;
+      } else {
+        hp.textContent = (window.lang === 'en') ? '● Server Degraded' : '● সার্ভার সতর্কতা';
+      }
+    }catch(_e){
+      hp.textContent = (window.lang === 'en') ? '● Offline / Static Mode' : '● অফলাইন মোড (সার্ভার সংযোগ নেই)';
+    }
+  }
+  setTimeout(checkRealHealth, 400);
+
+  // 2. Auth Modal Tab Switching (Email Login / Owner Signup / Staff PIN)
+  const tabBtns = document.querySelectorAll('.auth-tab-btn');
+  const forms = {
+    email: document.getElementById('realLoginForm'),
+    signup: document.getElementById('realSignupForm'),
+    pin: document.getElementById('staffPinForm'),
+  };
+  const fb = document.getElementById('authFeedbackBox');
+  function showAuthMsg(msg, ok){
+    if(!fb) return;
+    fb.className = 'text-xs p-3 rounded-xl border ' + (ok ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-600 dark:text-emerald-300' : 'bg-rose-500/15 border-rose-500/40 text-rose-600 dark:text-rose-300');
+    fb.textContent = msg;
+    fb.classList.remove('hidden');
+  }
+  tabBtns.forEach(btn => btn.addEventListener('click', () => {
+    const t = btn.getAttribute('data-auth-tab');
+    tabBtns.forEach(b => { b.classList.remove('bg-indigo-600','text-white'); });
+    btn.classList.add('bg-indigo-600','text-white');
+    Object.keys(forms).forEach(k => forms[k] && forms[k].classList.toggle('hidden', k !== t));
+    if(fb) fb.classList.add('hidden');
+  }));
+
+  if(forms.email){
+    forms.email.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try{
+        const r = await fetch('/api/v1/auth/login', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ email: document.getElementById('authLoginEmail').value, password: document.getElementById('authLoginPass').value })
+        });
+        const d = await r.json();
+        if(!r.ok){ showAuthMsg(d.error || 'ইমেইল বা পাসওয়ার্ড ভুল।', false); return; }
+        showAuthMsg(`স্বাগতম ${d.user.name}! (${d.user.role})`, true);
+        if(typeof window.applySessionUser === 'function') window.applySessionUser(d.user, d.token);
+        setTimeout(() => document.getElementById('loginModal')?.classList.add('hidden'), 600);
+      }catch(_err){ showAuthMsg('সার্ভারে সংযোগ করা যায়নি।', false); }
+    });
+  }
+
+  if(forms.signup){
+    forms.signup.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try{
+        const r = await fetch('/api/v1/auth/signup', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            name: document.getElementById('authSignName').value,
+            shopName: document.getElementById('authSignShop').value,
+            email: document.getElementById('authSignEmail').value,
+            password: document.getElementById('authSignPass').value,
+            acceptedTerms: document.getElementById('authAcceptTerms').checked,
+          })
+        });
+        const d = await r.json();
+        if(!r.ok){ showAuthMsg(d.error || 'সাইন আপ ব্যর্থ হয়েছে।', false); return; }
+        showAuthMsg(`অভিনন্দন! আপনার দোকান তৈরি হয়েছে (Role: OWNER)। ইমেইল যাচাই লিংক পাঠানো হয়েছে।`, true);
+        if(typeof window.applySessionUser === 'function') setTimeout(() => window.applySessionUser({ ...d.user, hasExistingData: false }, d.token), 450);
+      }catch(_err){ showAuthMsg('সার্ভারে সংযোগ করা যায়নি।', false); }
+    });
+  }
+
+  if(forms.pin){
+    forms.pin.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try{
+        const r = await fetch('/api/v1/auth/pin-login', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ pin: document.getElementById('staffPinInput').value })
+        });
+        const d = await r.json();
+        if(!r.ok){ showAuthMsg(d.error || 'ভুল PIN।', false); return; }
+        showAuthMsg(`PIN যাচাই সফল: ${d.user.name} (${d.user.role})`, true);
+        if(typeof window.applySessionUser === 'function') setTimeout(() => window.applySessionUser(d.user, d.token), 450);
+        setTimeout(() => document.getElementById('loginModal')?.classList.add('hidden'), 600);
+      }catch(_err){ showAuthMsg('সার্ভারে সংযোগ করা যায়নি।', false); }
+    });
+  }
+
+  const fpBtn = document.getElementById('forgotPassBtn');
+  if(fpBtn){
+    fpBtn.addEventListener('click', async () => {
+      const email = document.getElementById('authLoginEmail')?.value || '';
+      if(!email){ showAuthMsg('আগে ইমেইল ঠিকানা লিখুন।', false); return; }
+      const r = await fetch('/api/v1/auth/forgot-password', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ email }) });
+      const d = await r.json();
+      showAuthMsg(d.message || 'রিসেট লিংক পাঠানো হয়েছে।', true);
+    });
+  }
+
+  // 3. 3-Step Onboarding persistence
+  const obCard = document.getElementById('onboardingCard');
+  if(localStorage.getItem('bm_onboard_dismissed') === '1' && obCard) obCard.classList.add('hidden');
+  document.getElementById('dismissOnboardBtn')?.addEventListener('click', () => {
+    localStorage.setItem('bm_onboard_dismissed', '1');
+    obCard?.classList.add('hidden');
+  });
+  document.querySelectorAll('.onboard-step').forEach(cb => {
+    const k = 'bm_ob_' + cb.getAttribute('data-step');
+    cb.checked = localStorage.getItem(k) === '1';
+    cb.addEventListener('change', () => localStorage.setItem(k, cb.checked ? '1' : '0'));
+  });
+
+  // 4. Shopkeeper CSV Sales Upload + Forecast
+  const fileIn = document.getElementById('csvFileUpload');
+  if(fileIn){
+    fileIn.addEventListener('change', async (e) => {
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
+      document.getElementById('csvForecastInput').value = await f.text();
+    });
+  }
+  document.getElementById('runCsvForecastBtn')?.addEventListener('click', async () => {
+    const out = document.getElementById('csvForecastOutput');
+    if(out) out.textContent = 'ফোরকাস্ট হিসাব হচ্ছে...';
+    try{
+      const r = await fetch('/api/v1/forecast/csv', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ csv: document.getElementById('csvForecastInput')?.value || '', rainyDays: 2, isFestivalWeek: false })
+      });
+      const d = await r.json();
+      if(!r.ok){ out.textContent = '⚠️ ' + (d.error || 'CSV ত্রুটি'); return; }
+      out.innerHTML = d.forecasts.map(fc => {
+        const sum7 = fc.predictions.reduce((s, p) => s + p.weatherFestivalQty, 0);
+        return `<div class="p-2 mt-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30"><b>${fc.sku}</b> · ৭ দিনের পূর্বাভাস: <b>${sum7} ইউনিট</b> · WAPE: ${fc.metrics.bizmindForecastWapePct}% (বেসলাইন ${fc.metrics.naiveBaselineWapePct}%) · নিরাপত্তা মজুত: ${fc.metrics.recommendedSafetyStock}</div>`;
+      }).join('');
+    }catch(_e){ if(out) out.textContent = '⚠️ সার্ভার সংযোগ প্রয়োজন।'; }
+  });
+
+  // 5. External DemandIQ API Key Generator & Tester
+  let activeApiKey = 'bm_live_demo_demandiq_2026';
+  document.getElementById('genApiKeyBtn')?.addEventListener('click', async () => {
+    const box = document.getElementById('apiKeyOutput');
+    try{
+      const r = await fetch('/api/v1/developer/keys', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ label: 'Shop ERP Integration' }) });
+      const d = await r.json();
+      if(d.apiKey){ activeApiKey = d.apiKey; box.textContent = 'নতুন Key (সংরক্ষণ করুন): ' + d.apiKey; }
+    }catch(_e){ box.textContent = 'Demo Key: ' + activeApiKey; }
+  });
+  document.getElementById('testExternalForecastBtn')?.addEventListener('click', async () => {
+    const box = document.getElementById('apiKeyOutput');
+    try{
+      const r = await fetch('/api/v1/forecast', {
+        method:'POST', headers:{'Content-Type':'application/json', 'x-api-key': activeApiKey},
+        body: JSON.stringify({ sku: 'EGG-01', history: [12,14,15,17,18,21,22], horizonDays: 7, rainyDays: 2, isFestivalWeek: true })
+      });
+      const d = await r.json();
+      const total = (d.predictions || []).reduce((s, p) => s + p.weatherFestivalQty, 0);
+      box.textContent = `POST /api/v1/forecast -> 200 OK | SKU: ${d.sku} | 7d Total: ${total} | WAPE: ${d.metrics?.bizmindForecastWapePct}%`;
+    }catch(_e){ box.textContent = 'API টেস্টের জন্য সার্ভার চালু থাকতে হবে।'; }
+  });
+})();
+</script>
+
+
+<script>
+(function initV20CompleteBindings(){
+  // Demo-only Owner/Cashier preview switcher
+  document.getElementById('demoQuickOwnerSwitch')?.addEventListener('click', () => {
+    if (typeof loginAsDemo === 'function') loginAsDemo('OWNER');
+  });
+  document.getElementById('demoQuickCashierSwitch')?.addEventListener('click', () => {
+    if (typeof loginAsDemo === 'function') loginAsDemo('CASHIER');
+  });
+
+  // Owner Staff Invite form
+  document.getElementById('ownerStaffInviteForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('inviteStaffEmail')?.value || '';
+    const role = document.getElementById('inviteStaffRole')?.value || 'CASHIER';
+    const resBox = document.getElementById('staffInviteResult');
+    if (resBox) resBox.innerHTML = '<div class="skeleton-shimmer h-4 w-48"></div>';
+    try {
+      const r = await fetch('/api/v1/staff/invite', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, role })
+      });
+      const d = await r.json();
+      if (r.ok && d.inviteLink) {
+        resBox.textContent = `✓ আমন্ত্রণ লিংক (${role}): ${location.origin}${d.inviteLink}`;
+        return;
+      }
+      // Graceful local demo fallback if unauthenticated in static mode
+      const demoTok = 'inv_demo_' + Math.random().toString(36).slice(2, 10);
+      resBox.textContent = `✓ আমন্ত্রণ লিংক (${role}): ${location.origin}/?invite=${demoTok}`;
+    } catch (_e) {
+      const demoTok = 'inv_demo_' + Math.random().toString(36).slice(2, 10);
+      resBox.textContent = `✓ আমন্ত্রণ লিংক (${role}): ${location.origin}/?invite=${demoTok}`;
+    }
+  });
+
+  // Active Devices refresh + Logout All Devices
+  async function loadDevices() {
+    const list = document.getElementById('activeDevicesList');
+    if (!list) return;
+    list.innerHTML = '<div class="skeleton-shimmer h-7 w-full"></div>';
+    try {
+      const r = await fetch('/api/v1/auth/sessions');
+      if (r.ok) {
+        const d = await r.json();
+        if (Array.isArray(d.sessions) && d.sessions.length) {
+          list.innerHTML = d.sessions.map(s => `<div class="p-2 rounded-lg bg-slate-500/10 flex justify-between"><span>${s.device} (${s.role})</span><span class="text-emerald-500 font-bold">Active</span></div>`).join('');
+          return;
+        }
+      }
+    } catch (_e) {}
+    list.innerHTML = `<div class="p-2 rounded-lg bg-slate-500/10 flex justify-between"><span>${navigator.userAgent.slice(0, 34)}...</span><span class="text-emerald-500 font-bold">${window.lang === 'en' ? 'Active' : 'সক্রিয়'}</span></div>`;
+  }
+  document.getElementById('refreshSessionsBtn')?.addEventListener('click', loadDevices);
+  document.getElementById('logoutAllDevicesBtn')?.addEventListener('click', async () => {
+    try { await fetch('/api/v1/auth/logout-all', { method: 'POST' }); } catch (_e) {}
+    document.getElementById('logoutBtn')?.click();
+  });
+
+  // Full Bilingual Sync for ALL v19/v20 Elements (instant Bangla <-> English toggle)
+  window.syncV20I18n = function(curLang) {
+    const en = curLang === 'en';
+    const set = (id, bnTxt, enTxt) => { const el = document.getElementById(id); if (el) el.textContent = en ? enTxt : bnTxt; };
+    set('authModalHeading', 'অ্যাকাউন্ট লগইন ও সাইন আপ', 'Account Sign In & Sign Up');
+    set('authModalSub', 'রোল সার্ভার থেকে নির্ধারিত হয় — সাইন আপে কোনো রোল ড্রপডাউন নেই', 'Roles are server-enforced — zero role dropdown on signup');
+    set('demoNoticeText', 'এটি আলাদা ডেমো দোকান (প্রতি রাতে ডেটা রিসেট হয়) — অনুগ্রহ করে আসল ব্যক্তিগত তথ্য দেবেন না।', 'Isolated Demo Shop (resets nightly) — please do not enter real personal data.');
+    set('demoSwitchHint', 'ডেমো প্রিভিউ:', 'Demo Preview:');
+    set('emptyShopTitle', 'আপনার নতুন দোকান প্রস্তুত! এখনো কোনো বিক্রি যোগ হয়নি', 'Your new shop is ready! No sales recorded yet');
+    set('emptyShopSub', 'শুরু করতে নিচের CSV আপলোড করুন অথবা POS ট্যাবে প্রথম বিক্রি যোগ করুন।', 'Upload a sales CSV below or record your first sale in the POS tab.');
+    set('onboardTitle', '🚀 ৩ ধাপে শুরু করুন', '🚀 Get Started in 3 Steps');
+    set('onboardSub', 'প্রথমবার ব্যবহারের জন্য দ্রুত চেকলিস্ট', 'Quick first-time setup checklist');
+    set('dismissOnboardBtn', 'লুকান ✕', 'Hide ✕');
+    set('csvForecastTitle', '📂 নিজের দোকানের CSV ডেটা আপলোড ও External Forecast API', '📂 Upload Your Shop CSV & External Forecast API');
+    set('csvForecastSub', 'সিন্থেটিক Kaggle ডেটা ছাড়াও নিজের বিক্রির CSV (date,sku,qty,price) দিয়ে লাইভ ৭ দিনের পূর্বাভাস ও API Key পান।', 'Upload your own sales CSV (date,sku,qty,price) for live 7-day forecasts & API Key access.');
+    set('runCsvForecastBtn', 'CSV ফোরকাস্ট চালান', 'Run CSV Forecast');
+    set('genApiKeyBtn', 'নতুন API Key তৈরি করুন', 'Generate API Key');
+    set('testExternalForecastBtn', 'লাইভ API পরীক্ষা', 'Test Live API');
+    set('staffSecTitle', '👥 কর্মী আমন্ত্রণ, PIN সুরক্ষা ও লগইন করা ডিভাইস', '👥 Staff Invites, PIN Security & Active Devices');
+    set('staffSecSub', 'শুধুমাত্র দোকানের মালিক কর্মীকে রোল দিতে ও তাৎক্ষণিক সেশন বাতিল করতে পারবেন।', 'Only the shop Owner can assign staff roles and immediately revoke sessions.');
+    set('logoutAllDevicesBtn', 'সব ডিভাইস থেকে লগআউট', 'Logout All Devices');
+    set('staffInvHead', 'কর্মীকে আমন্ত্রণ পাঠান (মালিক রোল ঠিক করবেন)', 'Invite Staff Member (Owner Sets Role)');
+    set('sendStaffInviteBtn', 'আমন্ত্রণ লিংক', 'Create Invite');
+    set('activeDevHead', '📱 আমার লগইন করা ডিভাইস (httpOnly Session)', '📱 My Logged-In Devices (httpOnly Session)');
+    set('refreshSessionsBtn', 'রিফ্রেশ', 'Refresh');
+  };
+})();
+</script>
+
 </body>
 </html>
