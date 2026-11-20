@@ -840,11 +840,11 @@
               <button type="button" id="stopMicBtn" class="px-2.5 py-1 rounded-lg bg-rose-600 text-white text-[11px] font-bold"></button>
             </div>
 
-            <!-- Integrated Input Bar with Large Thumb-Friendly Mic Inside -->
-            <form id="voiceChatForm" class="flex items-center gap-2">
-              <input type="text" id="voiceChatIn" class="flex-1 min-h-[46px] glass-input rounded-xl px-3.5 text-sm" />
-              <button type="button" id="chatMicBtn" class="shrink-0 w-12 h-12 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-lg flex items-center justify-center shadow-lg transition" aria-label="Voice Input">🎤</button>
-              <button type="submit" data-i18n="btnSend" class="shrink-0 min-h-[46px] px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm"></button>
+            <!-- Integrated Input Bar with Large Thumb-Friendly Mic Inside (Zero Mobile Overflow) -->
+            <form id="voiceChatForm" class="flex items-center gap-1.5 sm:gap-2 w-full max-w-full">
+              <input type="text" id="voiceChatIn" class="flex-1 min-w-0 w-full min-h-[44px] glass-input rounded-xl px-3 text-sm" />
+              <button type="button" id="chatMicBtn" class="shrink-0 w-11 h-11 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-base flex items-center justify-center shadow-lg transition" aria-label="Voice Input">🎤</button>
+              <button type="submit" data-i18n="btnSend" class="shrink-0 min-h-[44px] px-3.5 sm:px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs sm:text-sm"></button>
             </form>
           </div>
 
@@ -884,7 +884,7 @@
             <div class="pt-2 border-t border-slate-500/20 space-y-2 text-xs">
               <label class="block font-bold" id="p2BarcodeLbl"></label>
               <div class="flex gap-2">
-                <input type="text" id="p2BarcodeIn" value="8941100100012" class="flex-1 glass-input rounded-xl px-3 min-h-[38px] font-mono text-xs" />
+                <input type="text" id="p2BarcodeIn" value="8941100100012" class="flex-1 min-w-0 w-full glass-input rounded-xl px-3 min-h-[38px] font-mono text-xs" />
                 <button type="button" id="p2BarcodeBtn" class="px-3.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-xs"></button>
               </div>
               <div class="flex flex-wrap gap-1.5 text-[10px]">
@@ -1025,7 +1025,7 @@
             <h3 class="font-extrabold text-sm sm:text-base text-emerald-600 dark:text-emerald-300" id="opsCashTitle"></h3>
             <div class="flex items-center gap-2">
               <label class="font-bold shrink-0" id="opsCashLbl"></label>
-              <input type="number" id="opsCashCountedIn" inputmode="numeric" value="36500" class="flex-1 glass-input rounded-xl px-3 py-2 font-mono font-bold" />
+              <input type="number" id="opsCashCountedIn" inputmode="numeric" value="36500" class="flex-1 min-w-0 w-full glass-input rounded-xl px-3 py-2 font-mono font-bold" />
               <button type="button" id="opsCashCheckBtn" class="px-3.5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-extrabold"></button>
             </div>
             <div id="opsCashRes" class="p-2.5 rounded-xl sub-glass-row font-semibold"></div>
@@ -1094,7 +1094,7 @@
           <div class="bento-card p-5 space-y-3 text-xs">
             <h3 class="font-extrabold text-sm sm:text-base text-sky-600 dark:text-sky-300" id="v5ClaimTitle"></h3>
             <div class="flex flex-wrap gap-2 items-center">
-              <select id="v5ClaimReasonSel" class="flex-1 glass-input rounded-xl px-3 py-2 text-xs font-bold"></select>
+              <select id="v5ClaimReasonSel" class="flex-1 min-w-0 w-full glass-input rounded-xl px-3 py-2 text-xs font-bold"></select>
               <button type="button" id="v5GenClaimBtn" class="px-3.5 py-2 rounded-xl bg-sky-600 text-white font-bold text-xs"></button>
             </div>
             <textarea id="v5ClaimDraftBox" rows="3" readonly class="w-full glass-input rounded-xl p-2.5 text-xs leading-relaxed"></textarea>
@@ -1739,9 +1739,13 @@
 
       const box = document.getElementById('chatThreadBox');
       box.innerHTML = chatHistory.length === 0
-        ? `<div class="p-3 rounded-2xl bg-indigo-500/15 border border-indigo-400/30">${L('যেকোনো প্রশ্ন করুন — ডান পাশে ৬টি এজেন্টের লাইভ চিন্তা, SQL টুল ও pgvector RAG ট্রেস দেখতে পাবেন!', 'Ask any question — watch the live 6-Agent Trace (SQL Tools vs pgvector RAG) on the right!')}</div>`
-        : chatHistory.map((m) => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="max-w-[88%] px-3.5 py-2 rounded-2xl whitespace-pre-line ${m.role === 'user' ? 'bg-indigo-600 text-white' : 'sub-glass-row'}">${m.text}</div></div>`).join('');
+        ? `<div class="p-3 rounded-2xl bg-indigo-500/15 border border-indigo-400/30">${L('যেকোনো প্রশ্ন করুন — ৬টি এজেন্টের লাইভ চিন্তা ও উত্তর দেখতে পাবেন!', 'Ask any question — see live AI answers and the 6-Agent Trace!')}</div>`
+        : chatHistory.map((m, idx) => `<div class="flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}"><div class="max-w-[90%] px-3.5 py-2.5 rounded-2xl whitespace-pre-line ${m.role === 'user' ? 'bg-indigo-600 text-white' : 'sub-glass-row'}"><div>${m.text}</div>${m.role === 'ai' ? `<div class="mt-2 pt-1.5 border-t border-slate-500/20 flex justify-end"><button type="button" data-speak-idx="${idx}" class="speak-msg-btn px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 font-bold text-[11px]">🔊 ${L('উত্তর শুনুন', 'Listen')}</button></div>` : ''}</div></div>`).join('');
       box.scrollTop = box.scrollHeight;
+      box.querySelectorAll('.speak-msg-btn').forEach((sb) => sb.addEventListener('click', () => {
+        const item = chatHistory[Number(sb.getAttribute('data-speak-idx'))];
+        if (item && typeof speakCleanText === 'function') speakCleanText(item.text);
+      }));
       renderAgentTrace();
     }
 
@@ -2047,12 +2051,9 @@
       lookupBarcode('8941100100012');
 
       document.getElementById('p2VoiceSpeakBtn').addEventListener('click', () => {
-        if (!('speechSynthesis' in window)) { showToast(L('এই ব্রাউজারে স্পিচ সাপোর্ট নেই।', 'Speech synthesis not supported.')); return; }
-        const u = new SpeechSynthesisUtterance(L('আসসালামু আলাইকুম। আজ মোট বিক্রি এক লাখ সাত হাজার নয়শো টাকা এবং ৫৫টি ডিম চার দিনে মেয়াদ শেষ হবে।', 'Today total sales are 107,900 taka, and 55 eggs expire in 4 days.'));
-        u.lang = lang === 'bn' ? 'bn-BD' : 'en-US';
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(u);
-        showToast(L('🔊 উত্তর পড়ে শোনানো হচ্ছে...', '🔊 Reading summary aloud...'));
+        const lastAi = chatHistory.slice().reverse().find((m) => m.role === 'ai');
+        const txt = lastAi ? lastAi.text : L('আজ মোট বিক্রি ১,০৭,৯০০ টাকা এবং ৫৫টি ডিম ৪ দিনে মেয়াদ শেষ হবে।', 'Today total sales are 107,900 taka and 55 eggs expire in 4 days.');
+        if (typeof speakCleanText === 'function') speakCleanText(txt);
       });
 
       document.getElementById('p2VoiceAskBtn').addEventListener('click', () => {
@@ -3132,7 +3133,7 @@
         .replace(/\s+/g, ' ')
         .trim();
       const parts = s.split(/(?<=[।.!?])\s+/).filter(Boolean);
-      return parts.slice(0, 2).join(' ');
+      return parts.slice(0, 4).join(' ');
     }
 
     function stopAllSpeech() {
@@ -3150,8 +3151,9 @@
       stopAllSpeech();
 
       const voices = window.speechSynthesis.getVoices() || [];
-      if (lang === 'bn' && voices.length > 0 && !voices.some((v) => (v.lang || '').toLowerCase().startsWith('bn'))) {
-        showToast(L('ℹ️ এই ডিভাইসে বাংলা ভয়েস নেই — লিখিত উত্তর পর্দায় অক্ষত আছে।', 'ℹ️ Bangla voice not installed on this device — written reply stays on screen.'));
+      const bnVoice = voices.find((v) => (v.lang || '').toLowerCase().startsWith('bn'));
+      if (lang === 'bn' && voices.length > 0 && !bnVoice) {
+        showToast(L('ℹ️ এই ডিভাইসে বাংলা ভয়েস নেই — লিখিত উত্তর পর্দায় আছে।', 'ℹ️ Bangla voice not installed on this device — written reply is shown.'));
         return;
       }
 
@@ -3163,6 +3165,7 @@
       chunks.forEach((chunk, idx) => {
         const u = new SpeechSynthesisUtterance(chunk);
         u.lang = lang === 'bn' ? 'bn-BD' : 'en-US';
+        if (lang === 'bn' && bnVoice) u.voice = bnVoice;
         u.rate = rate;
         if (idx === chunks.length - 1) {
           u.onend = () => document.getElementById('stopTtsBtn')?.classList.add('hidden');
@@ -3263,7 +3266,12 @@
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('toggleAutoSpeakBtn')?.addEventListener('click', () => {
         autoSpeakEnabled = !autoSpeakEnabled;
-        if (!autoSpeakEnabled) stopAllSpeech();
+        if (!autoSpeakEnabled) {
+          stopAllSpeech();
+        } else {
+          const lastAi = chatHistory.slice().reverse().find((m) => m.role === 'ai');
+          if (lastAi) speakCleanText(lastAi.text);
+        }
         renderVoiceToolbar();
       });
       document.getElementById('stopTtsBtn')?.addEventListener('click', stopAllSpeech);
