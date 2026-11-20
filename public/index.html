@@ -1808,13 +1808,38 @@
         }
       } catch (_e) {}
 
-      chatHistory[chatHistory.length - 1] = {
-        role: 'ai',
-        text: L(
-          'ম্যানেজার এজেন্টের সমন্বিত উত্তর:\n• Inventory+Sales: ৫৫টি ডিম ৪ দিনে নষ্ট হবে — ১৫% ছাড়ে ৳৭০১ উদ্ধার।\n• Finance (SQL): মোট বিক্রি ৳১,০৭,৯০০ ও নিট লাভ ৳৪,৫৫০।\n• Supplier (pgvector RAG): মেঘনা ট্রেডার্সের ২ দিনের ডেলিভারি শর্ত অনুযায়ী ২৮টি তেলের PO স্যান্ডবক্স খসড়া তৈরি হয়েছে।',
-          'Manager Agent Decision:\n• Inventory+Sales: 55 eggs expire in 4d — 15% discount recovers ৳701.\n• Finance (Direct SQL): Revenue ৳107,900 & Net Profit ৳4,550.\n• Supplier (pgvector RAG): 28-Oil PO sandbox draft queued per Meghna Traders 2-day lead-time policy.'
-        )
-      };
+      let smartAns = '';
+      if (/(কিনতে\s*হবে|অর্ডার|reorder|purchase|সাপ্লায়ার|buy)/i.test(text)) {
+        smartAns = L(
+          '📦 রি-অর্ডার বিশ্লেষণ (আজ যা কিনতে হবে):\n• সয়াবিন তেল (২ লিটার): ২৮ বোতল — আনুমানিক ৳৯,১০০\n• মিনিকেট চাল (৫ কেজি): ৭ বস্তা — আনুমানিক ৳২,৩১০\n• পরামর্শ: ৭০% মেঘনা ট্রেডার্স ও ৩০% ঢাকা এগ্রোতে অর্ডার ভাগ করুন।',
+          '📦 Reorder Analysis (What to Buy Today):\n• Soybean Oil (2L): 28 bottles — est. ৳9,100\n• Miniket Rice (5kg): 7 bags — est. ৳2,310\n• Advice: Split 70% Meghna Traders / 30% Dhaka Agro.'
+        );
+      } else if (/(বিক্রি\s*কত|আজকের\s*বিক্রি|মোট\s*বিক্রি|লাভ|profit|revenue|sale)/i.test(text)) {
+        const revSum = shopState.sales.reduce((s, x) => s + x.rev, 0);
+        smartAns = L(
+          `📊 আজকের বিক্রি ও লাভের বিশ্লেষণ:\n• মোট বিক্রি: ${fmtTaka(revSum)} (${fmtNum(shopState.sales.length)}টি চালান)\n• প্রাথমিক লাভ: ৳৮,৮০০\n• আসল নিট লাভ: ৳৪,৫৫০।`,
+          `📊 Today Sales & Profit Analysis:\n• Total Revenue: ${fmtTaka(revSum)} (${shopState.sales.length} invoices)\n• Gross Profit: ৳8,800\n• Net Profit: ৳4,550.`
+        );
+      } else if (/(বাকি|baki|due|করিম|সালমা|রফিকুল)/i.test(text)) {
+        const bakiSum = shopState.baki.reduce((s, b) => s + b.due, 0);
+        smartAns = L(
+          `📒 বাকির খাতা বিশ্লেষণ (মোট ${fmtTaka(bakiSum)}):\n• করিম মিয়া: ৳৩,৪৫০ (১৮ দিন — উচ্চ ঝুঁকি)\n• সালমা বেগম: ৳২,৮০০ (১২ দিন)\n• রফিকুল ইসলাম: ৳১,৯৫০ (৪ দিন)।`,
+          `📒 Credit Ledger Analysis (Total ${fmtTaka(bakiSum)}):\n• Karim Mia: ৳3,450 (18d — HIGH risk)\n• Salma Begum: ৳2,800 (12d)\n• Rafiqul Islam: ৳1,950 (4d).`
+        );
+      } else if (/(ডিম|egg|মেয়াদ|অপচয়|expiry|ছাড়|discount)/i.test(text)) {
+        smartAns = L(
+          '🥚 মেয়াদ ও অপচয় বিশ্লেষণ:\n• ৫৫টি ফার্মের লাল ডিম ৪ দিনে মেয়াদ শেষ হবে — ১৫% ছাড়ে ৳৭০১ নগদ উদ্ধার হবে।\n• ১৮টি তরল দুধ ৩ দিনে শেষ হবে — ডিমের সাথে কম্বো অফার দিন।',
+          '🥚 Expiry & Waste Analysis:\n• 55 Brown Farm Eggs expire in 4d — 15% off recovers ৳701 cash.\n• 18 Liquid Milk expire in 3d — bundle in a combo deal.'
+        );
+      } else if (/(তেল|oil|চাল|rice|দুধ|milk|স্টক|stock|মজুত)/i.test(text)) {
+        smartAns = L('📦 বর্তমান স্টক:\n', '📦 Current Stock:\n') + shopState.products.map((p) => `• ${L(p.nameBn, p.nameEn)}: ${fmtNum(p.stock)} (${fmtTaka(p.price)}, ${fmtNum(p.expDays)}${L(' দিন', 'd')})`).join('\n');
+      } else {
+        smartAns = L(
+          `🤖 আপনার প্রশ্ন "${text}" বিশ্লেষণ করেছি। দোকানে আজ মোট বিক্রি ৳১,০৭,৯০০, ৫৫টি ডিম ৪ দিনে নষ্ট হবে এবং ২৮টি সয়াবিন তেল অর্ডার করা জরুরি।`,
+          `🤖 Analyzed "${text}". Today sales: ৳107,900; 55 eggs expire in 4d; reorder 28 Soybean Oil bottles.`
+        );
+      }
+      chatHistory[chatHistory.length - 1] = { role: 'ai', text: smartAns };
       renderShopContent();
     }
 
