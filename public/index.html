@@ -322,20 +322,56 @@
       </div>
     </div>
 
-    <!-- Pricing Table -->
-    <div class="bento-card p-5 overflow-x-auto space-y-3">
-      <h2 class="text-xl font-extrabold text-center" data-i18n="pricingHeading"></h2>
-      <table class="w-full text-left text-xs sm:text-sm border-collapse">
-        <thead>
-          <tr class="border-b border-slate-500/25">
-            <th class="py-2.5 px-3" data-i18n="colFeat"></th>
-            <th class="py-2.5 px-3 text-center" data-i18n="colFree"></th>
-            <th class="py-2.5 px-3 text-center text-amber-500 dark:text-amber-300" data-i18n="colPremium"></th>
-          </tr>
-        </thead>
-        <tbody id="pricingComparisonBody" class="divide-y divide-slate-500/20"></tbody>
-      </table>
-    </div>
+    <!-- Modern Responsive Glassy 2-Card Pricing Showcase -->
+    <section id="pricingShowcaseSection" class="space-y-6 py-2">
+      <div class="text-center space-y-2 max-w-2xl mx-auto">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-extrabold bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30" id="prBadge"></span>
+        <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight" data-i18n="pricingHeading"></h2>
+        <p class="text-xs sm:text-sm text-muted" id="prSub"></p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+        <!-- FREE GLASS CARD -->
+        <div class="bento-card p-6 sm:p-8 flex flex-col justify-between gap-6 relative overflow-hidden">
+          <div class="space-y-5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h3 class="text-lg sm:text-xl font-extrabold" id="prFreeName"></h3>
+                <p class="text-xs text-muted mt-0.5" id="prFreeTag"></p>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-bold sub-glass-row" id="prFreePill"></span>
+            </div>
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-4xl font-extrabold tracking-tight" id="prFreePrice"></span>
+              <span class="text-xs text-muted font-semibold" id="prFreePer"></span>
+            </div>
+            <ul id="prFreeList" class="space-y-2.5 text-xs sm:text-sm"></ul>
+          </div>
+          <button type="button" id="prStartFreeBtn" class="w-full min-h-[46px] rounded-2xl glass-input hover:border-indigo-500 font-extrabold text-sm transition"></button>
+        </div>
+
+        <!-- PREMIUM FEATURED GLASS CARD -->
+        <div class="rounded-[1.35rem] p-[1.5px] bg-gradient-to-br from-indigo-500 via-sky-500 to-emerald-400 shadow-2xl shadow-indigo-500/20">
+          <div class="h-full rounded-[1.28rem] p-6 sm:p-8 flex flex-col justify-between gap-6 bg-white/95 dark:bg-[#0b132b]/95 backdrop-blur-xl relative overflow-hidden">
+            <div class="space-y-5">
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <h3 class="text-lg sm:text-xl font-extrabold text-indigo-600 dark:text-indigo-300" id="prProName"></h3>
+                  <p class="text-xs text-muted mt-0.5" id="prProTag"></p>
+                </div>
+                <span class="px-3 py-1 rounded-full text-[11px] font-extrabold bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 shadow-sm shrink-0" id="prProPill"></span>
+              </div>
+              <div class="flex items-baseline gap-1.5">
+                <span class="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-600 to-emerald-500 dark:from-indigo-300 dark:to-emerald-300 bg-clip-text text-transparent" id="prProPrice"></span>
+                <span class="text-xs text-muted font-semibold" id="prProPer"></span>
+              </div>
+              <ul id="prProList" class="space-y-2.5 text-xs sm:text-sm"></ul>
+            </div>
+            <button type="button" id="prUpgradeProBtn" class="w-full min-h-[46px] rounded-2xl bg-gradient-to-r from-indigo-600 via-blue-600 to-emerald-500 hover:brightness-110 text-white font-extrabold text-sm shadow-lg transition"></button>
+          </div>
+        </div>
+      </div>
+    </section>
 
     <!-- Top CTA Strip Above Footer -->
     <div class="rounded-3xl bg-gradient-to-r from-indigo-700 via-blue-700 to-emerald-700 text-white p-6 sm:p-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1679,13 +1715,6 @@
       document.getElementById('globalSearchIn').placeholder = L('পণ্য, কাস্টমার বা ট্যাব খুঁজুন...', 'Search products, customers, or tabs...');
       document.querySelectorAll('.quick-ai-chip').forEach((c) => { c.textContent = lang === 'bn' ? c.getAttribute('data-q-bn') : c.getAttribute('data-q-en'); });
 
-      const rows = [
-        [L('বিক্রি, স্টক ও বাকির খাতা', 'POS, Stock & Credit Ledger'), L('✅ (সীমিত)', '✅ (Limited)'), L('✅ আনলিমিটেড', '✅ Unlimited')],
-        [L('মাসিক এআই প্রশ্ন (কোটা)', 'Monthly AI Queries'), L('মাসে ২০টি', '20 / month'), L('মাসে ৫০০+', '500+ / month')],
-        [L('৬-এজেন্ট ট্রেস + Digital Twin', '6-Agent Trace + Digital Twin'), L('বেসিক', 'Basic'), L('✅ সম্পূর্ণ', '✅ Full')],
-        [L('সাপ্লায়ার অটো PO ও রিপোর্ট এক্সপোর্ট', 'Supplier PO & PDF/Excel Export'), '❌', '✅']
-      ];
-      document.getElementById('pricingComparisonBody').innerHTML = rows.map((r) => `<tr><td class="py-2.5 px-3 font-semibold">${r[0]}</td><td class="py-2.5 px-3 text-center text-muted">${r[1]}</td><td class="py-2.5 px-3 text-center font-bold text-emerald-600 dark:text-emerald-300">${r[2]}</td></tr>`).join('');
     }
 
     async function sendAgentQuery(msg) {
@@ -2605,7 +2634,7 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('ftPriceLink')?.addEventListener('click', () => {
-        const tbl = document.getElementById('pricingComparisonBody');
+        const tbl = document.getElementById('pricingShowcaseSection');
         if (tbl) tbl.scrollIntoView({ behavior: 'smooth', block: 'center' });
       });
       document.querySelectorAll('.ft-jump').forEach((btn) => btn.addEventListener('click', () => {
@@ -2917,6 +2946,69 @@
       });
 
       document.getElementById('pageBackHomeBtn').addEventListener('click', () => setWorkspace('landing'));
+    });
+
+  
+
+    function renderGlassyPricing() {
+      if (!document.getElementById('prBadge')) return;
+      const chk = '<svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
+      const xmk = '<svg class="w-4 h-4 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
+      document.getElementById('prBadge').textContent = L('স্বচ্ছ ও সহজ মূল্য', 'Transparent Plans');
+      document.getElementById('prSub').textContent = L('ফ্রি প্ল্যানে আজই শুরু করুন — ব্যবসা বড় হলে প্রিমিয়ামে আপগ্রেড করুন।', 'Start free today and upgrade seamlessly as your shop grows.');
+
+      document.getElementById('prFreeName').textContent = L('ফ্রি স্টার্টার', 'Free Starter');
+      document.getElementById('prFreeTag').textContent = L('ছোট মুদি ও একক দোকানের জন্য', 'For small single neighborhood shops');
+      document.getElementById('prFreePill').textContent = L('চিরকাল ফ্রি', 'Forever Free');
+      document.getElementById('prFreePrice').textContent = L('৳০', '৳0');
+      document.getElementById('prFreePer').textContent = L('/ মাস', '/ month');
+      document.getElementById('prStartFreeBtn').textContent = L('বিনামূল্যে শুরু করুন', 'Start Free Now');
+
+      const freeItems = [
+        [true, L('বিক্রি (POS), স্টক ও বাকির খাতা (১০০টি পণ্য)', 'POS, Stock & Credit Ledger (up to 100 items)')],
+        [true, L('মাসে ২০টি এআই প্রশ্ন ও অপচয় সতর্কতা', '20 monthly AI queries & expiry alerts')],
+        [true, L('বেসিক ৬-এজেন্ট ট্রেস ও ৭ দিনের পূর্বাভাস', 'Basic 6-Agent Trace & 7-day forecast')],
+        [true, L('ইন্টারনেট ছাড়াও অফলাইন বিক্রি (PWA)', 'Offline POS sales sync (PWA)')],
+        [false, L('চালান ছবি OCR ও ৩-মুখী PO মেলানো', 'Chalan OCR & 3-Way PO Reconciliation')],
+        [false, L('সাপ্লায়ার WhatsApp PO ও PDF/Excel এক্সপোর্ট', 'Supplier WhatsApp PO & PDF/Excel Export')]
+      ];
+      document.getElementById('prFreeList').innerHTML = freeItems
+        .map(([ok, txt]) => `<li class="flex items-start gap-2.5 ${ok ? 'font-medium' : 'text-muted opacity-70 line-through'}">${ok ? chk : xmk}<span>${txt}</span></li>`)
+        .join('');
+
+      document.getElementById('prProName').textContent = L('বিজমাইন্ড প্রিমিয়াম', 'BizMind Premium');
+      document.getElementById('prProTag').textContent = L('দ্রুত বর্ধনশীল দোকান ও একাধিক কর্মীর জন্য', 'For growing shops & multi-staff teams');
+      document.getElementById('prProPill').textContent = L('⭐ সবচেয়ে জনপ্রিয়', '⭐ Most Popular');
+      document.getElementById('prProPrice').textContent = L('৳৪৯৯', '৳499');
+      document.getElementById('prProPer').textContent = L('/ মাস', '/ month');
+      document.getElementById('prUpgradeProBtn').textContent = L('⚡ প্রিমিয়াম চালু করুন (বিকাশ / নগদ / SSL)', '⚡ Upgrade to Premium (Sandbox)');
+
+      const proItems = [
+        L('আনলিমিটেড পণ্য, বিক্রি, স্টক ও বাকির খাতা', 'Unlimited Products, POS, Stock & Credit Ledger'),
+        L('মাসে ৫০০+ লাইভ Gemini + Google Search এআই প্রশ্ন', '500+ monthly live Gemini + Google Search AI queries'),
+        L('পূর্ণ ৬-এজেন্ট ট্রেস, ডিজিটাল টুইন ও ৩০-দিন উৎসব পূর্বাভাস', 'Full 6-Agent Trace, Digital Twin & 30-day Festival Forecast'),
+        L('চালান ছবি OCR + ৩-মুখী PO মেলানো ও সাপ্লায়ার রিস্ক স্কোর', 'Chalan Photo OCR + 3-Way PO Reconciliation & Supplier Risk'),
+        L('স্বয়ংক্রিয় প্রোমো ব্যানার PNG, WhatsApp PO ও টেলিগ্রাম অনুমোদন', 'Promo Banner PNG, WhatsApp PO & Telegram HITL Approvals'),
+        L('আনলিমিটেড স্টাফ রোল ও পিডিএফ/এক্সেল রিপোর্ট এক্সপোর্ট', 'Unlimited Staff Roles & PDF/Excel Business Reports')
+      ];
+      document.getElementById('prProList').innerHTML = proItems
+        .map((txt) => `<li class="flex items-start gap-2.5 font-semibold">${chk}<span>${txt}</span></li>`)
+        .join('');
+    }
+
+    const _v12RenderAll = renderAll;
+    renderAll = function () { _v12RenderAll(); renderGlassyPricing(); };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('prStartFreeBtn')?.addEventListener('click', () => {
+        if (session) { setWorkspace('shop'); switchShopTab(activeShopTab || 'overview'); }
+        else document.getElementById('loginModal').classList.remove('hidden');
+      });
+      document.getElementById('prUpgradeProBtn')?.addEventListener('click', () => {
+        document.getElementById('upgradeModal').classList.remove('hidden');
+      });
+      renderGlassyPricing();
     });
 
   </script>
