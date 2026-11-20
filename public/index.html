@@ -312,63 +312,128 @@
       </table>
     </div>
 
-    <footer class="bento-card p-6 sm:p-8 mt-6 space-y-6">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs sm:text-sm">
-        <!-- Col 1: Brand & Trust -->
-        <div class="space-y-3">
+    <!-- Top CTA Strip Above Footer -->
+    <div class="rounded-3xl bg-gradient-to-r from-indigo-700 via-blue-700 to-emerald-700 text-white p-6 sm:p-8 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="space-y-1">
+        <h2 class="text-xl sm:text-2xl font-extrabold" id="ftCtaTitle"></h2>
+        <p class="text-sm text-indigo-100" id="ftCtaSub"></p>
+      </div>
+      <div class="flex flex-col sm:flex-row gap-2.5 w-full md:w-auto shrink-0">
+        <button type="button" id="ftStartDemoBtn" class="w-full sm:w-auto min-h-[46px] px-6 py-2.5 rounded-xl bg-white text-slate-950 font-extrabold text-sm shadow-md hover:bg-indigo-50 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"></button>
+        <a href="https://wa.me/8801865190471" target="_blank" rel="noopener noreferrer" id="ftWaCtaLink" class="w-full sm:w-auto min-h-[46px] px-5 py-2.5 rounded-xl bg-emerald-500 text-slate-950 font-extrabold text-sm shadow-md hover:bg-emerald-400 transition inline-flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"></a>
+      </div>
+    </div>
+
+    <!-- High-Contrast Solid Dark-Slate Footer (Zero backdrop-filter for 60fps Android, Centered, >=14px text, 44px tap targets) -->
+    <footer class="rounded-3xl bg-slate-900 dark:bg-[#070b18] text-slate-100 border border-slate-700/60 p-6 sm:p-9 shadow-2xl space-y-7 pb-10">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-sm">
+        <!-- Column 1: Brand, Social SVG Icons, Language/Theme/PWA & 2 Simple Trust Badges -->
+        <div class="space-y-4">
           <div class="flex items-center gap-2.5">
-            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-sky-500 to-emerald-400 text-white flex items-center justify-center font-extrabold text-sm shadow-md">BM</div>
-            <span class="font-extrabold text-base tracking-tight" id="ftBrandName"></span>
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 via-sky-500 to-emerald-400 text-white flex items-center justify-center font-extrabold text-sm shadow-md shrink-0">BM</div>
+            <span class="font-extrabold text-lg text-white tracking-tight" id="ftBrandName"></span>
           </div>
-          <p class="text-xs text-muted leading-relaxed" id="ftBrandDesc"></p>
-          <div class="flex flex-wrap gap-1.5 text-[10px] font-bold">
-            <span class="px-2 py-1 rounded-lg sub-glass-row">🔒 PostgreSQL RLS</span>
-            <span class="px-2 py-1 rounded-lg sub-glass-row">⚡ Offline PWA</span>
-            <span class="px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-300" id="ftStatusBadge"></span>
+          <p class="text-sm text-slate-300 leading-relaxed" id="ftBrandDesc"></p>
+
+          <!-- Social SVG Icons (Facebook, LinkedIn, WhatsApp) -->
+          <div class="flex items-center gap-2.5">
+            <a href="https://www.facebook.com/share/1HJb2Cwxvt/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" class="w-11 h-11 rounded-xl bg-slate-800 hover:bg-indigo-600 text-slate-200 hover:text-white flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M13.5 9H16V6h-2.5C11.57 6 10 7.57 10 9.5V11H8v3h2v7h3v-7h2.5l.5-3H13v-1.5c0-.28.22-.5.5-.5z"/></svg>
+            </a>
+            <a href="https://www.linkedin.com/in/md-shamim471/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" class="w-11 h-11 rounded-xl bg-slate-800 hover:bg-sky-600 text-slate-200 hover:text-white flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M6.94 8.5H3.56V19.5H6.94V8.5ZM5.25 3.5A1.97 1.97 0 1 0 5.25 7.44A1.97 1.97 0 1 0 5.25 3.5ZM20.44 13.02C20.44 9.88 18.76 8.22 16.22 8.22C14.44 8.22 13.56 9.2 13.12 9.91V8.5H9.75C9.8 9.48 9.75 19.5 9.75 19.5H13.12V13.36C13.12 13.02 13.15 12.69 13.25 12.45C13.52 11.78 14.13 11.09 15.16 11.09C16.51 11.09 17.06 12.12 17.06 13.63V19.5H20.44V13.02Z"/></svg>
+            </a>
+            <a href="https://wa.me/8801865190471" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" class="w-11 h-11 rounded-xl bg-slate-800 hover:bg-emerald-600 text-slate-200 hover:text-white flex items-center justify-center transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2ZM17.64 16.07C17.4 16.74 16.25 17.36 15.7 17.44C15.2 17.51 14.57 17.54 13.88 17.32C13.45 17.18 12.91 17 12.22 16.7C9.3 15.44 7.39 12.5 7.24 12.3C7.1 12.11 6.05 10.72 6.05 9.28C6.05 7.84 6.8 7.13 7.07 6.84C7.34 6.55 7.66 6.48 7.86 6.48C8.06 6.48 8.26 6.48 8.43 6.49C8.61 6.5 8.86 6.42 9.1 7C9.34 7.59 9.93 9.03 10 9.18C10.07 9.33 10.12 9.5 10.02 9.69C9.92 9.88 9.87 10 9.72 10.17C9.57 10.34 9.41 10.55 9.28 10.68C9.13 10.83 8.98 10.99 9.15 11.28C9.32 11.57 9.91 12.53 10.78 13.3C11.9 14.3 12.84 14.61 13.13 14.76C13.42 14.91 13.59 14.88 13.76 14.69C13.93 14.5 14.5 13.83 14.7 13.53C14.9 13.23 15.1 13.28 15.37 13.38C15.64 13.48 17.08 14.19 17.37 14.34C17.66 14.49 17.86 14.56 17.93 14.68C18 14.8 18 15.4 17.64 16.07Z"/></svg>
+            </a>
+          </div>
+
+          <!-- Footer Language, Theme & PWA Install Controls -->
+          <div class="flex flex-wrap gap-2">
+            <button type="button" id="ftLangBtn" class="min-h-[44px] px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"></button>
+            <button type="button" id="ftThemeBtn" class="min-h-[44px] px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 font-bold text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"></button>
+            <button type="button" id="ftPwaInstallBtn" class="min-h-[44px] px-3.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-400/40 text-indigo-100 font-bold text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"></button>
+          </div>
+
+          <!-- Max 2 Simple Shopkeeper Trust Badges (Plain Language) -->
+          <div class="flex flex-col gap-1.5 text-xs font-semibold text-emerald-300">
+            <span id="ftTrust1"></span>
+            <span id="ftTrust2"></span>
           </div>
         </div>
 
-        <!-- Col 2: Product Features -->
-        <div class="space-y-2.5">
-          <h4 class="font-extrabold text-sm" id="ftColProdTitle"></h4>
-          <ul class="space-y-1.5 text-xs text-muted">
-            <li><button type="button" data-ft-jump="overview" class="ft-jump hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftLink1"></button></li>
-            <li><button type="button" data-ft-jump="twin" class="ft-jump hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftLink2"></button></li>
-            <li><button type="button" data-ft-jump="ai" class="ft-jump hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftLink3"></button></li>
-            <li><button type="button" data-ft-jump="ops" class="ft-jump hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftLink4"></button></li>
+        <!-- Column 2: Product -->
+        <nav aria-label="Product links" class="space-y-2">
+          <h4 class="font-extrabold text-sm text-white pb-1" id="ftColProdTitle"></h4>
+          <ul class="space-y-1 text-sm text-slate-300">
+            <li><button type="button" data-ft-jump="overview" class="ft-jump min-h-[44px] w-full text-left flex items-center hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1" id="ftLink1"></button></li>
+            <li><button type="button" id="ftPriceLink" class="min-h-[44px] w-full text-left flex items-center hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1"></button></li>
+            <li><button type="button" data-ft-modal="how" class="ft-modal min-h-[44px] w-full text-left flex items-center hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1" id="ftLink3"></button></li>
+            <li><button type="button" data-ft-modal="whatsnew" class="ft-modal min-h-[44px] w-full text-left flex items-center hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1" id="ftLink4"></button></li>
           </ul>
-        </div>
+        </nav>
 
-        <!-- Col 3: Security & Support -->
-        <div class="space-y-2.5">
-          <h4 class="font-extrabold text-sm" id="ftColSecTitle"></h4>
-          <ul class="space-y-1.5 text-xs text-muted">
-            <li><button type="button" data-ft-modal="security" class="ft-modal hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftSecLink1"></button></li>
-            <li><button type="button" data-ft-modal="privacy" class="ft-modal hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftSecLink2"></button></li>
-            <li><button type="button" data-ft-modal="terms" class="ft-modal hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftSecLink3"></button></li>
-            <li><button type="button" data-ft-modal="help" class="ft-modal hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftSecLink4"></button></li>
+        <!-- Column 3: Support & Live Health Check -->
+        <nav aria-label="Support links" class="space-y-2">
+          <h4 class="font-extrabold text-sm text-white pb-1" id="ftColSecTitle"></h4>
+          <ul class="space-y-1 text-sm text-slate-300">
+            <li><button type="button" data-ft-modal="help" class="ft-modal min-h-[44px] w-full text-left flex items-center hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1" id="ftSecLink1"></button></li>
+            <li><button type="button" data-ft-modal="faq" class="ft-modal min-h-[44px] w-full text-left flex items-center hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1" id="ftSecLink2"></button></li>
+            <li><button type="button" data-ft-modal="demo" class="ft-modal min-h-[44px] w-full text-left flex items-center hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1" id="ftSecLink3"></button></li>
+            <li><button type="button" data-ft-modal="about" class="ft-modal min-h-[44px] w-full text-left flex items-center hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1" id="ftSecLink4"></button></li>
           </ul>
-        </div>
+          <!-- Real Live /health Check Indicator -->
+          <div class="pt-1">
+            <span id="ftLiveHealthPill" class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-amber-300"></span>
+          </div>
+        </nav>
 
-        <!-- Col 4: Contact & Payments -->
+        <!-- Column 4: Real Contact, Hours & Honest Upcoming Payments -->
         <div class="space-y-3">
-          <h4 class="font-extrabold text-sm" id="ftColContactTitle"></h4>
-          <div class="space-y-1 text-xs text-muted">
-            <div>📧 support@bizmind.ai</div>
-            <div id="ftLocation"></div>
+          <h4 class="font-extrabold text-sm text-white pb-1" id="ftColContactTitle"></h4>
+          <div class="space-y-2 text-sm text-slate-300">
+            <a href="mailto:mdshamim.mern@gmail.com" class="min-h-[44px] flex items-center gap-2.5 hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1">
+              <svg class="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+              <span class="break-all">mdshamim.mern@gmail.com</span>
+            </a>
+            <a href="tel:+8801865190471" class="min-h-[44px] flex items-center gap-2.5 hover:text-white transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded-lg px-1">
+              <svg class="w-4 h-4 text-emerald-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              <span id="ftPhoneText">01865190471</span>
+            </a>
+            <div class="flex items-center gap-2.5 px-1">
+              <svg class="w-4 h-4 text-sky-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span id="ftLocation"></span>
+            </div>
+            <div class="flex items-center gap-2.5 px-1 text-xs text-slate-300">
+              <svg class="w-4 h-4 text-amber-400 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span id="ftHours"></span>
+            </div>
           </div>
-          <div class="flex flex-wrap gap-1.5 text-[10px] font-extrabold">
-            <span class="px-2.5 py-1 rounded-lg bg-pink-500/15 text-pink-600 dark:text-pink-300 border border-pink-500/25">bKash</span>
-            <span class="px-2.5 py-1 rounded-lg bg-orange-500/15 text-orange-600 dark:text-orange-300 border border-orange-500/25">Nagad</span>
-            <span class="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/25">SSLCommerz</span>
+
+          <div class="pt-1 space-y-1">
+            <div class="text-xs font-bold text-slate-300" id="ftPaySoonLbl"></div>
+            <div class="flex flex-wrap gap-1.5 text-xs font-bold">
+              <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-pink-300">bKash</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-orange-300">Nagad</span>
+              <span class="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-indigo-300">SSLCommerz</span>
+            </div>
           </div>
-          <button type="button" id="ftStartDemoBtn" class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 text-white font-bold text-xs shadow-md hover:brightness-110 transition"></button>
         </div>
       </div>
 
-      <div class="pt-4 border-t border-slate-500/20 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
-        <span id="ftCopyright"></span>
-        <span id="ftMadeFor"></span>
+      <!-- Bottom Legal & SVG Bangladesh Flag Bar -->
+      <div class="pt-5 border-t border-slate-700/70 flex flex-col md:flex-row md:items-center justify-between gap-4 text-xs sm:text-sm text-slate-300">
+        <div class="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span id="ftCopyright" class="font-semibold text-white"></span>
+          <button type="button" data-ft-modal="privacy" class="ft-modal hover:text-white underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded px-1" id="ftBotPrivacy"></button>
+          <button type="button" data-ft-modal="terms" class="ft-modal hover:text-white underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded px-1" id="ftBotTerms"></button>
+          <button type="button" data-ft-modal="techsec" class="ft-modal hover:text-white underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded px-1" id="ftBotTechSec"></button>
+        </div>
+        <div class="inline-flex items-center gap-2 font-semibold text-slate-200">
+          <!-- Crisp Inline Bangladesh SVG Flag (works identically on Windows/Android/iOS) -->
+          <svg class="w-5 h-3.5 rounded-[2px] shrink-0" viewBox="0 0 20 12" aria-hidden="true"><rect width="20" height="12" fill="#006a4e"/><circle cx="9" cy="6" r="3.6" fill="#f42a41"/></svg>
+          <span id="ftMadeFor"></span>
+        </div>
       </div>
     </footer>
   </section>
@@ -936,6 +1001,16 @@
           <button type="button" class="open-upgrade-trigger px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 text-slate-950 font-extrabold text-xs" data-i18n="btnManageBilling"></button>
         </div>
       </section>
+
+      <!-- Slim 1-Line In-App Footer -->
+      <footer class="pt-4 mt-6 border-t border-slate-500/20 flex flex-wrap items-center justify-between gap-2 text-xs text-muted pb-6">
+        <span id="inAppFooterCopy"></span>
+        <div class="flex items-center gap-3 font-semibold">
+          <button type="button" data-ft-modal="help" class="ft-modal hover:underline" id="inAppHelpBtn"></button>
+          <button type="button" data-ft-modal="privacy" class="ft-modal hover:underline" id="inAppPrivBtn"></button>
+          <span>v2.6</span>
+        </div>
+      </footer>
     </main>
   </div>
 
@@ -2364,44 +2439,103 @@
 
   
 
-    function renderRichFooter() {
-      if (!document.getElementById('ftBrandName')) return;
-      document.getElementById('ftBrandName').textContent = L('বিজমাইন্ড এআই', 'BizMind AI');
-      document.getElementById('ftBrandDesc').textContent = L(
-        'বাংলাদেশের মুদি ও ক্ষুদ্র ব্যবসার এআই পার্টনার — অপচয় কমায়, বাকি আদায় করে এবং নিট লাভ বাড়ায়।',
-        'Smart AI retail co-pilot for Bangladeshi MSMEs — cut waste, recover credit dues, and grow verified net profit.'
-      );
-      document.getElementById('ftStatusBadge').textContent = L('● সিস্টেম সচল', '● All Systems Operational');
-      document.getElementById('ftColProdTitle').textContent = L('মূল ফিচারসমূহ', 'Platform Features');
-      document.getElementById('ftLink1').textContent = L('→ ৯০ দিনের ব্যাকটেস্ট ও জেনারেটিভ UI', '→ 90-Day Backtest & Generative UI');
-      document.getElementById('ftLink2').textContent = L('→ ডিজিটাল টুইন What-If সিমুলেটর', '→ Digital Twin What-If Simulator');
-      document.getElementById('ftLink3').textContent = L('→ ৬-এজেন্ট ট্রেস ও বাংলা ভয়েস এআই', '→ 6-Agent Trace & Bangla Voice AI');
-      document.getElementById('ftLink4').textContent = L('→ চালান ওসিআর, অডিট ও হ্যাশ-চেইন', '→ Invoice OCR, Audit & Hash-Chain');
+    let deferredPwaPrompt = null;
+    let liveHealthState = 'checking'; // 'checking' | 'ok' | 'down'
 
-      document.getElementById('ftColSecTitle').textContent = L('নিরাপত্তা ও সহায়তা', 'Security & Resources');
-      document.getElementById('ftSecLink1').textContent = L('ডেটা নিরাপত্তা ও রোল সুরক্ষা', 'Data Security & RBAC 404 Guard');
-      document.getElementById('ftSecLink2').textContent = L('গোপনীয়তা নীতি (Privacy Policy)', 'Privacy Policy');
-      document.getElementById('ftSecLink3').textContent = L('ব্যবহারের শর্তাবলী (Terms)', 'Terms of Service');
-      document.getElementById('ftSecLink4').textContent = L('সাহায্য কেন্দ্র ও সাপোর্ট', 'Help Center & Support');
+    window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPwaPrompt = e; });
 
-      document.getElementById('ftColContactTitle').textContent = L('যোগাযোগ ও পেমেন্ট', 'Contact & Payments');
-      document.getElementById('ftLocation').textContent = L('📍 ঢাকা, বাংলাদেশ', '📍 Dhaka, Bangladesh');
-      document.getElementById('ftStartDemoBtn').textContent = L('⚡ ফ্রি ডেমো ড্যাশবোর্ড দেখুন →', '⚡ Launch Free Demo Dashboard →');
-      document.getElementById('ftCopyright').textContent = L('© ২০২৬ বিজমাইন্ড এআই · সর্বস্বত্ব সংরক্ষিত', '© 2026 BizMind AI · All rights reserved');
-      document.getElementById('ftMadeFor').textContent = L('🇧🇩 বাংলাদেশের ক্ষুদ্র ব্যবসার জন্য তৈরি', '🇧🇩 Built for Bangladesh Retail MSMEs');
+    async function checkLiveBackendHealth() {
+      liveHealthState = 'checking';
+      renderRichFooter();
+      try {
+        const resp = await fetch('https://bizmind-ai-orcin.vercel.app/api/v1/public-ai/health', { cache: 'no-store' });
+        liveHealthState = resp.ok ? 'ok' : 'down';
+      } catch (_e) {
+        liveHealthState = 'down';
+      }
+      renderRichFooter();
     }
 
-    const _v7RenderAll = renderAll;
-    renderAll = function () { _v7RenderAll(); renderRichFooter(); };
+    function renderRichFooter() {
+      const yr = new Date().getFullYear();
+      const yrStr = lang === 'bn' ? toBnDigits(yr) : String(yr);
+
+      if (document.getElementById('inAppFooterCopy')) {
+        document.getElementById('inAppFooterCopy').textContent = L(`© ${yrStr} বিজমাইন্ড এআই`, `© ${yrStr} BizMind AI`);
+        document.getElementById('inAppHelpBtn').textContent = L('সাহায্য', 'Help');
+        document.getElementById('inAppPrivBtn').textContent = L('গোপনীয়তা', 'Privacy');
+      }
+      if (!document.getElementById('ftBrandName')) return;
+
+      document.getElementById('ftCtaTitle').textContent = L('আজই আপনার দোকানের অপচয় কমান', 'Cut Your Shop Waste Starting Today');
+      document.getElementById('ftCtaSub').textContent = L('অপচয় কমায়, বাকি আদায় করে, লাভ বাড়ায় — কোনো সেটআপ ঝামেলা ছাড়াই।', 'Cut waste, recover credit dues, and grow profit with zero setup hassle.');
+      document.getElementById('ftStartDemoBtn').textContent = L('বিনামূল্যে শুরু করুন', 'Start Free');
+      document.getElementById('ftWaCtaLink').textContent = L('WhatsApp-এ কথা বলুন', 'Chat on WhatsApp');
+
+      document.getElementById('ftBrandName').textContent = L('বিজমাইন্ড এআই', 'BizMind AI');
+      document.getElementById('ftBrandDesc').textContent = L('অপচয় কমায়, বাকি আদায় করে, লাভ বাড়ায়।', 'Cut waste, recover credit dues, and grow profit.');
+      document.getElementById('ftLangBtn').textContent = lang === 'bn' ? 'English' : 'বাংলা';
+      document.getElementById('ftThemeBtn').textContent = isDark ? L('লাইট মোড', 'Light Mode') : L('ডার্ক মোড', 'Dark Mode');
+      document.getElementById('ftPwaInstallBtn').textContent = L('হোম স্ক্রিনে যোগ করুন', 'Install App (PWA)');
+      document.getElementById('ftTrust1').textContent = L('✓ আপনার ডেটা শুধু আপনারই', '✓ Your data stays strictly private');
+      document.getElementById('ftTrust2').textContent = L('✓ ইন্টারনেট না থাকলেও বিক্রি চলে', '✓ Works even without internet');
+
+      document.getElementById('ftColProdTitle').textContent = L('পণ্য', 'Product');
+      document.getElementById('ftLink1').textContent = L('বৈশিষ্ট্যসমূহ', 'Features');
+      document.getElementById('ftPriceLink').textContent = L('দাম ও প্ল্যান', 'Pricing');
+      document.getElementById('ftLink3').textContent = L('কীভাবে কাজ করে', 'How It Works');
+      document.getElementById('ftLink4').textContent = L('নতুন কী এসেছে', "What's New");
+
+      document.getElementById('ftColSecTitle').textContent = L('সহায়তা', 'Support');
+      document.getElementById('ftSecLink1').textContent = L('সাহায্য কেন্দ্র', 'Help Center');
+      document.getElementById('ftSecLink2').textContent = L('সচরাচর প্রশ্ন', 'FAQ');
+      document.getElementById('ftSecLink3').textContent = L('ডেমো ভিডিও', 'Demo Video');
+      document.getElementById('ftSecLink4').textContent = L('আমাদের সম্পর্কে', 'About Us');
+
+      const hp = document.getElementById('ftLiveHealthPill');
+      if (liveHealthState === 'ok') {
+        hp.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-emerald-500/15 border border-emerald-500/40 text-xs font-bold text-emerald-300';
+        hp.textContent = L('● সার্ভার সচল (লাইভ যাচাইকৃত)', '● Server Online (Live Check)');
+      } else if (liveHealthState === 'down') {
+        hp.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-xs font-bold text-rose-300';
+        hp.textContent = L('● সার্ভার সংযোগ বিচ্ছিন্ন', '● Server Unreachable');
+      } else {
+        hp.className = 'inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/40 text-xs font-bold text-amber-300';
+        hp.textContent = L('● সার্ভার অবস্থা যাচাই হচ্ছে...', '● Checking Server Health...');
+      }
+
+      document.getElementById('ftColContactTitle').textContent = L('যোগাযোগ', 'Contact');
+      document.getElementById('ftLocation').textContent = L('ঢাকা, বাংলাদেশ', 'Dhaka, Bangladesh');
+      document.getElementById('ftHours').textContent = L('সহায়তা: সকাল ১০টা–রাত ৮টা', 'Support: 10 AM – 8 PM (BST)');
+      document.getElementById('ftPaySoonLbl').textContent = L('অনলাইন পেমেন্ট (শীঘ্রই আসছে):', 'Online Payments (Coming Soon):');
+
+      document.getElementById('ftCopyright').textContent = L(`© ${yrStr} বিজমাইন্ড এআই`, `© ${yrStr} BizMind AI`);
+      document.getElementById('ftBotPrivacy').textContent = L('গোপনীয়তা নীতি', 'Privacy Policy');
+      document.getElementById('ftBotTerms').textContent = L('শর্তাবলী', 'Terms');
+      document.getElementById('ftBotTechSec').textContent = L('নিরাপত্তা ও প্রযুক্তি', 'Security & Tech');
+      document.getElementById('ftMadeFor').textContent = L('বাংলাদেশের খুচরা ব্যবসার জন্য তৈরি', 'Built for Bangladesh retail businesses');
+    }
+
+    const _v8RenderAll = renderAll;
+    renderAll = function () { _v8RenderAll(); renderRichFooter(); };
 
     window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('ftLangBtn')?.addEventListener('click', () => { lang = lang === 'bn' ? 'en' : 'bn'; safeStorageSet('bizmind_lang', lang); renderAll(); });
+      document.getElementById('ftThemeBtn')?.addEventListener('click', () => { isDark = !isDark; safeStorageSet('bizmind_theme', isDark ? 'dark' : 'light'); renderAll(); });
+      document.getElementById('ftPwaInstallBtn')?.addEventListener('click', async () => {
+        if (deferredPwaPrompt) { deferredPwaPrompt.prompt(); deferredPwaPrompt = null; }
+        else showToast(L('ব্রাউজার মেনু থেকে "Add to Home Screen" চাপুন — ইন্টারনেট ছাড়াও অ্যাপ চলবে।', 'Tap "Add to Home Screen" in your browser menu to install the offline PWA.'));
+      });
+      document.getElementById('ftPriceLink')?.addEventListener('click', () => {
+        const tbl = document.getElementById('pricingComparisonBody');
+        if (tbl) tbl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
       document.querySelectorAll('.ft-jump').forEach((btn) => btn.addEventListener('click', () => {
         const target = btn.getAttribute('data-ft-jump');
         if (!session) loginAsDemo('OWNER');
         else setWorkspace('shop');
         switchShopTab(target);
       }));
-
       document.getElementById('ftStartDemoBtn')?.addEventListener('click', () => {
         if (session) { setWorkspace('shop'); switchShopTab(activeShopTab || 'overview'); }
         else document.getElementById('loginModal').classList.remove('hidden');
@@ -2410,17 +2544,25 @@
       document.querySelectorAll('.ft-modal').forEach((btn) => btn.addEventListener('click', () => {
         const k = btn.getAttribute('data-ft-modal');
         const map = {
-          security: [L('🔐 ডেটা নিরাপত্তা ও রোল সুরক্ষা', '🔐 Data Security & RBAC'), L('<p>প্রতিটি দোকানের ডেটা PostgreSQL Row-Level Security (RLS) দিয়ে আলাদা রাখা হয়। অননুমোদিত রুটে ৪০৪ গার্ড ও হ্যাশ-চেইন অডিট লগ সক্রিয় আছে।</p>', '<p>Every shop is isolated at the PostgreSQL RLS layer with server-enforced RBAC, 404 stealth guards, and tamper-evident hash-chain audit logs.</p>')],
-          privacy: [L('🛡️ গোপনীয়তা নীতি', '🛡️ Privacy Policy'), L('<p>আপনার দোকানের বিক্রি, লাভ-ক্ষতি ও কাস্টমারের বাকির হিসাব সম্পূর্ণ গোপন — প্ল্যাটফর্ম অ্যাডমিনও ডিফল্টভাবে ব্যক্তিগত হিসাব দেখতে পায় না।</p>', '<p>Your shop sales, profit margins, and credit ledgers remain strictly private — platform admins never view private financials by default.</p>')],
-          terms: [L('📜 ব্যবহারের শর্তাবলী', '📜 Terms of Service'), L('<p>ডেমো পরিবেশে প্রদর্শিত পূর্বাভাস ও সিমুলেশন শিক্ষামূলক ও ব্যবসায়িক সহায়তার জন্য। যেকোনো অর্ডার বা পেমেন্ট মালিকের অনুমোদনেই কার্যকর হয়।</p>', '<p>Forecasts and simulations assist decision-making. All purchase orders and financial actions require explicit owner approval.</p>')],
-          help: [L('💬 সাহায্য কেন্দ্র ও সাপোর্ট', '💬 Help Center & Support'), L('<p>যেকোনো সহায়তার জন্য ইমেইল করুন: <strong>support@bizmind.ai</strong> অথবা টেলিগ্রাম বটে প্রশ্ন করুন।</p>', '<p>Need assistance? Email <strong>support@bizmind.ai</strong> or message our Telegram shopkeeper bot 24/7.</p>')]
+          how: [L('কীভাবে কাজ করে', 'How BizMind AI Works'), L('<p>১) দোকানের প্রতিদিনের বিক্রি ও স্টক লিখুন বা চালানের ছবি তুলুন।</p><p>২) কোন পণ্য মেয়াদ শেষ হচ্ছে ও কার কাছে বাকি ঝুঁকিপূর্ণ — এআই আগেই জানাবে।</p><p>৩) আপনার অনুমোদনেই অফার বা অর্ডার পাঠানো হবে।</p>', '<p>1) Record daily sales or scan supplier chalans.</p><p>2) AI alerts you before items expire or stock runs out.</p><p>3) Offers & reorders execute only after your 1-click approval.</p>')],
+          whatsnew: [L('নতুন কী এসেছে (v2.6)', "What's New (v2.6)"), L('<p>• চালান ও PO মেলানো (অতিরিক্ত চার্জ শনাক্তকরণ)</p><p>• হোয়াটসঅ্যাপ বাংলা অর্ডার তালিকা</p><p>• ইন্টারনেট ছাড়াই বিক্রি (Offline PWA)</p>', '<p>• 3-Way Invoice OCR & PO Reconciliation</p><p>• WhatsApp Bangla Purchase Order Share</p><p>• Offline-First PWA & Local Forecast</p>')],
+          faq: [L('সচরাচর জিজ্ঞাসিত প্রশ্ন', 'Frequently Asked Questions'), L('<p><strong>প্রশ্ন: ইন্টারনেট না থাকলে কি বিক্রি করা যাবে?</strong><br/>হ্যাঁ, অফলাইনে বিক্রি সেভ থাকবে, নেট এলে সিঙ্ক হবে।</p><p><strong>প্রশ্ন: ক্যাশিয়ার কি লাভ দেখতে পারবে?</strong><br/>না, লাভ-ক্ষতির হিসাব শুধু মালিক ও ম্যানেজারের জন্য।</p>', '<p><strong>Q: Does it work offline?</strong><br/>Yes, sales queue locally and sync when reconnected.</p><p><strong>Q: Can cashiers see profit?</strong><br/>No, financials are strictly hidden from cashiers.</p>')],
+          demo: [L('ডেমো গাইড', 'Quick Demo Guide'), L('<p>উপরে "বিনামূল্যে শুরু করুন" বা লগইন থেকে মালিক বা ক্যাশিয়ার ডেমো অ্যাকাউন্ট দিয়ে পুরো সিস্টেম সরাসরি চালিয়ে দেখতে পারবেন।</p>', '<p>Sign in with any role-locked Demo Account from the login button to experience the full workflow live.</p>')],
+          about: [L('আমাদের সম্পর্কে', 'About BizMind AI'), L('<p>বিজমাইন্ড এআই বাংলাদেশের মুদি ও ক্ষুদ্র ব্যবসায়ীদের অপচয় কমাতে, বাকি আদায় সহজ করতে এবং স্বচ্ছ নিট লাভ হিসাব করতে তৈরি একটি আধুনিক বাংলা-প্রথম প্ল্যাটফর্ম।</p><p>যোগাযোগ: <strong>mdshamim.mern@gmail.com</strong> · <strong>01865190471</strong></p>', '<p>BizMind AI is a Bangla-first retail co-pilot built to help Bangladeshi MSMEs cut expiry waste, manage credit dues, and track verified net profit.</p><p>Contact: <strong>mdshamim.mern@gmail.com</strong> · <strong>01865190471</strong></p>')],
+          techsec: [L('নিরাপত্তা ও প্রযুক্তি (বিচারক ও টেকনিক্যাল তথ্য)', 'Security & Technical Architecture'), L('<p>• <strong>PostgreSQL RLS:</strong> প্রতিটি দোকানের ডেটা ডাটাবেস লেভেলে আলাদা।</p><p>• <strong>Server-Side RBAC + 404 Guard:</strong> অননুমোদিত রুটে ৪০৪ রিটার্ন।</p><p>• <strong>Tamper-Evident Hash-Chain Audit Log:</strong> প্রতিটি এআই সিদ্ধান্ত যাচাইযোগ্য।</p><p>• <strong>6-Agent LangGraph + Direct SQL:</strong> টাকার হিসাব সরাসরি SQL-এ, নথিপত্র pgvector RAG-এ।</p>', '<p>• <strong>PostgreSQL RLS:</strong> Strict tenant isolation by shopId.</p><p>• <strong>Server-Side RBAC + 404 Guard:</strong> Stealth 404 on unauthorized routes.</p><p>• <strong>Tamper-Evident Hash-Chain Audit Log:</strong> Verifiable AI decision trail.</p><p>• <strong>6-Agent StateGraph + SQL Tools:</strong> Financial math runs strictly on SQL.</p>')],
+          privacy: [L('গোপনীয়তা নীতি', 'Privacy Policy'), L('<p>আপনার দোকানের বিক্রি, লাভ-ক্ষতি ও কাস্টমারের তথ্য সম্পূর্ণ গোপন থাকে এবং অন্য কোনো দোকান বা তৃতীয় পক্ষের সাথে শেয়ার করা হয় না।</p>', '<p>Your shop sales, profit margins, and customer ledgers are strictly private and never shared with other tenants or third parties.</p>')],
+          terms: [L('ব্যবহারের শর্তাবলী', 'Terms of Service'), L('<p>বিজমাইন্ড এআই ব্যবসার সিদ্ধান্তে সহায়তা করে। যেকোনো ক্রয় অর্ডার বা কাস্টমার বার্তা মালিকের অনুমোদনেই কার্যকর হয়।</p>', '<p>BizMind AI provides decision support. All orders and customer communications require explicit owner approval.</p>')],
+          help: [L('সাহায্য কেন্দ্র', 'Help Center'), L('<p>সকাল ১০টা থেকে রাত ৮টা পর্যন্ত সহায়তার জন্য কল বা WhatsApp করুন: <strong>01865190471</strong> অথবা ইমেইল করুন: <strong>mdshamim.mern@gmail.com</strong></p>', '<p>Call or WhatsApp us (10 AM – 8 PM BST): <strong>01865190471</strong> or email <strong>mdshamim.mern@gmail.com</strong></p>')]
         };
-        document.getElementById('whyModalTitle').textContent = map[k][0];
-        document.getElementById('whyModalBody').innerHTML = map[k][1];
-        document.getElementById('whyModal').classList.remove('hidden');
+        if (map[k]) {
+          document.getElementById('whyModalTitle').textContent = map[k][0];
+          document.getElementById('whyModalBody').innerHTML = map[k][1];
+          document.getElementById('whyModal').classList.remove('hidden');
+        }
       }));
 
       renderRichFooter();
+      checkLiveBackendHealth();
     });
 
   </script>
