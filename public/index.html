@@ -312,9 +312,64 @@
       </table>
     </div>
 
-    <footer class="flex flex-wrap items-center justify-between gap-3 text-xs text-muted pt-4 border-t border-slate-500/25">
-      <span data-i18n="footerCopy"></span>
-      
+    <footer class="bento-card p-6 sm:p-8 mt-6 space-y-6">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 text-xs sm:text-sm">
+        <!-- Col 1: Brand & Trust -->
+        <div class="space-y-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 via-sky-500 to-emerald-400 text-white flex items-center justify-center font-extrabold text-sm shadow-md">BM</div>
+            <span class="font-extrabold text-base tracking-tight" id="ftBrandName"></span>
+          </div>
+          <p class="text-xs text-muted leading-relaxed" id="ftBrandDesc"></p>
+          <div class="flex flex-wrap gap-1.5 text-[10px] font-bold">
+            <span class="px-2 py-1 rounded-lg sub-glass-row">🔒 PostgreSQL RLS</span>
+            <span class="px-2 py-1 rounded-lg sub-glass-row">⚡ Offline PWA</span>
+            <span class="px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-300" id="ftStatusBadge"></span>
+          </div>
+        </div>
+
+        <!-- Col 2: Product Features -->
+        <div class="space-y-2.5">
+          <h4 class="font-extrabold text-sm" id="ftColProdTitle"></h4>
+          <ul class="space-y-1.5 text-xs text-muted">
+            <li><button type="button" data-ft-jump="overview" class="ft-jump hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftLink1"></button></li>
+            <li><button type="button" data-ft-jump="twin" class="ft-jump hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftLink2"></button></li>
+            <li><button type="button" data-ft-jump="ai" class="ft-jump hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftLink3"></button></li>
+            <li><button type="button" data-ft-jump="ops" class="ft-jump hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftLink4"></button></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Security & Support -->
+        <div class="space-y-2.5">
+          <h4 class="font-extrabold text-sm" id="ftColSecTitle"></h4>
+          <ul class="space-y-1.5 text-xs text-muted">
+            <li><button type="button" data-ft-modal="security" class="ft-modal hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftSecLink1"></button></li>
+            <li><button type="button" data-ft-modal="privacy" class="ft-modal hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftSecLink2"></button></li>
+            <li><button type="button" data-ft-modal="terms" class="ft-modal hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftSecLink3"></button></li>
+            <li><button type="button" data-ft-modal="help" class="ft-modal hover:text-indigo-500 dark:hover:text-indigo-300 transition text-left" id="ftSecLink4"></button></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Contact & Payments -->
+        <div class="space-y-3">
+          <h4 class="font-extrabold text-sm" id="ftColContactTitle"></h4>
+          <div class="space-y-1 text-xs text-muted">
+            <div>📧 support@bizmind.ai</div>
+            <div id="ftLocation"></div>
+          </div>
+          <div class="flex flex-wrap gap-1.5 text-[10px] font-extrabold">
+            <span class="px-2.5 py-1 rounded-lg bg-pink-500/15 text-pink-600 dark:text-pink-300 border border-pink-500/25">bKash</span>
+            <span class="px-2.5 py-1 rounded-lg bg-orange-500/15 text-orange-600 dark:text-orange-300 border border-orange-500/25">Nagad</span>
+            <span class="px-2.5 py-1 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-300 border border-indigo-500/25">SSLCommerz</span>
+          </div>
+          <button type="button" id="ftStartDemoBtn" class="w-full py-2 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-500 text-white font-bold text-xs shadow-md hover:brightness-110 transition"></button>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-slate-500/20 flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
+        <span id="ftCopyright"></span>
+        <span id="ftMadeFor"></span>
+      </div>
     </footer>
   </section>
 
@@ -2305,6 +2360,67 @@
       });
 
       renderV5MasterUI();
+    });
+
+  
+
+    function renderRichFooter() {
+      if (!document.getElementById('ftBrandName')) return;
+      document.getElementById('ftBrandName').textContent = L('বিজমাইন্ড এআই', 'BizMind AI');
+      document.getElementById('ftBrandDesc').textContent = L(
+        'বাংলাদেশের মুদি ও ক্ষুদ্র ব্যবসার এআই পার্টনার — অপচয় কমায়, বাকি আদায় করে এবং নিট লাভ বাড়ায়।',
+        'Smart AI retail co-pilot for Bangladeshi MSMEs — cut waste, recover credit dues, and grow verified net profit.'
+      );
+      document.getElementById('ftStatusBadge').textContent = L('● সিস্টেম সচল', '● All Systems Operational');
+      document.getElementById('ftColProdTitle').textContent = L('মূল ফিচারসমূহ', 'Platform Features');
+      document.getElementById('ftLink1').textContent = L('→ ৯০ দিনের ব্যাকটেস্ট ও জেনারেটিভ UI', '→ 90-Day Backtest & Generative UI');
+      document.getElementById('ftLink2').textContent = L('→ ডিজিটাল টুইন What-If সিমুলেটর', '→ Digital Twin What-If Simulator');
+      document.getElementById('ftLink3').textContent = L('→ ৬-এজেন্ট ট্রেস ও বাংলা ভয়েস এআই', '→ 6-Agent Trace & Bangla Voice AI');
+      document.getElementById('ftLink4').textContent = L('→ চালান ওসিআর, অডিট ও হ্যাশ-চেইন', '→ Invoice OCR, Audit & Hash-Chain');
+
+      document.getElementById('ftColSecTitle').textContent = L('নিরাপত্তা ও সহায়তা', 'Security & Resources');
+      document.getElementById('ftSecLink1').textContent = L('ডেটা নিরাপত্তা ও রোল সুরক্ষা', 'Data Security & RBAC 404 Guard');
+      document.getElementById('ftSecLink2').textContent = L('গোপনীয়তা নীতি (Privacy Policy)', 'Privacy Policy');
+      document.getElementById('ftSecLink3').textContent = L('ব্যবহারের শর্তাবলী (Terms)', 'Terms of Service');
+      document.getElementById('ftSecLink4').textContent = L('সাহায্য কেন্দ্র ও সাপোর্ট', 'Help Center & Support');
+
+      document.getElementById('ftColContactTitle').textContent = L('যোগাযোগ ও পেমেন্ট', 'Contact & Payments');
+      document.getElementById('ftLocation').textContent = L('📍 ঢাকা, বাংলাদেশ', '📍 Dhaka, Bangladesh');
+      document.getElementById('ftStartDemoBtn').textContent = L('⚡ ফ্রি ডেমো ড্যাশবোর্ড দেখুন →', '⚡ Launch Free Demo Dashboard →');
+      document.getElementById('ftCopyright').textContent = L('© ২০২৬ বিজমাইন্ড এআই · সর্বস্বত্ব সংরক্ষিত', '© 2026 BizMind AI · All rights reserved');
+      document.getElementById('ftMadeFor').textContent = L('🇧🇩 বাংলাদেশের ক্ষুদ্র ব্যবসার জন্য তৈরি', '🇧🇩 Built for Bangladesh Retail MSMEs');
+    }
+
+    const _v7RenderAll = renderAll;
+    renderAll = function () { _v7RenderAll(); renderRichFooter(); };
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.ft-jump').forEach((btn) => btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-ft-jump');
+        if (!session) loginAsDemo('OWNER');
+        else setWorkspace('shop');
+        switchShopTab(target);
+      }));
+
+      document.getElementById('ftStartDemoBtn')?.addEventListener('click', () => {
+        if (session) { setWorkspace('shop'); switchShopTab(activeShopTab || 'overview'); }
+        else document.getElementById('loginModal').classList.remove('hidden');
+      });
+
+      document.querySelectorAll('.ft-modal').forEach((btn) => btn.addEventListener('click', () => {
+        const k = btn.getAttribute('data-ft-modal');
+        const map = {
+          security: [L('🔐 ডেটা নিরাপত্তা ও রোল সুরক্ষা', '🔐 Data Security & RBAC'), L('<p>প্রতিটি দোকানের ডেটা PostgreSQL Row-Level Security (RLS) দিয়ে আলাদা রাখা হয়। অননুমোদিত রুটে ৪০৪ গার্ড ও হ্যাশ-চেইন অডিট লগ সক্রিয় আছে।</p>', '<p>Every shop is isolated at the PostgreSQL RLS layer with server-enforced RBAC, 404 stealth guards, and tamper-evident hash-chain audit logs.</p>')],
+          privacy: [L('🛡️ গোপনীয়তা নীতি', '🛡️ Privacy Policy'), L('<p>আপনার দোকানের বিক্রি, লাভ-ক্ষতি ও কাস্টমারের বাকির হিসাব সম্পূর্ণ গোপন — প্ল্যাটফর্ম অ্যাডমিনও ডিফল্টভাবে ব্যক্তিগত হিসাব দেখতে পায় না।</p>', '<p>Your shop sales, profit margins, and credit ledgers remain strictly private — platform admins never view private financials by default.</p>')],
+          terms: [L('📜 ব্যবহারের শর্তাবলী', '📜 Terms of Service'), L('<p>ডেমো পরিবেশে প্রদর্শিত পূর্বাভাস ও সিমুলেশন শিক্ষামূলক ও ব্যবসায়িক সহায়তার জন্য। যেকোনো অর্ডার বা পেমেন্ট মালিকের অনুমোদনেই কার্যকর হয়।</p>', '<p>Forecasts and simulations assist decision-making. All purchase orders and financial actions require explicit owner approval.</p>')],
+          help: [L('💬 সাহায্য কেন্দ্র ও সাপোর্ট', '💬 Help Center & Support'), L('<p>যেকোনো সহায়তার জন্য ইমেইল করুন: <strong>support@bizmind.ai</strong> অথবা টেলিগ্রাম বটে প্রশ্ন করুন।</p>', '<p>Need assistance? Email <strong>support@bizmind.ai</strong> or message our Telegram shopkeeper bot 24/7.</p>')]
+        };
+        document.getElementById('whyModalTitle').textContent = map[k][0];
+        document.getElementById('whyModalBody').innerHTML = map[k][1];
+        document.getElementById('whyModal').classList.remove('hidden');
+      }));
+
+      renderRichFooter();
     });
 
   </script>
