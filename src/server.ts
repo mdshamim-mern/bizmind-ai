@@ -80,12 +80,87 @@ app.post('/api/v1/ai/optimize-discount', (_req, res) => res.json(optimizeExpiryD
 app.post('/api/v1/ai/credit-risk', (_req, res) => res.json(scoreCustomerCreditRisk({ id: 'c1', name: 'Karim Mia', dueAmount: 3450, overdueDays: 18, totalLifetimeCredit: 8000, onTimePaymentRate: 0.55 })));
 app.post('/api/v1/mcp', (req, res) => res.json(handleMcpRpc(req.body)));
 app.post('/api/v1/bots/telegram/webhook', (req, res) => res.json({ ok: true, reply: buildTelegramReply(req.body?.message?.text || '') }));
-app.post('/api/v1/public-ai/chat', (req, res) => {
-  const msg = String(req.body?.message || '');
+app.post('/api/v1/public-ai/chat', async (req, res) => {
+  const started = Date.now();
+  const msg = String(req.body?.message || '').trim();
   const lang = req.body?.lang === 'en' ? 'en' : 'bn';
-  if (!checkGuardrails(msg).safe) { res.json({ answer: lang === 'bn' ? '🛡️ নিরাপত্তা গার্ডরেইল: অনুরোধ ব্লক।' : '🛡️ Guardrail blocked.', blocked: true }); return; }
+  const role = String(req.body?.role || 'OWNER').toUpperCase();
+  if (!msg) { res.status(400).json({ error: 'Message required' }); return; }
+
+  if (!checkGuardrails(msg).safe) {
+    res.json({
+      answer: lang === 'bn' ? '🛡️ নিরাপত্তা গার্ডরেইল: অন্য দোকানের ডেটা বা প্রম্পট ইনজেকশন ব্লক করা হয়েছে।' : '🛡️ Security Guardrail: Cross-tenant or prompt injection attempt blocked.',
+      blocked: true,
+      provider: 'BizMind Guardrails',
+      latencyMs: Date.now() - started,
+    });
+    return;
+  }
+
+  if ((role === 'CASHIER' || role === 'STOCK_KEEPER') && /(profit|margin|লাভ|মুনাফা|ক্ষতি)/i.test(msg)) {
+    res.json({
+      answer: lang === 'bn' ? '🛡️ রোল সুরক্ষা: ক্যাশিয়ার বা স্টক কিপার দোকানের লাভ-ক্ষতির তথ্য দেখতে পারবেন না।' : '🛡️ Role Security: Cashiers and Stock Keepers cannot access shop profit or margin.',
+      blocked: true,
+      provider: 'RBAC Guard',
+      latencyMs: Date.now() - started,
+    });
+    return;
+  }
+
   const g = runSixAgentStateGraph(msg, lang);
-  res.json({ answer: g.answer, trace: g.trace, generativeUi: g.generativeUi });
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (apiKey) {
+    try {
+      const sys = lang === 'bn'
+        ? 'You are BizMind AI, a helpful retail co-pilot for Bangladeshi grocery shopkeepers. Always reply in clear, natural Bengali (Bangla). Use Google Search for live Bangladesh market prices (like potato/rice/egg prices in any district), weather, or general questions. Use the provided shopContext for shop questions. If role is CASHIER, never reveal profit or margin.'
+        : 'You are BizMind AI, a practical retail co-pilot for Bangladeshi shopkeepers. Reply in clear English. Use Google Search for live market prices or current events, and use shopContext for store questions. Never reveal profit/margin if role is CASHIER.';
+
+      const history = Array.isArray(req.body?.history) ? req.body.history.slice(-6) : [];
+      const contents = [
+        ...history.map((h: any) => ({ role: h.role === 'user' ? 'user' : 'model', parts: [{ text: String(h.text || '') }] })),
+        { role: 'user', parts: [{ text: `${msg}\n\n[Role: ${role}] [Shop Context: ${JSON.stringify(req.body?.shopContext || {})}]` }] },
+      ];
+
+      const resp = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: sys }] },
+            contents,
+            tools: [{ googleSearch: {} }],
+          }),
+        }
+      );
+
+      if (resp.ok) {
+        const data: any = await resp.json();
+        const liveAnswer = data?.candidates?.[0]?.content?.parts?.map((p: any) => p.text).filter(Boolean).join('\n').trim();
+        if (liveAnswer) {
+          res.json({
+            answer: liveAnswer,
+            trace: g.trace,
+            generativeUi: g.generativeUi,
+            provider: 'Gemini 2.5 Flash + Google Search',
+            latencyMs: Date.now() - started,
+          });
+          return;
+        }
+      }
+    } catch {
+      // Graceful fallback to deterministic 6-agent graph below
+    }
+  }
+
+  res.json({
+    answer: g.answer,
+    trace: g.trace,
+    generativeUi: g.generativeUi,
+    provider: '6-Agent Local Fallback',
+    latencyMs: Date.now() - started,
+  });
 });
 
 export default app;

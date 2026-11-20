@@ -1663,25 +1663,58 @@
       document.getElementById('pricingComparisonBody').innerHTML = rows.map((r) => `<tr><td class="py-2.5 px-3 font-semibold">${r[0]}</td><td class="py-2.5 px-3 text-center text-muted">${r[1]}</td><td class="py-2.5 px-3 text-center font-bold text-emerald-600 dark:text-emerald-300">${r[2]}</td></tr>`).join('');
     }
 
-    function sendAgentQuery(msg) {
+    async function sendAgentQuery(msg) {
       const text = msg.trim();
       if (!text) return;
       const lim = session?.plan === 'PREMIUM' ? 500 : 20;
       if (aiUsedCount >= lim) { document.getElementById('upgradeModal').classList.remove('hidden'); return; }
       aiUsedCount += 1;
       chatHistory.push({ role: 'user', text });
+
       if (/(ignore|other\s+shop|অন্য\s+দোকানের|system\s+prompt)/i.test(text)) {
         chatHistory.push({ role: 'ai', text: L('🛡️ নিরাপত্তা গার্ডরেইল: অন্য দোকানের ডেটা বা প্রম্পট ইনজেকশন ব্লক করা হয়েছে।', '🛡️ Guardrails: Cross-tenant data or prompt injection attempt blocked.') });
-      } else {
-        currentTrace = buildSixAgentTrace(text);
-        chatHistory.push({
-          role: 'ai',
-          text: L(
-            'ম্যানেজার এজেন্টের সমন্বিত উত্তর:\n• Inventory+Sales: ৫৫টি ডিম ৪ দিনে নষ্ট হবে — ১৫% ছাড়ে ৳৭০১ উদ্ধার।\n• Finance (SQL): মোট বিক্রি ৳১,০৭,৯০০ ও নিট লাভ ৳৪,৫৫০।\n• Supplier (pgvector RAG): মেঘনা ট্রেডার্সের ২ দিনের ডেলিভারি শর্ত অনুযায়ী ২৮টি তেলের PO স্যান্ডবক্স খসড়া তৈরি হয়েছে।',
-            'Manager Agent Decision:\n• Inventory+Sales: 55 eggs expire in 4d — 15% discount recovers ৳701.\n• Finance (Direct SQL): Revenue ৳107,900 & Net Profit ৳4,550.\n• Supplier (pgvector RAG): 28-Oil PO sandbox draft queued per Meghna Traders 2-day lead-time policy.'
-          )
-        });
+        renderShopContent();
+        return;
       }
+
+      currentTrace = buildSixAgentTrace(text);
+      chatHistory.push({ role: 'ai', text: L('🔍 ৬-এজেন্ট ও লাইভ Gemini + Google Search উত্তর আনছে...', '🔍 Running 6-Agent + live Gemini & Google Search...') });
+      renderShopContent();
+
+      try {
+        const resp = await fetch('https://bizmind-ai-orcin.vercel.app/api/v1/public-ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: text,
+            lang,
+            role: session?.role || 'OWNER',
+            history: chatHistory.slice(-7, -1).map((m) => ({ role: m.role === 'user' ? 'user' : 'model', text: m.text })),
+            shopContext: {
+              shopName: L(shopState.nameBn, shopState.nameEn),
+              products: shopState.products,
+              baki: shopState.baki,
+              salesCount: shopState.sales.length
+            }
+          })
+        });
+        if (resp.ok) {
+          const json = await resp.json();
+          if (json && json.answer) {
+            chatHistory[chatHistory.length - 1] = { role: 'ai', text: json.answer };
+            renderShopContent();
+            return;
+          }
+        }
+      } catch (_e) {}
+
+      chatHistory[chatHistory.length - 1] = {
+        role: 'ai',
+        text: L(
+          'ম্যানেজার এজেন্টের সমন্বিত উত্তর:\n• Inventory+Sales: ৫৫টি ডিম ৪ দিনে নষ্ট হবে — ১৫% ছাড়ে ৳৭০১ উদ্ধার।\n• Finance (SQL): মোট বিক্রি ৳১,০৭,৯০০ ও নিট লাভ ৳৪,৫৫০।\n• Supplier (pgvector RAG): মেঘনা ট্রেডার্সের ২ দিনের ডেলিভারি শর্ত অনুযায়ী ২৮টি তেলের PO স্যান্ডবক্স খসড়া তৈরি হয়েছে।',
+          'Manager Agent Decision:\n• Inventory+Sales: 55 eggs expire in 4d — 15% discount recovers ৳701.\n• Finance (Direct SQL): Revenue ৳107,900 & Net Profit ৳4,550.\n• Supplier (pgvector RAG): 28-Oil PO sandbox draft queued per Meghna Traders 2-day lead-time policy.'
+        )
+      };
       renderShopContent();
     }
 
@@ -2546,12 +2579,6 @@
     renderAll = function () { _v8RenderAll(); renderRichFooter(); };
 
     window.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('ftLangBtn')?.addEventListener('click', () => { lang = lang === 'bn' ? 'en' : 'bn'; safeStorageSet('bizmind_lang', lang); renderAll(); });
-      document.getElementById('ftThemeBtn')?.addEventListener('click', () => { isDark = !isDark; safeStorageSet('bizmind_theme', isDark ? 'dark' : 'light'); renderAll(); });
-      document.getElementById('ftPwaInstallBtn')?.addEventListener('click', async () => {
-        if (deferredPwaPrompt) { deferredPwaPrompt.prompt(); deferredPwaPrompt = null; }
-        else showToast(L('ব্রাউজার মেনু থেকে "Add to Home Screen" চাপুন — ইন্টারনেট ছাড়াও অ্যাপ চলবে।', 'Tap "Add to Home Screen" in your browser menu to install the offline PWA.'));
-      });
       document.getElementById('ftPriceLink')?.addEventListener('click', () => {
         const tbl = document.getElementById('pricingComparisonBody');
         if (tbl) tbl.scrollIntoView({ behavior: 'smooth', block: 'center' });
