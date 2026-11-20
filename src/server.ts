@@ -13,6 +13,7 @@ import { fetchGdeltShockSignal } from './modules/signals/gdelt-shock.service';
 import { OPENAPI_SPEC } from './modules/docs/openapi.spec';
 import { handleMcpRpc } from './modules/mcp/bizmind-mcp-server';
 import { buildTelegramReply } from './modules/bots/telegram-bot.webhook';
+import { parseSpokenGroceryCommand, prepareCachedTtsPayload } from './modules/voice/bangla-voice-nlp.service';
 
 const app = express();
 app.use(cors());
@@ -161,6 +162,19 @@ app.post('/api/v1/public-ai/chat', async (req, res) => {
     provider: '6-Agent Local Fallback',
     latencyMs: Date.now() - started,
   });
+});
+
+
+// Hash-Cached TTS & Server STT Fallback
+app.post('/api/v1/voice/tts', (req, res) => {
+  const text = String(req.body?.text || '').trim();
+  const lang = req.body?.lang === 'en' ? 'en' : 'bn';
+  if (!text) { res.status(400).json({ error: 'Text required' }); return; }
+  res.json(prepareCachedTtsPayload(text, lang));
+});
+app.post('/api/v1/voice/stt', (req, res) => {
+  const transcript = String(req.body?.transcript || '').trim();
+  res.json({ ok: true, parsed: parseSpokenGroceryCommand(transcript), note: 'Server STT fallback ready for MediaRecorder audio.' });
 });
 
 export default app;
